@@ -11,7 +11,7 @@ export type UserProfile = {
     email?: string;
     phone?: string;
     address?: string;
-    insurance?: string;
+    insurance?: string[];
     // Bodywork Profile
     primaryComplaints: string[]; // e.g. "Lower Back Pain"
     contraindications: string[]; // e.g. "No deep tissue on calves"

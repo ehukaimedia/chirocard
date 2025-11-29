@@ -36,7 +36,7 @@ export default function Profile() {
         diet: [] as string[],
         supplements: [] as string[],
         hydration: "",
-        insurance: ""
+        insurance: [] as string[]
     });
 
     useEffect(() => {
@@ -62,7 +62,7 @@ export default function Profile() {
                 diet: user.diet || [],
                 supplements: user.supplements || [],
                 hydration: user.hydration || "",
-                insurance: user.insurance || ""
+                insurance: Array.isArray(user.insurance) ? user.insurance : (user.insurance ? [user.insurance] : [])
             });
         }
     }, [user]);
@@ -110,14 +110,21 @@ export default function Profile() {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
-            <div className="flex items-center justify-between mb-8 print:hidden">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2">
-                        <ArrowLeft className="w-4 h-4" />
-                        Return to Dashboard
-                    </Button>
+            {/* Top Navigation Bar */}
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50 print:hidden">
+                <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2 pl-0 hover:bg-transparent">
+                    <ArrowLeft className="w-4 h-4" />
+                    Return to Dashboard
+                </Button>
+            </nav>
+
+            {/* Header Content */}
+            <div className="mt-16 mb-8 pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+                <div>
                     <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Bodywork Profile</h1>
+                    <p className="text-sm text-zinc-500 mt-1">Manage your personal health data and preferences.</p>
                 </div>
+
                 <div className="flex gap-2">
                     {!isEditing && (
                         <Button
@@ -189,7 +196,7 @@ interface FormData {
     diet: string[];
     supplements: string[];
     hydration: string;
-    insurance: string;
+    insurance: string[];
 }
 
 const PassportView = ({ user }: { user: UserProfile | undefined }) => {
@@ -306,12 +313,23 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                                 <p className="text-zinc-300 text-sm truncate">{user.address}</p>
                             </div>
                         )}
-                        {user.insurance && (
-                            <div className="md:col-span-3">
-                                <p className="text-zinc-500 text-xs uppercase">Insurance</p>
-                                <p className="text-zinc-300 text-sm">{user.insurance}</p>
-                            </div>
-                        )}
+                        {(() => {
+                            const insuranceList = Array.isArray(user.insurance) ? user.insurance : (user.insurance ? [user.insurance] : []);
+                            if (insuranceList.length === 0) return null;
+
+                            return (
+                                <div className="md:col-span-3">
+                                    <p className="text-zinc-500 text-xs uppercase mb-1">Insurance</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {insuranceList.map((item, i) => (
+                                            <span key={i} className="text-xs text-zinc-300 bg-zinc-800/50 border border-zinc-700/50 px-2 py-0.5 rounded">
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
             </div>
@@ -495,12 +513,11 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             placeholder="123 Wellness Way, Healing City, HC 90210"
             className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
         />
-        <Input
+        <TagInput
             label="Insurance Provider & Policy #"
             value={formData.insurance}
-            onChange={e => setFormData((prev: FormData) => ({ ...prev, insurance: e.target.value }))}
+            onChange={(tags) => setFormData(prev => ({ ...prev, insurance: tags }))}
             placeholder="e.g. Blue Cross #123456789"
-            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
         />
 
         <div className="grid grid-cols-2 gap-4">
