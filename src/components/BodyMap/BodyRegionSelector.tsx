@@ -6,6 +6,7 @@ interface BodyRegionSelectorProps {
     value: Record<string, BodyStatus>;
     onChange: (part: string, status: BodyStatus) => void;
     readOnly?: boolean;
+    mode?: 'simple' | 'detailed';
 }
 
 const REGIONS = [
@@ -27,7 +28,7 @@ const REGIONS = [
     { id: "r-foot", label: "R Foot" },
 ];
 
-export function BodyRegionSelector({ value, onChange, readOnly = false }: BodyRegionSelectorProps) {
+export function BodyRegionSelector({ value, onChange, readOnly = false, mode = 'detailed' }: BodyRegionSelectorProps) {
     const getStatusColor = (status: BodyStatus) => {
         switch (status) {
             case "issue": return "bg-red-500/20 text-red-500 border-red-500 hover:bg-red-500/30";
@@ -45,9 +46,15 @@ export function BodyRegionSelector({ value, onChange, readOnly = false }: BodyRe
 
         // Cycle: Normal -> Issue -> Watch -> Normal (User Mode)
         // Note: 'Addressed' is typically set by Practitioner, but we can allow cycling or specific logic
-        if (current === "normal") next = "issue";
-        else if (current === "issue") next = "watch";
-        else next = "normal";
+        if (mode === 'simple') {
+            // Simple toggle: Normal <-> Issue
+            next = current === 'issue' ? 'normal' : 'issue';
+        } else {
+            // Detailed cycle
+            if (current === "normal") next = "issue";
+            else if (current === "issue") next = "watch";
+            else next = "normal";
+        }
 
         onChange(partId, next);
     };

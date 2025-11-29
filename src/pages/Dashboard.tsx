@@ -94,7 +94,7 @@ export default function Dashboard() {
             {/* Holistic Health Passport (Quick View) */}
             <section>
                 <div className="flex justify-between items-end mb-4">
-                    <h2 className="text-xl font-bold text-zinc-100">Current Status</h2>
+                    <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Current Status</h2>
                     <Link to="/profile">
                         <Button variant="ghost" size="sm" className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
                             View Full Passport
@@ -205,7 +205,7 @@ export default function Dashboard() {
                 confirmLabel="Delete"
                 cancelLabel="Cancel"
                 onConfirm={confirmDelete}
-                variant="destructive"
+                variant="danger"
             />
         </div>
     );

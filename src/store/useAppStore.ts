@@ -3,21 +3,23 @@ import { persist } from 'zustand/middleware';
 
 type AppMode = 'user' | 'guest';
 
+import { type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
+
 interface AppState {
     mode: AppMode;
     theme: 'dark' | 'light';
     activeSessionId: string | null;
     activePractitioner: { id: string; name: string; role: string } | null;
     intakeData: {
-        bodyMap: Record<string, any>;
+        bodyMap: Record<string, BodyStatus>;
         notes: string;
     } | null;
 
     // Actions
     setMode: (mode: AppMode) => void;
     setTheme: (theme: 'dark' | 'light') => void;
-    startSession: (sessionId: string, practitioner?: { id: string; name: string; role: string }, intakeData?: { bodyMap: Record<string, any>; notes: string }) => void;
-    updateIntakeData: (data: { bodyMap: Record<string, any>; notes: string }) => void;
+    startSession: (sessionId: string, practitioner?: { id: string; name: string; role: string }, intakeData?: { bodyMap: Record<string, BodyStatus>; notes: string }) => void;
+    updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; notes: string }) => void;
     endSession: () => void;
     toggleTheme: () => void;
 }

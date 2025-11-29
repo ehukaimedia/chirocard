@@ -62,6 +62,7 @@ export default function Calendar() {
     const toggleHomework = async (id: string, currentStatus: boolean) => {
         await db.homework.update(id, {
             isCompletedToday: !currentStatus,
+            // eslint-disable-next-line react-hooks/purity
             lastCompletedAt: !currentStatus ? Date.now() : undefined
         });
     };

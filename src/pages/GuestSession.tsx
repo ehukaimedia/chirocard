@@ -105,8 +105,16 @@ export default function GuestSession() {
                     await db.homework.bulkAdd(recommendations);
                 }
 
-                // Download PDF
-                pdf.save("chirocard-session.pdf");
+                // Download PDF (Manual Blob method for better compatibility)
+                const pdfBlob = pdf.output("blob");
+                const url = URL.createObjectURL(pdfBlob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
 
                 toast("Session completed and saved!", "success");
 
@@ -203,6 +211,18 @@ export default function GuestSession() {
                             </Card>
                         )}
 
+                        {/* Intake Notes Display */}
+                        {intakeData?.notes && (
+                            <Card className="bg-amber-950/30 border-amber-900/50 p-4 space-y-2">
+                                <h3 className="text-sm font-medium text-amber-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Info className="w-4 h-4" /> Patient Intake Notes
+                                </h3>
+                                <p className="text-zinc-300 text-sm whitespace-pre-wrap italic">
+                                    "{intakeData.notes}"
+                                </p>
+                            </Card>
+                        )}
+
                         <section>
                             <h2 className="text-lg font-medium mb-3 text-zinc-300">1. Log Bodywork</h2>
                             <BodyRegionSelector
@@ -232,15 +252,14 @@ export default function GuestSession() {
                                 {/* Quick Add Options */}
                                 <div className="space-y-3 mb-4">
                                     <div>
-                                        <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Acute Care & Relief</p>
+                                        <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Relief & Recovery</p>
                                         <div className="flex flex-wrap gap-2">
                                             {[
-                                                { label: "Ice Area", desc: "15-20 mins", freq: "Acute (3x/day)" },
-                                                { label: "Apply Heat", desc: "20 mins", freq: "As Needed" },
+                                                { label: "Cold Therapy", desc: "Ice/Cold pack, 15-20 mins", freq: "Acute (3x/day)" },
+                                                { label: "Heat Therapy", desc: "Heating pad/Warm compress, 20 mins", freq: "As Needed" },
                                                 { label: "Contrast Therapy", desc: "3 min heat / 1 min ice", freq: "Daily" },
-                                                { label: "Epsom Salt Bath", desc: "20 mins, warm water", freq: "Weekly" },
-                                                { label: "Elevate Legs", desc: "15 mins", freq: "As Needed" },
-                                                { label: "Biofreeze/Topical", desc: "As needed for pain", freq: "As Needed" }
+                                                { label: "Rest & Elevation", desc: "Elevate and rest area", freq: "As Needed" },
+                                                { label: "Topical Relief", desc: "Apply biofreeze/cream", freq: "As Needed" }
                                             ].map(opt => (
                                                 <button
                                                     key={opt.label}
@@ -258,14 +277,14 @@ export default function GuestSession() {
                                     </div>
 
                                     <div>
-                                        <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Mobility & Movement</p>
+                                        <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Movement & Mobility</p>
                                         <div className="flex flex-wrap gap-2">
                                             {[
-                                                { label: "Light Stretching", desc: "Gentle, no pain", freq: "Morning/Night" },
-                                                { label: "Walking", desc: "15-30 mins", freq: "Daily" },
-                                                { label: "Foam Rolling", desc: "Quads/Back, 5 mins", freq: "Daily" },
-                                                { label: "Cat/Cow Stretch", desc: "10 reps", freq: "Morning/Night" },
-                                                { label: "Doorway Stretch", desc: "Pec stretch, 30s", freq: "Daily" }
+                                                { label: "Stretching", desc: "Gentle hold, 30s", freq: "Morning/Night" },
+                                                { label: "Mobility Work", desc: "Dynamic movement/Foam rolling", freq: "Daily" },
+                                                { label: "Light Activity", desc: "Walking/Gentle movement", freq: "Daily" },
+                                                { label: "Strengthening", desc: "Resistance exercises", freq: "3x/Week" },
+                                                { label: "Range of Motion", desc: "Active ROM exercises", freq: "Daily" }
                                             ].map(opt => (
                                                 <button
                                                     key={opt.label}
@@ -286,11 +305,11 @@ export default function GuestSession() {
                                         <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Lifestyle & Wellness</p>
                                         <div className="flex flex-wrap gap-2">
                                             {[
-                                                { label: "Drink Water", desc: "8+ glasses/day", freq: "Daily" },
-                                                { label: "Sleep Hygiene", desc: "8 hours, dark room", freq: "Daily" },
-                                                { label: "Deep Breathing", desc: "Box breathing, 5 mins", freq: "As Needed" },
-                                                { label: "Ergonomic Check", desc: "Adjust monitor/chair", freq: "Once" },
-                                                { label: "Digital Detox", desc: "No screens 1hr before bed", freq: "Daily" }
+                                                { label: "Hydration", desc: "Increase water intake", freq: "Daily" },
+                                                { label: "Sleep Hygiene", desc: "8 hours, consistent schedule", freq: "Daily" },
+                                                { label: "Breathwork", desc: "Deep diaphragmatic breathing", freq: "As Needed" },
+                                                { label: "Ergonomics", desc: "Check posture/workstation", freq: "Daily" },
+                                                { label: "Stress Management", desc: "Meditation/Relaxation", freq: "Daily" }
                                             ].map(opt => (
                                                 <button
                                                     key={opt.label}

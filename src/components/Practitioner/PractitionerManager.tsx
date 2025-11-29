@@ -45,14 +45,14 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
             if (editingId) {
                 await db.practitioners.update(editingId, {
                     ...formData,
-                    role: formData.role as any
+                    role: formData.role as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other"
                 });
             } else {
                 const count = await db.practitioners.count();
                 await db.practitioners.add({
                     id: crypto.randomUUID(),
                     name: formData.name,
-                    role: formData.role as any,
+                    role: formData.role as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other",
                     clinicName: formData.clinicName || "",
                     email: formData.email || "",
                     phone: formData.phone || "",
@@ -133,7 +133,7 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                             <select
                                 className="w-full h-11 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 text-sm"
                                 value={formData.role}
-                                onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as any }))}
+                                onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other" }))}
                             >
                                 <option value="Chiropractor">Chiropractor</option>
                                 <option value="Massage Therapist">Massage Therapist</option>

@@ -14,7 +14,11 @@ const SignaturePad = forwardRef<SignaturePadRef>((_, ref) => {
     useImperativeHandle(ref, () => ({
         clear: () => sigPad.current?.clear(),
         // Fallback to getCanvas() because getTrimmedCanvas() is throwing a TypeError in this version
-        getTrimmedCanvas: () => sigPad.current?.getCanvas()!,
+        getTrimmedCanvas: () => {
+            const canvas = sigPad.current?.getCanvas();
+            if (!canvas) throw new Error("Canvas not available");
+            return canvas;
+        },
         isEmpty: () => sigPad.current?.isEmpty() ?? true,
     }));
 

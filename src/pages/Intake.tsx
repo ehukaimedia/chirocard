@@ -52,8 +52,8 @@ export default function Intake() {
         });
 
         startSession(sessionId, selectedPractitioner, {
-            bodyMap: {},
-            notes: ""
+            bodyMap: bodyStatus,
+            notes: notes
         });
 
         navigate("/guest-session");
@@ -114,6 +114,7 @@ export default function Intake() {
                     <BodyRegionSelector
                         value={bodyStatus}
                         onChange={(part, status) => setBodyStatus(prev => ({ ...prev, [part]: status }))}
+                        mode="simple"
                     />
                 </section>
 
@@ -149,9 +150,9 @@ export default function Intake() {
             <Modal
                 isOpen={showStartModal}
                 onClose={() => setShowStartModal(false)}
-                title={`Hand over to ${selectedPractitioner?.name}?`}
-                description="By continuing, you verify that all intake information is correct and agree to share this holistic health data with your practitioner for the purpose of treatment and allow the practitioner to provide holistic recommendations for you to retain."
-                confirmLabel="I Agree & Start"
+                title="Ready to Start Session?"
+                description={`You are about to hand over your device to ${selectedPractitioner?.name}. They will review your intake notes and begin the session.`}
+                confirmLabel="Confirm & Hand Over"
                 onConfirm={handleConfirmStart}
             />
         </div>
