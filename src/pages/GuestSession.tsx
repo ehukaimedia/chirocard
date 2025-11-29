@@ -7,7 +7,7 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { BodyRegionSelector, type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
+import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { generateSessionPDF } from "../utils/pdfGenerator";
 import { Lock, Mic, AlertTriangle, Info, Plus, Trash2 } from "lucide-react";
@@ -23,6 +23,8 @@ export default function GuestSession() {
     const [step, setStep] = useState<"work" | "sign" | "finish">("work");
     // Initialize with data from Intake if available
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
+    const [bodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
+    const [treatmentNotes, setTreatmentNotes] = useState<Record<string, string>>({});
     const [notes, setNotes] = useState(intakeData?.notes || "");
     const [practitionerName, setPractitionerName] = useState(activePractitioner?.name || "");
 
@@ -36,6 +38,7 @@ export default function GuestSession() {
         // Sync current state back to store so Intake page reflects changes
         updateIntakeData({
             bodyMap: bodyStatus,
+            bodyNotes: bodyNotes,
             notes: notes
         });
         navigate("/intake");
@@ -95,6 +98,8 @@ export default function GuestSession() {
                     notes,
                     recommendations, // Save snapshot
                     bodyMap: bodyStatus, // Save snapshot of body status
+                    bodyNotes: bodyNotes, // Save user notes
+                    treatmentNotes: treatmentNotes, // Save practitioner notes
                     signatureBase64: signature,
                     isLocked: true,
                     createdAt: Date.now()
@@ -223,12 +228,63 @@ export default function GuestSession() {
                             </Card>
                         )}
 
+                        {/* Body Notes Display */}
+                        {Object.keys(bodyNotes).length > 0 && (
+                            <Card className="bg-zinc-900/80 border-zinc-800 p-4 space-y-3">
+                                <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                    <Info className="w-4 h-4" /> Specific Area Notes
+                                </h3>
+                                <div className="grid gap-2">
+                                    {Object.entries(bodyNotes).map(([partId, note]) => {
+                                        const region = REGIONS.find(r => r.id === partId);
+                                        if (!region || !note) return null;
+                                        return (
+                                            <div key={partId} className="text-sm">
+                                                <span className="font-medium text-emerald-400">{region.label}:</span> <span className="text-zinc-300">{note}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </Card>
+                        )}
+
                         <section>
                             <h2 className="text-lg font-medium mb-3 text-zinc-300">1. Log Bodywork</h2>
                             <BodyRegionSelector
                                 value={bodyStatus}
                                 onChange={(part, status) => setBodyStatus(prev => ({ ...prev, [part]: status }))}
                             />
+
+                            {/* Practitioner Treatment Notes */}
+                            {Object.entries(bodyStatus).some(([_, status]) => status === 'addressed') && (
+                                <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
+                                    <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Treatment Notes</h3>
+                                    <div className="grid gap-3">
+                                        {Object.entries(bodyStatus)
+                                            .filter(([_, status]) => status === 'addressed')
+                                            .map(([partId]) => {
+                                                const region = REGIONS.find(r => r.id === partId);
+                                                if (!region) return null;
+                                                return (
+                                                    <div key={partId} className="flex items-center gap-3">
+                                                        <label className="text-sm font-medium text-emerald-500 w-24 flex-shrink-0">
+                                                            {region.label}
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={treatmentNotes[partId] || ""}
+                                                            onChange={(e) => setTreatmentNotes(prev => ({ ...prev, [partId]: e.target.value }))}
+                                                            placeholder={`Treatment details for ${region.label}...`}
+                                                            className="flex-1 h-9 bg-zinc-900 border border-zinc-800 rounded-lg px-3 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+                            )}
+
+
                         </section>
 
                         <section>

@@ -9,7 +9,7 @@ interface BodyRegionSelectorProps {
     mode?: 'simple' | 'detailed';
 }
 
-const REGIONS = [
+export const REGIONS = [
     { id: "head", label: "Head" },
     { id: "neck", label: "Neck" },
     { id: "l-shoulder", label: "L Shoulder" },
@@ -50,9 +50,10 @@ export function BodyRegionSelector({ value, onChange, readOnly = false, mode = '
             // Simple toggle: Normal <-> Issue
             next = current === 'issue' ? 'normal' : 'issue';
         } else {
-            // Detailed cycle
+            // Detailed cycle for practitioner
             if (current === "normal") next = "issue";
             else if (current === "issue") next = "watch";
+            else if (current === "watch") next = "addressed";
             else next = "normal";
         }
 

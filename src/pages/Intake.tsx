@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Practitioner } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
-import { BodyRegionSelector, type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
+import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { ArrowLeft, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { useToast } from "../components/ui/Toast";
@@ -15,6 +15,7 @@ export default function Intake() {
 
     // Initialize with existing data if returning from session
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
+    const [bodyNotes, setBodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
     const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(
         activePractitioner ? { ...activePractitioner } as Practitioner : null
     );
@@ -53,6 +54,7 @@ export default function Intake() {
 
         startSession(sessionId, selectedPractitioner, {
             bodyMap: bodyStatus,
+            bodyNotes: bodyNotes,
             notes: notes
         });
 
@@ -117,6 +119,38 @@ export default function Intake() {
                         mode="simple"
                     />
                 </section>
+
+                {/* Dynamic Body Notes */}
+                {Object.entries(bodyStatus).some(([_, status]) => status === 'issue' || status === 'watch') && (
+                    <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                        <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
+                            Details for Selected Areas
+                        </h2>
+                        <div className="grid gap-4">
+                            {Object.entries(bodyStatus)
+                                .filter(([_, status]) => status === 'issue' || status === 'watch')
+                                .map(([partId, status]) => {
+                                    const region = REGIONS.find(r => r.id === partId);
+                                    if (!region) return null;
+                                    return (
+                                        <div key={partId} className="space-y-2">
+                                            <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${status === 'issue' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                                                {region.label}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={bodyNotes[partId] || ""}
+                                                onChange={(e) => setBodyNotes(prev => ({ ...prev, [partId]: e.target.value }))}
+                                                placeholder={`Specifics for ${region.label}...`}
+                                                className="w-full h-10 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                        </div>
+                    </section>
+                )}
 
                 {/* Question 4: Notes */}
                 <section className="space-y-4">

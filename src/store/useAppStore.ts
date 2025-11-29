@@ -12,14 +12,15 @@ interface AppState {
     activePractitioner: { id: string; name: string; role: string } | null;
     intakeData: {
         bodyMap: Record<string, BodyStatus>;
+        bodyNotes: Record<string, string>;
         notes: string;
     } | null;
 
     // Actions
     setMode: (mode: AppMode) => void;
     setTheme: (theme: 'dark' | 'light') => void;
-    startSession: (sessionId: string, practitioner?: { id: string; name: string; role: string }, intakeData?: { bodyMap: Record<string, BodyStatus>; notes: string }) => void;
-    updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; notes: string }) => void;
+    startSession: (sessionId: string, practitioner?: { id: string; name: string; role: string }, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string }) => void;
+    updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string }) => void;
     endSession: () => void;
     toggleTheme: () => void;
 }
