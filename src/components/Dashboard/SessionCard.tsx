@@ -1,9 +1,9 @@
 import { type Session } from "../../db/db";
 import { Card } from "../ui/Card";
 import { REGIONS } from "../BodyMap/BodyRegionSelector";
-import { Calendar, User, Activity, FileText, ArrowRight, Trash2 } from "lucide-react";
+import { Activity, FileText, ArrowRight, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { cn } from "../../lib/utils";
+
 
 interface SessionCardProps {
     session: Session;

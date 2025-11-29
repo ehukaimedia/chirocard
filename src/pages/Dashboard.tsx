@@ -144,7 +144,7 @@ export default function Dashboard() {
                 <Button
                     variant="outline"
                     className="h-32 flex flex-col items-center justify-center gap-3 text-lg bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 shadow-sm"
-                    onClick={() => navigate("/calendar")}
+                    onClick={() => navigate("/history")}
                 >
                     <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-full">
                         <History className="w-6 h-6 text-zinc-700 dark:text-zinc-300" />

@@ -1,6 +1,6 @@
 import { cn } from "../../lib/utils";
 
-export type BodyStatus = "normal" | "issue" | "addressed" | "watch";
+export type BodyStatus = "normal" | "issue" | "addressed" | "watch"; // Updated type
 
 interface BodyRegionSelectorProps {
     value: Record<string, BodyStatus>;

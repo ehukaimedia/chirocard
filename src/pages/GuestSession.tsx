@@ -10,7 +10,6 @@ import { Input } from "../components/ui/Input";
 import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { BodyAreaCard } from "../components/Practitioner/BodyAreaCard";
-import { generateSessionPDF, downloadPDF } from "../utils/pdfGenerator";
 import { Lock, AlertTriangle, Info, Plus, Trash2, CheckCircle, FileText, Home } from "lucide-react";
 import { type Homework } from "../db/db";
 import { useToast } from "../components/ui/Toast";
@@ -73,6 +72,8 @@ export default function GuestSession() {
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
 
+    const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+
     const handleFinish = async () => {
         if (step === "work") {
             setStep("sign");
@@ -82,48 +83,14 @@ export default function GuestSession() {
         if (step === "sign") {
             setIsSaving(true);
             try {
-                // Generate PDF
+                // Generate Signature
                 const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || "";
-
-                // Build comprehensive PDF with all session data
-                const pdf = generateSessionPDF({
-                    date: new Date().toLocaleDateString(),
-                    practitionerName,
-                    practitioner: activePractitioner ? {
-                        name: activePractitioner.name,
-                        role: activePractitioner.role,
-                        clinicName: activePractitioner.clinicName,
-                        phone: activePractitioner.phone,
-                        email: activePractitioner.email,
-                        website: activePractitioner.website,
-                        address: activePractitioner.address
-                    } : undefined,
-                    userContact: {
-                        name: user?.name || "Guest User",
-                        email: user?.email,
-                        phone: user?.phone,
-                        address: user?.address
-                    },
-                    // Patient's pre-session intake data
-                    patientIntake: {
-                        notes: intakeData?.notes,
-                        bodyAreas: intakeData?.bodyMap,
-                        bodyNotes: intakeData?.bodyNotes
-                    },
-                    // Practitioner's session work
-                    notes,
-                    bodyLog: bodyStatus,
-                    treatmentNotes: treatmentNotes,
-                    // Signatures
-                    userSignature: intakeData?.userSignature,
-                    signatureImage: signature,
-                    // Recommendations
-                    recommendations: recommendations
-                });
+                const sessionId = crypto.randomUUID();
+                setCompletedSessionId(sessionId);
 
                 // Save to DB
                 await db.sessions.add({
-                    id: crypto.randomUUID(),
+                    id: sessionId,
                     date: Date.now(),
                     practitionerId: activePractitioner?.id || "guest",
                     practitionerName,
@@ -134,6 +101,7 @@ export default function GuestSession() {
                     bodyNotes: bodyNotes, // Save user notes
                     treatmentNotes: treatmentNotes, // Save practitioner notes
                     signatureBase64: signature,
+                    userSignature: intakeData?.userSignature, // Save patient signature
                     isLocked: true,
                     createdAt: Date.now()
                 });
@@ -143,9 +111,8 @@ export default function GuestSession() {
                     await db.homework.bulkAdd(recommendations);
                 }
 
-                // Download PDF
-                console.log("Saving PDF...");
-                downloadPDF(pdf, `chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`);
+                // Open Report Page
+                window.open(`/session/${sessionId}/report`, '_blank');
 
                 toast("Session completed and saved!", "success");
                 setStep("completed");
@@ -611,38 +578,9 @@ export default function GuestSession() {
                                 className="w-full flex items-center justify-center gap-2 h-12"
                                 onClick={() => {
                                     try {
-                                        const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || "";
-                                        const pdf = generateSessionPDF({
-                                            date: new Date().toLocaleDateString(),
-                                            practitionerName,
-                                            practitioner: activePractitioner ? {
-                                                name: activePractitioner.name,
-                                                role: activePractitioner.role,
-                                                clinicName: activePractitioner.clinicName,
-                                                phone: activePractitioner.phone,
-                                                email: activePractitioner.email,
-                                                website: activePractitioner.website,
-                                                address: activePractitioner.address
-                                            } : undefined,
-                                            userContact: {
-                                                name: user?.name || "Guest User",
-                                                email: user?.email,
-                                                phone: user?.phone,
-                                                address: user?.address
-                                            },
-                                            patientIntake: {
-                                                notes: intakeData?.notes,
-                                                bodyAreas: intakeData?.bodyMap,
-                                                bodyNotes: intakeData?.bodyNotes
-                                            },
-                                            notes,
-                                            bodyLog: bodyStatus,
-                                            treatmentNotes: treatmentNotes,
-                                            userSignature: intakeData?.userSignature,
-                                            signatureImage: signature,
-                                            recommendations: recommendations
-                                        });
-                                        downloadPDF(pdf, `chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`);
+                                        if (completedSessionId) {
+                                            window.open(`/session/${completedSessionId}/report`, '_blank');
+                                        }
                                     } catch (err) {
                                         console.error("Manual download failed:", err);
                                         alert("Failed to download PDF. Please try again or check console for details.");
@@ -668,26 +606,28 @@ export default function GuestSession() {
             </div>
 
             {/* Footer Action */}
-            {step !== "completed" && (
-                <div className="fixed bottom-0 left-0 right-0 p-6 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900">
-                    <div className="flex gap-4">
-                        {step === "sign" && (
-                            <Button variant="ghost" onClick={() => setStep("work")} className="flex-1">
-                                Back
+            {
+                step !== "completed" && (
+                    <div className="fixed bottom-0 left-0 right-0 p-6 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900">
+                        <div className="flex gap-4">
+                            {step === "sign" && (
+                                <Button variant="ghost" onClick={() => setStep("work")} className="flex-1">
+                                    Back
+                                </Button>
+                            )}
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                disabled={isSaving}
+                                className="flex-1 shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={handleFinish}
+                            >
+                                {step === "work" ? "Review & Sign" : (isSaving ? "Saving..." : "Complete Session")}
                             </Button>
-                        )}
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            disabled={isSaving}
-                            className="flex-1 shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={handleFinish}
-                        >
-                            {step === "work" ? "Review & Sign" : (isSaving ? "Saving..." : "Complete Session")}
-                        </Button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

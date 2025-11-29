@@ -29,7 +29,7 @@ export function BodyAreaCard({
         if (practitionerStatus === 'addressed') return "border-emerald-500/50";
         if (practitionerStatus === 'watch') return "border-blue-500/50";
         if (patientStatus === 'issue') return "border-red-500/50";
-        if (patientStatus === 'issue') return "border-red-500/50";
+
         return "border-zinc-200 dark:border-zinc-800";
     };
 

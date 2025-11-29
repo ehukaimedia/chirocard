@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { ArrowLeft, Calendar, User, Activity, FileText, CheckCircle } from "lucide-react";
+import { ArrowLeft, User, Activity, FileText, CheckCircle } from "lucide-react";
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
 
 export default function SessionDetails() {
@@ -33,16 +33,21 @@ export default function SessionDetails() {
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="w-6 h-6" />
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Session Details</h1>
-                    <p className="text-sm text-zinc-500">
-                        {new Date(session.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
+            <div className="flex items-center gap-4 mb-8 justify-between">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                        <ArrowLeft className="w-6 h-6" />
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Session Details</h1>
+                        <p className="text-sm text-zinc-500">
+                            {new Date(session.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                    </div>
                 </div>
+                <Button variant="outline" onClick={() => window.open(`/session/${id}/report`, '_blank')}>
+                    <FileText className="w-4 h-4 mr-2" /> Print Report
+                </Button>
             </div>
 
             <div className="space-y-6 max-w-2xl mx-auto">
@@ -85,8 +90,8 @@ export default function SessionDetails() {
                                     <div className="flex justify-between items-start mb-1">
                                         <h4 className="font-medium text-zinc-900 dark:text-zinc-100">{area.label}</h4>
                                         <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${area.status === 'issue'
-                                                ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                                             }`}>
                                             {area.status}
                                         </span>

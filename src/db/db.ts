@@ -48,6 +48,7 @@ export type Session = {
     practitionerClass: string;
     notes: string;
     signatureBase64: string | null;
+    userSignature?: string; // Patient signature
     recommendations?: Homework[]; // Snapshot of assigned homework
     bodyMap?: Record<string, 'normal' | 'issue' | 'addressed' | 'watch'>; // Snapshot of body status
     bodyNotes?: Record<string, string>; // User notes per body part
