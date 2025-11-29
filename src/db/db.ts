@@ -7,6 +7,10 @@ export type UserProfile = {
     pin: string | null;
     biometricEnabled: boolean;
     theme: 'dark' | 'light';
+    // Contact Info
+    email?: string;
+    phone?: string;
+    address?: string;
     // Bodywork Profile
     primaryComplaints: string[]; // e.g. "Lower Back Pain"
     contraindications: string[]; // e.g. "No deep tissue on calves"

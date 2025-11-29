@@ -16,6 +16,9 @@ export default function Profile() {
 
     const [formData, setFormData] = useState({
         name: "",
+        email: "",
+        phone: "",
+        address: "",
         primaryComplaints: "",
         contraindications: "",
         preferences: "",
@@ -34,6 +37,9 @@ export default function Profile() {
         if (user) {
             setFormData({
                 name: user.name || "",
+                email: user.email || "",
+                phone: user.phone || "",
+                address: user.address || "",
                 primaryComplaints: user.primaryComplaints?.join(", ") || "",
                 contraindications: user.contraindications?.join(", ") || "",
                 preferences: user.preferences?.join(", ") || "",
@@ -71,7 +77,10 @@ export default function Profile() {
                 mobilityStatus: formData.mobilityStatus.split(",").map(s => s.trim()).filter(Boolean),
                 pin: user?.pin || null,
                 biometricEnabled: user?.biometricEnabled || false,
-                theme: user?.theme || "dark"
+                theme: user?.theme || "dark",
+                email: formData.email,
+                phone: formData.phone,
+                address: formData.address
             });
             setIsEditing(false);
             toast("Profile updated successfully", "success");
@@ -122,6 +131,9 @@ import { type UserProfile } from "../db/db";
 
 interface FormData {
     name: string;
+    email: string;
+    phone: string;
+    address: string;
     primaryComplaints: string;
     contraindications: string;
     preferences: string;
@@ -176,6 +188,29 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => (
                     </div>
                 </div>
             </div>
+            {/* Contact Info */}
+            {(user?.email || user?.phone || user?.address) && (
+                <div className="mt-4 pt-4 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {user.email && (
+                        <div>
+                            <p className="text-zinc-500 text-xs uppercase">Email</p>
+                            <p className="text-zinc-300 text-sm truncate">{user.email}</p>
+                        </div>
+                    )}
+                    {user.phone && (
+                        <div>
+                            <p className="text-zinc-500 text-xs uppercase">Phone</p>
+                            <p className="text-zinc-300 text-sm">{user.phone}</p>
+                        </div>
+                    )}
+                    {user.address && (
+                        <div>
+                            <p className="text-zinc-500 text-xs uppercase">Address</p>
+                            <p className="text-zinc-300 text-sm truncate">{user.address}</p>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
 
         {/* Clinical & Safety Grid */}
@@ -323,7 +358,31 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             value={formData.name}
             onChange={e => setFormData((prev: FormData) => ({ ...prev, name: e.target.value }))}
             placeholder="Jane Doe"
-            className="bg-zinc-950 border-zinc-800"
+            className="bg-zinc-950 border-zinc-800 text-white"
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+            <Input
+                label="Email"
+                value={formData.email}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, email: e.target.value }))}
+                placeholder="jane@example.com"
+                className="bg-zinc-950 border-zinc-800 text-white"
+            />
+            <Input
+                label="Phone"
+                value={formData.phone}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, phone: e.target.value }))}
+                placeholder="(555) 123-4567"
+                className="bg-zinc-950 border-zinc-800 text-white"
+            />
+        </div>
+        <Input
+            label="Address"
+            value={formData.address}
+            onChange={e => setFormData((prev: FormData) => ({ ...prev, address: e.target.value }))}
+            placeholder="123 Wellness Way, Healing City, HC 90210"
+            className="bg-zinc-950 border-zinc-800 text-white"
         />
 
         <div className="grid grid-cols-2 gap-4">
@@ -332,14 +391,14 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 value={formData.height}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
                 placeholder="5'10"
-                className="bg-zinc-950 border-zinc-800"
+                className="bg-zinc-950 border-zinc-800 text-white"
             />
             <Input
                 label="Weight"
                 value={formData.weight}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
                 placeholder="165 lbs"
-                className="bg-zinc-950 border-zinc-800"
+                className="bg-zinc-950 border-zinc-800 text-white"
             />
         </div>
 
@@ -348,7 +407,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 <label className="text-sm font-medium text-zinc-400">Date of Birth</label>
                 <input
                     type="date"
-                    className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     value={formData.dateOfBirth}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
                 />
@@ -356,7 +415,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-400">Activity Level</label>
                 <select
-                    className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full h-10 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     value={formData.activityLevel}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, activityLevel: e.target.value }))}
                 >
@@ -372,7 +431,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             value={formData.occupation}
             onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
             placeholder="e.g. Desk Worker, Nurse, Construction"
-            className="bg-zinc-950 border-zinc-800"
+            className="bg-zinc-950 border-zinc-800 text-white"
         />
 
         <div className="space-y-2">
@@ -380,7 +439,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 Medical History (Surgeries, Accidents)
             </label>
             <textarea
-                className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 placeholder="e.g. ACL Reconstruction 2018, Car Accident 2020"
                 value={formData.medicalHistory}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, medicalHistory: e.target.value }))}
@@ -393,7 +452,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                     Medications
                 </label>
                 <textarea
-                    className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     placeholder="e.g. Blood Thinners"
                     value={formData.medications}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, medications: e.target.value }))}
@@ -404,7 +463,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                     Allergies
                 </label>
                 <textarea
-                    className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     placeholder="e.g. Latex, Nut Oils"
                     value={formData.allergies}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, allergies: e.target.value }))}
@@ -417,7 +476,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 Mobility & ROM Status
             </label>
             <textarea
-                className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full h-20 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 placeholder="e.g. Limited Right Shoulder Flexion, Tight Hamstrings"
                 value={formData.mobilityStatus}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, mobilityStatus: e.target.value }))}
@@ -429,7 +488,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 Primary Complaints (comma separated)
             </label>
             <textarea
-                className="w-full h-24 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full h-24 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 placeholder="e.g. Lower Back Pain, Sciatica, Neck Stiffness"
                 value={formData.primaryComplaints}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, primaryComplaints: e.target.value }))}
@@ -441,7 +500,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 Contraindications (What to avoid)
             </label>
             <textarea
-                className="w-full h-24 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full h-24 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 placeholder="e.g. No deep tissue on calves, Recent shoulder surgery"
                 value={formData.contraindications}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, contraindications: e.target.value }))}
@@ -453,7 +512,7 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 Preferences
             </label>
             <textarea
-                className="w-full h-24 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full h-24 rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 placeholder="e.g. Lighter pressure, Focus on neck, Scalp massage"
                 value={formData.preferences}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, preferences: e.target.value }))}

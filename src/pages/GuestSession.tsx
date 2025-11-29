@@ -10,7 +10,7 @@ import { Input } from "../components/ui/Input";
 import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { BodyAreaCard } from "../components/Practitioner/BodyAreaCard";
-import { generateSessionPDF } from "../utils/pdfGenerator";
+import { generateSessionPDF, downloadPDF } from "../utils/pdfGenerator";
 import { Lock, AlertTriangle, Info, Plus, Trash2, CheckCircle, FileText, Home } from "lucide-react";
 import { type Homework } from "../db/db";
 import { useToast } from "../components/ui/Toast";
@@ -92,6 +92,13 @@ export default function GuestSession() {
                 const pdf = generateSessionPDF({
                     date: new Date().toLocaleDateString(),
                     practitionerName,
+                    practitioner: activePractitioner || undefined,
+                    userContact: {
+                        name: user?.name || "Guest User",
+                        email: user?.email,
+                        phone: user?.phone,
+                        address: user?.address
+                    },
                     notes,
                     bodyLog: bodyStatus,
                     signatureImage: signature,
@@ -122,7 +129,7 @@ export default function GuestSession() {
 
                 // Download PDF
                 console.log("Saving PDF...");
-                pdf.save(`chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`);
+                downloadPDF(pdf, `chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`);
 
                 toast("Session completed and saved!", "success");
                 setStep("completed");
@@ -599,12 +606,19 @@ export default function GuestSession() {
                                         const pdf = generateSessionPDF({
                                             date: new Date().toLocaleDateString(),
                                             practitionerName,
+                                            practitioner: activePractitioner || undefined,
+                                            userContact: {
+                                                name: user?.name || "Guest User",
+                                                email: user?.email,
+                                                phone: user?.phone,
+                                                address: user?.address
+                                            },
                                             notes,
                                             bodyLog: bodyStatus,
                                             signatureImage: signature,
                                             recommendations: recommendations
                                         });
-                                        pdf.save(`chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`);
+                                        downloadPDF(pdf, `chirocard-session-${new Date().toISOString().split('T')[0]}.pdf`);
                                     } catch (err) {
                                         console.error("Manual download failed:", err);
                                         alert("Failed to download PDF. Please try again or check console for details.");
