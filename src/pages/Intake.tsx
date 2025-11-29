@@ -44,17 +44,8 @@ export default function Intake() {
 
         // Create new session
         const sessionId = crypto.randomUUID();
-        await db.sessions.add({
-            id: sessionId,
-            date: Date.now(),
-            practitionerId: selectedPractitioner.id,
-            practitionerName: selectedPractitioner.name,
-            practitionerClass: selectedPractitioner.role,
-            notes: "",
-            signatureBase64: signature,
-            isLocked: false,
-            createdAt: Date.now()
-        });
+        // Session is now only saved to DB upon completion in GuestSession.tsx
+
 
         // Pass full practitioner data including contact info for PDF
         startSession(sessionId, {

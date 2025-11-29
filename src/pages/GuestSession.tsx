@@ -26,7 +26,7 @@ export default function GuestSession() {
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
     const [bodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
     const [treatmentNotes, setTreatmentNotes] = useState<Record<string, string>>({});
-    const [notes, setNotes] = useState(intakeData?.notes || "");
+    const [notes, setNotes] = useState("");
     const [practitionerName, setPractitionerName] = useState(activePractitioner?.name || "");
 
     const [showExitModal, setShowExitModal] = useState(false);
@@ -86,11 +86,15 @@ export default function GuestSession() {
             try {
                 // Generate Signature
                 const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || "";
-                const sessionId = crypto.randomUUID();
+
+                // Use the active session ID from the store, or fallback to a new one if something went wrong
+                const { activeSessionId } = useAppStore.getState();
+                const sessionId = activeSessionId || crypto.randomUUID();
+
                 setCompletedSessionId(sessionId);
 
-                // Save to DB
-                await db.sessions.add({
+                // Save to DB (use put to create or update)
+                await db.sessions.put({
                     id: sessionId,
                     date: Date.now(),
                     practitionerId: activePractitioner?.id || "guest",
