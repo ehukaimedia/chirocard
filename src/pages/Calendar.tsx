@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Appointment, type Homework } from "../db/db";
+import { db, type Appointment, type Homework, type Practitioner } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ChevronLeft, CheckCircle, Plus, Trash2, Edit2, Clock, Download } from "lucide-react";
+import { ChevronLeft, CheckCircle, Plus, Trash2, Edit2, Clock, MapPin, Phone, Mail, Globe, Building2 } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
 import { PractitionerManager } from "../components/Practitioner/PractitionerManager";
 import CalendarComponent from 'react-calendar';
@@ -42,6 +42,13 @@ export default function Calendar() {
     const [editTime, setEditTime] = useState("");
     const [editFreq, setEditFreq] = useState("");
     const [editCategory, setEditCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
+
+    // Edit Appointment State
+    const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
+    const [editApptDate, setEditApptDate] = useState("");
+    const [editApptTime, setEditApptTime] = useState("");
+    const [editApptPractitioner, setEditApptPractitioner] = useState<{ id: string, name: string } | null>(null);
+    const [practitionerDetails, setPractitionerDetails] = useState<Practitioner | null>(null);
 
     // Filter items for selected date
     const selectedDateStr = date instanceof Date ? date.toDateString() : "";
@@ -138,33 +145,53 @@ export default function Calendar() {
         setEditingHomework(null);
     };
 
-    const downloadICS = (appt: Appointment) => {
-        const dateObj = new Date(appt.date);
-        const endDateObj = new Date(appt.date + 60 * 60 * 1000); // Assume 1 hour duration
+    const handleApptClick = async (appt: Appointment) => {
+        setEditingAppt(appt);
+        const d = new Date(appt.date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        setEditApptDate(`${year}-${month}-${day}`);
 
-        const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, "");
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        setEditApptTime(`${hours}:${minutes}`);
 
-        const icsContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//ChiroCard//BodyWork Passport//EN
-BEGIN:VEVENT
-UID:${appt.id}
-DTSTAMP:${formatDate(new Date())}
-DTSTART:${formatDate(dateObj)}
-DTEND:${formatDate(endDateObj)}
-SUMMARY:Appointment with ${appt.practitionerName}
-DESCRIPTION:Bodywork session via ChiroCard.
-END:VEVENT
-END:VCALENDAR`;
+        setEditApptPractitioner({ id: appt.practitionerId, name: appt.practitionerName });
 
-        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `appointment-${appt.practitionerName}.ics`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Fetch full practitioner details
+        const practitioner = await db.practitioners.get(appt.practitionerId);
+        setPractitionerDetails(practitioner || null);
+    };
+
+    const handleSaveApptEdit = async () => {
+        if (!editingAppt || !editApptPractitioner || !editApptDate || !editApptTime) return;
+
+        const dateObj = new Date(`${editApptDate}T${editApptTime}`);
+
+        await db.appointments.update(editingAppt.id, {
+            practitionerId: editApptPractitioner.id,
+            practitionerName: editApptPractitioner.name,
+            date: dateObj.getTime()
+        });
+
+        // Update local details if practitioner changed
+        if (editApptPractitioner.id !== practitionerDetails?.id) {
+            const practitioner = await db.practitioners.get(editApptPractitioner.id);
+            setPractitionerDetails(practitioner || null);
+        }
+
+        setEditingAppt(null);
+        setPractitionerDetails(null);
+    };
+
+    const handleDeleteApptFromModal = async () => {
+        if (!editingAppt) return;
+        if (confirm("Delete this appointment?")) {
+            await db.appointments.delete(editingAppt.id);
+            setEditingAppt(null);
+            setPractitionerDetails(null);
+        }
     };
 
     // Calendar Tile Content
@@ -267,7 +294,11 @@ END:VCALENDAR`;
                         */}
                         {dayAppointments.length > 0 ? (
                             dayAppointments.map((appt: Appointment) => (
-                                <Card key={appt.id} className="p-4 flex justify-between items-center">
+                                <Card
+                                    key={appt.id}
+                                    className="p-4 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-colors"
+                                    onClick={() => handleApptClick(appt)}
+                                >
                                     <div>
                                         <p className="font-medium text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
                                         <p className="text-sm text-zinc-500">
@@ -276,13 +307,9 @@ END:VCALENDAR`;
                                     </div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => downloadICS(appt)}
-                                            className="text-zinc-400 hover:text-blue-500 p-2"
-                                            title="Add to Calendar"
+                                            onClick={(e) => { e.stopPropagation(); deleteItem('appointment', appt.id); }}
+                                            className="text-zinc-400 hover:text-red-500 p-2"
                                         >
-                                            <Download className="w-4 h-4" />
-                                        </button>
-                                        <button onClick={() => deleteItem('appointment', appt.id)} className="text-zinc-400 hover:text-red-500 p-2">
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
@@ -502,6 +529,108 @@ END:VCALENDAR`;
                                 <option value="custom">Custom</option>
                             </select>
                         </div>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Edit Appointment Modal */}
+            <Modal
+                isOpen={!!editingAppt}
+                onClose={() => { setEditingAppt(null); setPractitionerDetails(null); }}
+                title="Appointment Details"
+                description="View and manage your appointment."
+                confirmLabel="Save Changes"
+                cancelLabel="Cancel"
+                onConfirm={handleSaveApptEdit}
+            >
+                <div className="space-y-6 py-2">
+                    {/* Practitioner Details Card */}
+                    {practitionerDetails && (
+                        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-4 space-y-3 border border-zinc-100 dark:border-zinc-800">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                    <Building2 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-zinc-900 dark:text-zinc-100">
+                                        {practitionerDetails.clinicName || practitionerDetails.name}
+                                    </h4>
+                                    <p className="text-xs text-zinc-500">{practitionerDetails.role}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                {practitionerDetails.address && (
+                                    <a
+                                        href={`https://maps.google.com/?q=${encodeURIComponent(practitionerDetails.address)}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-blue-500 transition-colors"
+                                    >
+                                        <MapPin className="w-4 h-4 shrink-0" />
+                                        <span className="truncate">{practitionerDetails.address}</span>
+                                    </a>
+                                )}
+                                {practitionerDetails.phone && (
+                                    <a
+                                        href={`tel:${practitionerDetails.phone}`}
+                                        className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-blue-500 transition-colors"
+                                    >
+                                        <Phone className="w-4 h-4 shrink-0" />
+                                        <span>{practitionerDetails.phone}</span>
+                                    </a>
+                                )}
+                                {practitionerDetails.email && (
+                                    <a
+                                        href={`mailto:${practitionerDetails.email}`}
+                                        className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-blue-500 transition-colors"
+                                    >
+                                        <Mail className="w-4 h-4 shrink-0" />
+                                        <span>{practitionerDetails.email}</span>
+                                    </a>
+                                )}
+                                {practitionerDetails.website && (
+                                    <a
+                                        href={practitionerDetails.website.startsWith('http') ? practitionerDetails.website : `https://${practitionerDetails.website}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-blue-500 transition-colors"
+                                    >
+                                        <Globe className="w-4 h-4 shrink-0" />
+                                        <span className="truncate">{practitionerDetails.website}</span>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Edit Details</h4>
+                        {!editApptPractitioner ? (
+                            <div className="space-y-2">
+                                <label className="text-xs text-zinc-500">Select Practitioner</label>
+                                <PractitionerManager onSelect={(p) => setEditApptPractitioner({ id: p.id, name: p.name })} />
+                            </div>
+                        ) : (
+                            <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
+                                <span className="text-sm font-medium">{editApptPractitioner.name}</span>
+                                <Button size="sm" variant="ghost" onClick={() => setEditApptPractitioner(null)}>Change</Button>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                            <Input type="date" value={editApptDate} onChange={e => setEditApptDate(e.target.value)} />
+                            <Input type="time" value={editApptTime} onChange={e => setEditApptTime(e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <Button
+                            variant="ghost"
+                            className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            onClick={handleDeleteApptFromModal}
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete Appointment
+                        </Button>
                     </div>
                 </div>
             </Modal>
