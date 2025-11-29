@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
-import { Info, AlertTriangle } from "lucide-react";
+import { Info, AlertTriangle, Share2 } from "lucide-react";
 
 export default function SessionReport() {
     const { id } = useParams();
@@ -28,18 +28,61 @@ export default function SessionReport() {
             }))
         : [];
 
+    const handleShare = async () => {
+        const date = new Date(session.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+        const text = `
+ChiroCard Session Report
+Date: ${date}
+Practitioner: ${session.practitionerName}
+Client: ${user?.name || "Guest"}
+
+Treated Areas:
+${treatedAreas.map(a => `- ${a.label} (${a.status})`).join('\n')}
+
+${session.recommendations?.length ? `Recommendations:\n${session.recommendations.map(r => `- ${r.title}: ${r.frequency}`).join('\n')}` : ''}
+        `.trim();
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'ChiroCard Session Report',
+                    text: text,
+                });
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        } else {
+            // Fallback to clipboard
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('Session summary copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white text-zinc-900 p-8 max-w-[210mm] mx-auto print:p-0 print:max-w-none">
             {/* Print Controls - Hidden when printing */}
             <div className="mb-8 flex justify-between items-center print:hidden">
                 <h1 className="text-2xl font-bold">Session Report Preview</h1>
-                <button
-                    onClick={() => window.print()}
-                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                    Print / Save as PDF
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleShare}
+                        className="bg-zinc-100 text-zinc-700 px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors font-medium flex items-center gap-2"
+                    >
+                        <Share2 className="w-4 h-4" />
+                        Share
+                    </button>
+                    <button
+                        onClick={() => window.print()}
+                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Print / Save as PDF
+                    </button>
+                </div>
             </div>
 
             {/* Report Content */}
