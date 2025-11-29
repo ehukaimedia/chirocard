@@ -10,8 +10,14 @@ interface BodyAreaCardProps {
     patientNote?: string;
     practitionerStatus: BodyStatus;
     practitionerNote: string;
+    practitionerLevel?: number;
+    practitionerBadges?: string[];
+    patientLevel?: number;
+    patientBadges?: string[];
     onStatusChange: (status: BodyStatus) => void;
     onNoteChange: (note: string) => void;
+    onLevelChange: (level: number) => void;
+    onBadgesChange: (badges: string[]) => void;
 }
 
 export function BodyAreaCard({
@@ -20,8 +26,14 @@ export function BodyAreaCard({
     patientNote,
     practitionerStatus,
     practitionerNote,
+    practitionerLevel,
+    practitionerBadges,
+    patientLevel,
+    patientBadges,
     onStatusChange,
-    onNoteChange
+    onNoteChange,
+    onLevelChange,
+    onBadgesChange
 }: BodyAreaCardProps) {
 
     // Helper to determine card border color based on status
@@ -41,9 +53,25 @@ export function BodyAreaCard({
                     <div>
                         <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{regionLabel}</h3>
                         {patientStatus === 'issue' && (
-                            <span className="text-xs font-medium text-red-400 flex items-center gap-1 mt-1">
-                                <User className="w-3 h-3" /> Patient Flagged
-                            </span>
+                            <div className="mt-1 space-y-1">
+                                <span className="text-xs font-medium text-red-400 flex items-center gap-1">
+                                    <User className="w-3 h-3" /> Patient Flagged
+                                </span>
+                                {(patientLevel !== undefined || (patientBadges && patientBadges.length > 0)) && (
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        {patientLevel !== undefined && (
+                                            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                                                Pain Level: {patientLevel}/10
+                                            </span>
+                                        )}
+                                        {patientBadges?.map(badge => (
+                                            <span key={badge} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                {badge}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
 
@@ -97,10 +125,60 @@ export function BodyAreaCard({
                 )}
 
                 {/* Practitioner Note Input */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                     <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                        <MessageSquare className="w-3 h-3" /> Treatment Notes
+                        <MessageSquare className="w-3 h-3" /> Clinical Assessment
                     </label>
+
+                    {/* Practitioner Assessment Controls (Visible when Treated or Watch) */}
+                    {(practitionerStatus === 'addressed' || practitionerStatus === 'watch') && (
+                        <div className="bg-zinc-50 dark:bg-zinc-950 rounded-lg p-3 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                            {/* Level Slider */}
+                            <div>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-xs text-zinc-500">Assessment Level</span>
+                                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">{practitionerLevel || 0}/10</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="10"
+                                    step="1"
+                                    value={practitionerLevel || 0}
+                                    onChange={(e) => onLevelChange(parseInt(e.target.value))}
+                                    className="w-full h-1.5 bg-zinc-200 rounded-lg appearance-none cursor-pointer dark:bg-zinc-800 accent-emerald-500"
+                                />
+                            </div>
+
+                            {/* Clinical Badges */}
+                            <div>
+                                <span className="text-xs text-zinc-500 block mb-2">Findings</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {["Hypertonic", "Subluxation", "Inflamed", "Trigger Point", "Spasm", "Restricted", "Weak", "Stable"].map(badge => {
+                                        const isSelected = (practitionerBadges || []).includes(badge);
+                                        return (
+                                            <button
+                                                key={badge}
+                                                onClick={() => {
+                                                    const current = practitionerBadges || [];
+                                                    onBadgesChange(isSelected ? current.filter(b => b !== badge) : [...current, badge]);
+                                                }}
+                                                className={cn(
+                                                    "text-[10px] px-2 py-1 rounded-full border transition-all",
+                                                    isSelected
+                                                        ? "bg-emerald-500 text-white border-emerald-600"
+                                                        : "bg-white dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50"
+                                                )}
+                                            >
+                                                {badge}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <textarea
                         value={practitionerNote}
                         onChange={(e) => onNoteChange(e.target.value)}

@@ -16,6 +16,8 @@ export default function Intake() {
     // Initialize with existing data if returning from session
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
     const [bodyNotes, setBodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
+    const [bodyLevels, setBodyLevels] = useState<Record<string, number>>(intakeData?.bodyLevels || {});
+    const [bodyBadges, setBodyBadges] = useState<Record<string, string[]>>(intakeData?.bodyBadges || {});
     const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(
         activePractitioner ? { ...activePractitioner } as Practitioner : null
     );
@@ -60,6 +62,8 @@ export default function Intake() {
         }, {
             bodyMap: bodyStatus,
             bodyNotes: bodyNotes,
+            bodyLevels: bodyLevels,
+            bodyBadges: bodyBadges,
             notes: notes,
             userSignature: signature || undefined
         });
@@ -141,11 +145,64 @@ export default function Intake() {
                                             const region = REGIONS.find(r => r.id === partId);
                                             if (!region) return null;
                                             return (
-                                                <div key={partId} className="space-y-2">
-                                                    <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
-                                                        <span className={`w-2 h-2 rounded-full ${status === 'issue' ? 'bg-red-500' : 'bg-blue-500'}`} />
-                                                        {region.label}
-                                                    </label>
+                                                <div key={partId} className="space-y-3 bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
+                                                            <span className={`w-2 h-2 rounded-full ${status === 'issue' ? 'bg-red-500' : 'bg-blue-500'}`} />
+                                                            {region.label}
+                                                        </label>
+                                                        <span className="text-xs font-bold text-zinc-500">
+                                                            Pain Level: {bodyLevels[partId] || 0}/10
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Intensity Slider */}
+                                                    <div className="px-2">
+                                                        <input
+                                                            type="range"
+                                                            min="0"
+                                                            max="10"
+                                                            step="1"
+                                                            value={bodyLevels[partId] || 0}
+                                                            onChange={(e) => setBodyLevels(prev => ({ ...prev, [partId]: parseInt(e.target.value) }))}
+                                                            className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer dark:bg-zinc-700 accent-emerald-500"
+                                                        />
+                                                        <div className="flex justify-between text-[10px] text-zinc-400 mt-1">
+                                                            <span>None</span>
+                                                            <span>Moderate</span>
+                                                            <span>Severe</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Badges */}
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {["Pain", "Stiffness", "Numbness", "Tingling", "Weakness", "Spasm", "Limited ROM", "Swelling"].map(badge => {
+                                                            const isSelected = (bodyBadges[partId] || []).includes(badge);
+                                                            return (
+                                                                <button
+                                                                    key={badge}
+                                                                    onClick={() => {
+                                                                        setBodyBadges(prev => {
+                                                                            const current = prev[partId] || [];
+                                                                            return {
+                                                                                ...prev,
+                                                                                [partId]: isSelected
+                                                                                    ? current.filter(b => b !== badge)
+                                                                                    : [...current, badge]
+                                                                            };
+                                                                        });
+                                                                    }}
+                                                                    className={`text-xs px-2.5 py-1 rounded-full border transition-all ${isSelected
+                                                                        ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
+                                                                        : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/50'
+                                                                        }`}
+                                                                >
+                                                                    {badge}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
                                                     <input
                                                         type="text"
                                                         value={bodyNotes[partId] || ""}
@@ -213,6 +270,18 @@ export default function Intake() {
                                                                         {status}
                                                                     </span>
                                                                 </div>
+                                                                {(bodyLevels[partId] !== undefined || (bodyBadges[partId] && bodyBadges[partId].length > 0)) && (
+                                                                    <div className="flex flex-wrap gap-2 mt-1 mb-1">
+                                                                        {bodyLevels[partId] !== undefined && (
+                                                                            <span className="text-xs font-bold text-zinc-500">Pain Level: {bodyLevels[partId]}/10</span>
+                                                                        )}
+                                                                        {bodyBadges[partId]?.map(badge => (
+                                                                            <span key={badge} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                                                {badge}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
                                                                 {note && <p className="text-sm text-zinc-400 mt-1">{note}</p>}
                                                             </div>
                                                         </div>

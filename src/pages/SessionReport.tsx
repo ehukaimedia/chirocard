@@ -24,7 +24,11 @@ export default function SessionReport() {
             .map(([id, status]) => ({
                 label: REGIONS.find(r => r.id === id)?.label || id,
                 status,
-                notes: session.treatmentNotes?.[id] || session.bodyNotes?.[id]
+                notes: session.treatmentNotes?.[id] || session.bodyNotes?.[id],
+                level: session.bodyLevels?.[id],
+                badges: session.bodyBadges?.[id],
+                practitionerLevel: session.practitionerLevels?.[id],
+                practitionerBadges: session.practitionerBadges?.[id]
             }))
         : [];
 
@@ -145,7 +149,21 @@ export default function SessionReport() {
                             {treatedAreas.map((area, i) => (
                                 <div key={i} className="bg-white border border-zinc-200 rounded-lg p-3 break-inside-avoid">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-zinc-900">{area.label}</h3>
+                                        <div>
+                                            <h3 className="font-bold text-zinc-900">{area.label}</h3>
+                                            {(area.level !== undefined || (area.badges && area.badges.length > 0)) && (
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {area.level !== undefined && (
+                                                        <span className="text-xs font-bold text-zinc-500">Pain Level: {area.level}/10</span>
+                                                    )}
+                                                    {area.badges?.map(badge => (
+                                                        <span key={badge} className="text-[10px] bg-zinc-100 text-zinc-600 px-1.5 py-0.5 rounded border border-zinc-200">
+                                                            {badge}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                         <span className={`text-xs px-2 py-1 rounded font-medium uppercase tracking-wide ${area.status === 'issue' ? 'bg-red-50 text-red-700 border border-red-100' :
                                             area.status === 'addressed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                                                 'bg-blue-50 text-blue-700 border border-blue-100'
@@ -154,7 +172,24 @@ export default function SessionReport() {
                                         </span>
                                     </div>
                                     {area.notes && (
-                                        <p className="text-sm text-zinc-600 italic">"{area.notes}"</p>
+                                        <p className="text-sm text-zinc-600 italic mb-2">"{area.notes}"</p>
+                                    )}
+
+                                    {/* Practitioner Assessment in Report */}
+                                    {(area.practitionerLevel !== undefined || (area.practitionerBadges && area.practitionerBadges.length > 0)) && (
+                                        <div className="mt-2 pt-2 border-t border-zinc-100">
+                                            <p className="text-[10px] uppercase text-emerald-600 font-bold mb-1">Clinical Findings</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {area.practitionerLevel !== undefined && (
+                                                    <span className="text-xs font-bold text-zinc-500">Level: {area.practitionerLevel}/10</span>
+                                                )}
+                                                {area.practitionerBadges?.map(badge => (
+                                                    <span key={badge} className="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-100">
+                                                        {badge}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             ))}

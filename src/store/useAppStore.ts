@@ -25,6 +25,8 @@ interface AppState {
     intakeData: {
         bodyMap: Record<string, BodyStatus>;
         bodyNotes: Record<string, string>;
+        bodyLevels: Record<string, number>;
+        bodyBadges: Record<string, string[]>;
         notes: string;
         userSignature?: string; // User's signature from intake
     } | null;
@@ -32,8 +34,8 @@ interface AppState {
     // Actions
     setMode: (mode: AppMode) => void;
     setTheme: (theme: 'dark' | 'light') => void;
-    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string; userSignature?: string }) => void;
-    updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string }) => void;
+    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }) => void;
+    updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string }) => void;
     endSession: () => void;
     toggleTheme: () => void;
 }

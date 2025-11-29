@@ -57,7 +57,11 @@ export type Session = {
     recommendations?: Homework[]; // Snapshot of assigned homework
     bodyMap?: Record<string, 'normal' | 'issue' | 'addressed' | 'watch'>; // Snapshot of body status
     bodyNotes?: Record<string, string>; // User notes per body part
+    bodyLevels?: Record<string, number>; // User pain/discomfort level (0-10)
+    bodyBadges?: Record<string, string[]>; // User selected badges (e.g. "Pain", "Stiffness")
     treatmentNotes?: Record<string, string>; // Practitioner notes per body part
+    practitionerLevels?: Record<string, number>; // Practitioner assessment level (0-10)
+    practitionerBadges?: Record<string, string[]>; // Practitioner findings (e.g. "Hypertonic", "Subluxation")
     isLocked: boolean;
     createdAt: number;
 };

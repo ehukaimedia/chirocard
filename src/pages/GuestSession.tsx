@@ -25,7 +25,11 @@ export default function GuestSession() {
     // Initialize with data from Intake if available
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
     const [bodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
+    const [bodyLevels] = useState<Record<string, number>>(intakeData?.bodyLevels || {});
+    const [bodyBadges] = useState<Record<string, string[]>>(intakeData?.bodyBadges || {});
     const [treatmentNotes, setTreatmentNotes] = useState<Record<string, string>>({});
+    const [practitionerLevels, setPractitionerLevels] = useState<Record<string, number>>({});
+    const [practitionerBadges, setPractitionerBadges] = useState<Record<string, string[]>>({});
     const [notes, setNotes] = useState("");
     const [practitionerName, setPractitionerName] = useState(activePractitioner?.name || "");
 
@@ -40,6 +44,8 @@ export default function GuestSession() {
         updateIntakeData({
             bodyMap: bodyStatus,
             bodyNotes: bodyNotes,
+            bodyLevels: bodyLevels,
+            bodyBadges: bodyBadges,
             notes: notes
         });
         navigate("/intake");
@@ -104,7 +110,11 @@ export default function GuestSession() {
                     recommendations, // Save snapshot
                     bodyMap: bodyStatus, // Save snapshot of body status
                     bodyNotes: bodyNotes, // Save user notes
+                    bodyLevels: bodyLevels, // Save user levels
+                    bodyBadges: bodyBadges, // Save user badges
                     treatmentNotes: treatmentNotes, // Save practitioner notes
+                    practitionerLevels: practitionerLevels, // Save practitioner levels
+                    practitionerBadges: practitionerBadges, // Save practitioner badges
                     signatureBase64: signature,
                     userSignature: intakeData?.userSignature, // Save patient signature
                     isLocked: true,
@@ -247,8 +257,14 @@ export default function GuestSession() {
                                                 patientNote={intakeData?.bodyNotes?.[partId]}
                                                 practitionerStatus={status}
                                                 practitionerNote={treatmentNotes[partId] || ""}
+                                                practitionerLevel={practitionerLevels[partId]}
+                                                practitionerBadges={practitionerBadges[partId]}
+                                                patientLevel={bodyLevels[partId]}
+                                                patientBadges={bodyBadges[partId]}
                                                 onStatusChange={(newStatus) => setBodyStatus(prev => ({ ...prev, [partId]: newStatus }))}
                                                 onNoteChange={(note) => setTreatmentNotes(prev => ({ ...prev, [partId]: note }))}
+                                                onLevelChange={(level) => setPractitionerLevels(prev => ({ ...prev, [partId]: level }))}
+                                                onBadgesChange={(badges) => setPractitionerBadges(prev => ({ ...prev, [partId]: badges }))}
                                             />
                                         );
                                     })}
@@ -382,14 +398,13 @@ export default function GuestSession() {
                                             <option value="Once">Once</option>
                                         </select>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Input
-                                            placeholder="Details (e.g. 20 mins)"
+                                    <div>
+                                        <textarea
+                                            placeholder="Details (e.g. 20 mins, specific instructions...)"
                                             value={newRecDesc}
                                             onChange={(e) => setNewRecDesc(e.target.value)}
-                                            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100"
+                                            className="w-full min-h-[80px] bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"
                                         />
-
                                     </div>
                                     <div className="flex justify-end">
                                         <Button size="sm" onClick={handleAddRec} disabled={!newRecTitle}>
@@ -490,7 +505,34 @@ export default function GuestSession() {
                                                                         {status}
                                                                     </span>
                                                                 </div>
+                                                                {(bodyLevels[partId] !== undefined || (bodyBadges[partId] && bodyBadges[partId].length > 0)) && (
+                                                                    <div className="flex flex-wrap gap-2 mt-1 mb-1">
+                                                                        {bodyLevels[partId] !== undefined && (
+                                                                            <span className="text-xs font-bold text-zinc-500">Pain Level: {bodyLevels[partId]}/10</span>
+                                                                        )}
+                                                                        {bodyBadges[partId]?.map(badge => (
+                                                                            <span key={badge} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                                                {badge}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
                                                                 {note && <p className="text-sm text-zinc-400 mt-1">{note}</p>}
+                                                                {(practitionerLevels[partId] !== undefined || (practitionerBadges[partId] && practitionerBadges[partId].length > 0)) && (
+                                                                    <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                                                        <p className="text-[10px] uppercase text-emerald-500 font-bold mb-1">Clinical Assessment</p>
+                                                                        <div className="flex flex-wrap gap-2">
+                                                                            {practitionerLevels[partId] !== undefined && (
+                                                                                <span className="text-xs font-bold text-zinc-500">Level: {practitionerLevels[partId]}/10</span>
+                                                                            )}
+                                                                            {practitionerBadges[partId]?.map(badge => (
+                                                                                <span key={badge} className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                                                                    {badge}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     );
