@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 23 125 79;
+    /* #177D4F */
+    --color-secondary: 138 171 53;
+    /* #8AAB35 */
+  }
+
+  body {
+    @apply font-sans antialiased transition-colors duration-300 bg-zinc-950 text-zinc-100;
+  }
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-300 dark:bg-zinc-700 rounded-full;
+}
