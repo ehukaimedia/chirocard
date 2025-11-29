@@ -6,7 +6,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer } from "lucide-react";
-import { DataManagement } from "../components/Profile/DataManagement";
+
 import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
 
@@ -468,7 +468,7 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
             </div>
 
             {/* Data Management */}
-            <DataManagement />
+
         </div>
     );
 }

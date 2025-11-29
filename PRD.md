@@ -71,6 +71,11 @@
 *   **User Details:** Name, biometrics, and preferences.
 *   **Practitioner List:** Manage saved practitioners.
 
+### 6.7. Settings & Data Management
+*   **Dedicated Settings Page:** Central location for app configuration.
+*   **Data Backup & Restore:** Export full database to JSON and restore from backup.
+*   **Persistent Storage Request:** Automatically requests browser persistence to prevent data eviction.
+
 ## 7. Mobile Deployment Strategy
 **Framework:** [Capacitor](https://capacitorjs.com/)
 **Goal:** Wrap the existing React web application into native iOS and Android apps.

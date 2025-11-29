@@ -9,6 +9,7 @@ import History from "./pages/History";
 import GuestSession from "./pages/GuestSession";
 import SessionDetails from "./pages/SessionDetails";
 import SessionReport from "./pages/SessionReport";
+import Settings from "./pages/Settings";
 import { useAppStore } from "./store/useAppStore";
 
 function ProtectedGuestRoute({ children }: { children: React.ReactElement }) {
@@ -20,9 +21,11 @@ function ProtectedGuestRoute({ children }: { children: React.ReactElement }) {
 }
 
 import { useReminders } from "./hooks/useReminders";
+import { usePersistence } from "./hooks/usePersistence";
 
 function App() {
   useReminders();
+  usePersistence();
   return (
     <BrowserRouter>
       <Routes>
@@ -30,6 +33,7 @@ function App() {
         <Route path="/intake" element={<Intake />} />
         <Route path="/team" element={<Team />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/history" element={<History />} />
         <Route path="/session/:id" element={<SessionDetails />} />

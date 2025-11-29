@@ -5,7 +5,7 @@ import { db, type Homework, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
-import { Plus, History, Calendar as CalendarIcon, User, Info, ShieldCheck, Users } from "lucide-react";
+import { Plus, History, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 
 export default function Dashboard() {
@@ -57,8 +57,13 @@ export default function Dashboard() {
                         </Button>
                     </Link>
                     <Link to="/profile">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100">
+                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Profile">
                             <User className="w-5 h-5" />
+                        </Button>
+                    </Link>
+                    <Link to="/settings">
+                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Settings">
+                            <Settings className="w-5 h-5" />
                         </Button>
                     </Link>
                 </div>
