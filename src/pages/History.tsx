@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Session } from "../db/db";
-import { Button } from "../components/ui/Button";
+
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { Modal } from "../components/ui/Modal";
-import { ArrowLeft, History as HistoryIcon, Search } from "lucide-react";
+import { ChevronLeft, History as HistoryIcon, Search } from "lucide-react";
 import { Input } from "../components/ui/Input";
 
 export default function History() {
@@ -35,20 +35,26 @@ export default function History() {
 
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="w-6 h-6" />
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                        <HistoryIcon className="w-6 h-6" />
-                        Session History
-                    </h1>
-                    <p className="text-sm text-zinc-500">
-                        Your complete record of body work sessions.
-                    </p>
-                </div>
+            {/* Top Navigation Bar */}
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
+                <button
+                    onClick={() => navigate("/")}
+                    className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium text-sm flex items-center gap-2 transition-colors"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                    Return to Dashboard
+                </button>
+            </nav>
+
+            {/* Header Content */}
+            <div className="mt-16 mb-8 pt-6">
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <HistoryIcon className="w-6 h-6" />
+                    Session History
+                </h1>
+                <p className="text-sm text-zinc-500 mt-1">
+                    Your complete record of body work sessions.
+                </p>
             </div>
 
             {/* Search */}

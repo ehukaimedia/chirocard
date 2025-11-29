@@ -10,7 +10,8 @@ import { Input } from "../components/ui/Input";
 import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { BodyAreaCard } from "../components/Practitioner/BodyAreaCard";
-import { Lock, AlertTriangle, Info, Plus, Trash2, CheckCircle, FileText, Home } from "lucide-react";
+import { Hand, AlertTriangle, Info, Plus, Trash2, CheckCircle, FileText, Home } from "lucide-react";
+
 import { type Homework } from "../db/db";
 import { useToast } from "../components/ui/Toast";
 
@@ -111,8 +112,8 @@ export default function GuestSession() {
                     await db.homework.bulkAdd(recommendations);
                 }
 
-                // Open Report Page
-                window.open(`/session/${sessionId}/report`, '_blank');
+                // Open Report Page - REMOVED
+                // window.open(`/session/${sessionId}/report`, '_blank');
 
                 toast("Session completed and saved!", "success");
                 setStep("completed");
@@ -134,16 +135,16 @@ export default function GuestSession() {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 p-4 pb-24">
-            {/* Locked Header */}
+            {/* Practitioner Header */}
             <header className="flex justify-between items-center mb-6 p-4 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-lg">
                 <div className="flex items-center gap-2 text-emerald-500">
-                    <Lock className="w-5 h-5" />
+                    <Hand className="w-5 h-5" />
                     <span className="font-mono text-sm uppercase tracking-widest">
                         Practitioner Mode: {activePractitioner?.name || "Practitioner"}
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="text-xs text-zinc-500">App Locked</div>
+                    {/* App Locked text removed */}
                     <Button
                         variant="ghost"
                         size="sm"
@@ -440,10 +441,8 @@ export default function GuestSession() {
 
                         {/* Digital Document Preview */}
                         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
-                            {/* Watermark/Background decoration */}
-                            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                                <Info className="w-32 h-32" />
-                            </div>
+                            {/* Watermark/Background decoration - REMOVED */}
+
 
                             {/* Header */}
                             <div className="border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
@@ -577,17 +576,12 @@ export default function GuestSession() {
                                 variant="outline"
                                 className="w-full flex items-center justify-center gap-2 h-12"
                                 onClick={() => {
-                                    try {
-                                        if (completedSessionId) {
-                                            window.open(`/session/${completedSessionId}/report`, '_blank');
-                                        }
-                                    } catch (err) {
-                                        console.error("Manual download failed:", err);
-                                        alert("Failed to download PDF. Please try again or check console for details.");
+                                    if (completedSessionId) {
+                                        navigate(`/session/${completedSessionId}/report`);
                                     }
                                 }}
                             >
-                                <FileText className="w-4 h-4" /> Download PDF Again
+                                <FileText className="w-4 h-4" /> Download PDF
                             </Button>
 
                             <Button
