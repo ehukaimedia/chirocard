@@ -5,8 +5,9 @@ import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity } from "lucide-react";
+import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
+import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
 
 export default function Profile() {
@@ -19,18 +20,23 @@ export default function Profile() {
         email: "",
         phone: "",
         address: "",
-        primaryComplaints: "",
-        contraindications: "",
-        preferences: "",
+        primaryComplaints: [] as string[],
+        contraindications: [] as string[],
+        preferences: [] as string[],
         height: "",
         weight: "",
         dateOfBirth: "",
         occupation: "",
         activityLevel: "Moderate",
-        medicalHistory: "",
-        medications: "",
-        allergies: "",
-        mobilityStatus: ""
+        medicalHistory: [] as string[],
+        medications: [] as string[],
+        allergies: [] as string[],
+        mobilityStatus: [] as string[],
+        physicalActivities: [] as string[],
+        diet: [] as string[],
+        supplements: [] as string[],
+        hydration: "",
+        insurance: ""
     });
 
     useEffect(() => {
@@ -40,18 +46,23 @@ export default function Profile() {
                 email: user.email || "",
                 phone: user.phone || "",
                 address: user.address || "",
-                primaryComplaints: user.primaryComplaints?.join(", ") || "",
-                contraindications: user.contraindications?.join(", ") || "",
-                preferences: user.preferences?.join(", ") || "",
+                primaryComplaints: user.primaryComplaints || [],
+                contraindications: user.contraindications || [],
+                preferences: user.preferences || [],
                 height: user.height || "",
                 weight: user.weight || "",
                 dateOfBirth: user.dateOfBirth || "",
                 occupation: user.occupation || "",
                 activityLevel: user.activityLevel || "Moderate",
-                medicalHistory: user.medicalHistory?.join(", ") || "",
-                medications: user.medications?.join(", ") || "",
-                allergies: user.allergies?.join(", ") || "",
-                mobilityStatus: user.mobilityStatus?.join(", ") || ""
+                medicalHistory: user.medicalHistory || [],
+                medications: user.medications || [],
+                allergies: user.allergies || [],
+                mobilityStatus: user.mobilityStatus || [],
+                physicalActivities: user.physicalActivities || [],
+                diet: user.diet || [],
+                supplements: user.supplements || [],
+                hydration: user.hydration || "",
+                insurance: user.insurance || ""
             });
         }
     }, [user]);
@@ -63,18 +74,23 @@ export default function Profile() {
             await db.users.put({
                 id: "me",
                 name: formData.name,
-                primaryComplaints: formData.primaryComplaints.split(",").map(s => s.trim()).filter(Boolean),
-                contraindications: formData.contraindications.split(",").map(s => s.trim()).filter(Boolean),
-                preferences: formData.preferences.split(",").map(s => s.trim()).filter(Boolean),
+                primaryComplaints: formData.primaryComplaints,
+                contraindications: formData.contraindications,
+                preferences: formData.preferences,
                 height: formData.height,
                 weight: formData.weight,
                 dateOfBirth: formData.dateOfBirth,
                 occupation: formData.occupation,
                 activityLevel: formData.activityLevel as 'Sedentary' | 'Light' | 'Moderate' | 'Active' | 'Athlete',
-                medicalHistory: formData.medicalHistory.split(",").map(s => s.trim()).filter(Boolean),
-                medications: formData.medications.split(",").map(s => s.trim()).filter(Boolean),
-                allergies: formData.allergies.split(",").map(s => s.trim()).filter(Boolean),
-                mobilityStatus: formData.mobilityStatus.split(",").map(s => s.trim()).filter(Boolean),
+                medicalHistory: formData.medicalHistory,
+                medications: formData.medications,
+                allergies: formData.allergies,
+                mobilityStatus: formData.mobilityStatus,
+                physicalActivities: formData.physicalActivities,
+                diet: formData.diet,
+                supplements: formData.supplements,
+                hydration: formData.hydration,
+                insurance: formData.insurance,
                 pin: user?.pin || null,
                 biometricEnabled: user?.biometricEnabled || false,
                 theme: user?.theme || "dark",
@@ -94,23 +110,46 @@ export default function Profile() {
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-8 print:hidden">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
-                        <ArrowLeft className="w-6 h-6" />
+                    <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Return to Dashboard
                     </Button>
                     <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Bodywork Profile</h1>
                 </div>
-                <Button
-                    variant={isEditing ? "ghost" : "outline"}
-                    size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
-                    className={isEditing ? "text-zinc-500 dark:text-zinc-400" : "border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"}
-                >
-                    {isEditing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4 mr-2" />}
-                    {isEditing ? "Cancel" : "Edit"}
-                </Button>
+                <div className="flex gap-2">
+                    {!isEditing && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.print()}
+                            className="border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
+                        >
+                            <Printer className="w-4 h-4 mr-2" />
+                            Print / Save PDF
+                        </Button>
+                    )}
+                    <Button
+                        variant={isEditing ? "ghost" : "outline"}
+                        size="sm"
+                        onClick={() => setIsEditing(!isEditing)}
+                        className={isEditing ? "text-zinc-500 dark:text-zinc-400" : "border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"}
+                    >
+                        {isEditing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4 mr-2" />}
+                        {isEditing ? "Cancel" : "Edit"}
+                    </Button>
+                </div>
             </div>
+
+            <style>{`
+                @media print {
+                    @page { margin: 0.5cm; }
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .print\\:hidden { display: none !important; }
+                    .no-print { display: none !important; }
+                }
+            `}</style>
 
             <div className="max-w-md mx-auto">
                 {isEditing ? (
@@ -134,225 +173,297 @@ interface FormData {
     email: string;
     phone: string;
     address: string;
-    primaryComplaints: string;
-    contraindications: string;
-    preferences: string;
+    primaryComplaints: string[];
+    contraindications: string[];
+    preferences: string[];
     height: string;
     weight: string;
     dateOfBirth: string;
     occupation: string;
     activityLevel: string;
-    medicalHistory: string;
-    medications: string;
-    allergies: string;
-    mobilityStatus: string;
+    medicalHistory: string[];
+    medications: string[];
+    allergies: string[];
+    mobilityStatus: string[];
+    physicalActivities: string[];
+    diet: string[];
+    supplements: string[];
+    hydration: string;
+    insurance: string;
 }
 
-const PassportView = ({ user }: { user: UserProfile | undefined }) => (
-    <div className="space-y-6">
-        {/* ID Card Header */}
-        <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-            <div className="relative z-10 flex justify-between items-start">
-                <div>
-                    <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">Digital Passport</p>
-                    <h2 className="text-3xl font-black text-white tracking-tight mb-1">{user?.name || "Guest User"}</h2>
-                    <p className="text-zinc-500 text-sm font-mono mb-4">ID: {user?.id === "me" ? "8829-1920-4492" : "UNKNOWN"}</p>
-
-                    {/* Vitals Grid */}
-                    <div className="flex gap-6 text-sm">
-                        <div>
-                            <p className="text-zinc-500 text-xs uppercase">Height</p>
-                            <p className="text-zinc-200 font-medium">{user?.height || "--"}</p>
-                        </div>
-                        <div>
-                            <p className="text-zinc-500 text-xs uppercase">Weight</p>
-                            <p className="text-zinc-200 font-medium">{user?.weight || "--"}</p>
-                        </div>
-                        <div>
-                            <p className="text-zinc-500 text-xs uppercase">Age</p>
-                            <p className="text-zinc-200 font-medium">
-                                {user?.dateOfBirth ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear() : "--"}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div className="text-right">
-                    <div className="bg-zinc-800/50 px-3 py-1 rounded-lg border border-zinc-700/50 inline-block mb-2">
-                        <p className="text-zinc-400 text-xs uppercase">Activity</p>
-                        <p className="text-emerald-400 font-bold">{user?.activityLevel || "Moderate"}</p>
-                    </div>
+const PassportView = ({ user }: { user: UserProfile | undefined }) => {
+    console.log("PassportView user:", user);
+    return (
+        <div className="space-y-6">
+            {/* ID Card Header */}
+            <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                <div className="relative z-10 flex justify-between items-start">
                     <div>
-                        <p className="text-zinc-500 text-xs uppercase">Occupation</p>
-                        <p className="text-zinc-300 font-medium max-w-[120px] truncate">{user?.occupation || "--"}</p>
-                    </div>
-                </div>
-            </div>
-            {/* Contact Info */}
-            {(user?.email || user?.phone || user?.address) && (
-                <div className="mt-4 pt-4 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {user.email && (
-                        <div>
-                            <p className="text-zinc-500 text-xs uppercase">Email</p>
-                            <p className="text-zinc-300 text-sm truncate">{user.email}</p>
-                        </div>
-                    )}
-                    {user.phone && (
-                        <div>
-                            <p className="text-zinc-500 text-xs uppercase">Phone</p>
-                            <p className="text-zinc-300 text-sm">{user.phone}</p>
-                        </div>
-                    )}
-                    {user.address && (
-                        <div>
-                            <p className="text-zinc-500 text-xs uppercase">Address</p>
-                            <p className="text-zinc-300 text-sm truncate">{user.address}</p>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+                        <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">DIGITAL BODYWORK PASSPORT</p>
+                        <h2 className="text-3xl font-black text-white tracking-tight mb-1">{user?.name || "Guest User"}</h2>
+                        <p className="text-zinc-500 text-sm font-mono mb-4">ID: {user?.id === "me" ? "8829-1920-4492" : "UNKNOWN"}</p>
 
-        {/* Clinical & Safety Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Critical Alerts - Contraindications & Allergies */}
-            <div className="bg-rose-50 dark:bg-rose-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-900/50">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-rose-100 dark:bg-rose-500/20 rounded-lg">
-                        <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-rose-900 dark:text-rose-200">Safety Alerts</h3>
-                </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <p className="text-xs text-rose-700 dark:text-rose-400 uppercase font-bold tracking-wider mb-2">Contraindications</p>
-                        <div className="flex flex-wrap gap-2">
-                            {user?.contraindications && user.contraindications.length > 0 ? (
-                                user.contraindications.map((item: string, i: number) => (
-                                    <span key={i} className="px-3 py-1.5 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg text-rose-900 dark:text-rose-200 font-medium text-sm">
-                                        {item}
-                                    </span>
-                                ))
-                            ) : (
-                                <p className="text-rose-600/50 dark:text-rose-400/50 italic text-sm">None listed</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {(user?.allergies && user.allergies.length > 0) || (user?.medications && user.medications.length > 0) ? (
-                        <div className="pt-4 border-t border-rose-200 dark:border-rose-500/20">
-                            <p className="text-xs text-rose-700 dark:text-rose-400 uppercase font-bold tracking-wider mb-2">Meds & Allergies</p>
-                            <div className="flex flex-wrap gap-2">
-                                {user?.allergies?.map((item: string, i: number) => (
-                                    <span key={`alg-${i}`} className="px-3 py-1.5 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg text-rose-900 dark:text-rose-200 font-medium text-sm">
-                                        Allergy: {item}
-                                    </span>
-                                ))}
-                                {user?.medications?.map((item: string, i: number) => (
-                                    <span key={`med-${i}`} className="px-3 py-1.5 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg text-rose-900 dark:text-rose-200 font-medium text-sm">
-                                        Med: {item}
-                                    </span>
-                                ))}
+                        {/* Vitals Grid */}
+                        <div className="flex gap-6 text-sm">
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase">Height</p>
+                                <p className="text-zinc-200 font-medium">{user?.height || "--"}</p>
+                            </div>
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase">Weight</p>
+                                <p className="text-zinc-200 font-medium">{user?.weight || "--"}</p>
+                            </div>
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase">Age</p>
+                                <p className="text-zinc-200 font-medium">
+                                    {user?.dateOfBirth ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear() : "--"}
+                                </p>
                             </div>
                         </div>
-                    ) : null}
+                    </div>
+                    <div className="text-right">
+                        <div className="bg-zinc-800/50 px-3 py-1 rounded-lg border border-zinc-700/50 inline-block mb-2">
+                            <p className="text-zinc-400 text-xs uppercase">Activity</p>
+                            <p className="text-emerald-400 font-bold">{user?.activityLevel || "Moderate"}</p>
+                        </div>
+                        <div>
+                            <p className="text-zinc-500 text-xs uppercase">Occupation</p>
+                            <p className="text-zinc-300 font-medium max-w-[120px] truncate">{user?.occupation || "--"}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Lifestyle: Physical Activities, Diet, Hydration, Supplements */}
+                {(user?.physicalActivities?.length || user?.diet?.length || user?.supplements?.length || user?.hydration) && (
+                    <div className="mt-4 pt-4 border-t border-zinc-800/50 space-y-4">
+                        {user?.physicalActivities && user.physicalActivities.length > 0 && (
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase mb-1">Physical Activities</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {user.physicalActivities.map((activity, i) => (
+                                        <span key={i} className="text-xs text-emerald-400 bg-emerald-950/30 border border-emerald-900/50 px-2 py-0.5 rounded">
+                                            {activity}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4">
+                            {user?.diet && user.diet.length > 0 && (
+                                <div>
+                                    <p className="text-zinc-500 text-xs uppercase mb-1">Diet</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {user.diet.map((item, i) => (
+                                            <span key={i} className="text-xs text-lime-400 bg-lime-950/30 border border-lime-900/50 px-2 py-0.5 rounded">
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {user?.supplements && user.supplements.length > 0 && (
+                                <div>
+                                    <p className="text-zinc-500 text-xs uppercase mb-1">Supplements</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {user.supplements.map((item, i) => (
+                                            <span key={i} className="text-xs text-orange-400 bg-orange-950/30 border border-orange-900/50 px-2 py-0.5 rounded">
+                                                {item}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {user?.hydration && (
+                                <div className="col-span-2">
+                                    <p className="text-zinc-500 text-xs uppercase mb-1">Hydration</p>
+                                    <p className="text-cyan-400 font-medium text-sm">{user.hydration}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {/* Contact Info */}
+                {(user?.email || user?.phone || user?.address || user?.insurance) && (
+                    <div className="mt-4 pt-4 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {user.email && (
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase">Email</p>
+                                <p className="text-zinc-300 text-sm truncate">{user.email}</p>
+                            </div>
+                        )}
+                        {user.phone && (
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase">Phone</p>
+                                <p className="text-zinc-300 text-sm">{user.phone}</p>
+                            </div>
+                        )}
+                        {user.address && (
+                            <div>
+                                <p className="text-zinc-500 text-xs uppercase">Address</p>
+                                <p className="text-zinc-300 text-sm truncate">{user.address}</p>
+                            </div>
+                        )}
+                        {user.insurance && (
+                            <div className="md:col-span-3">
+                                <p className="text-zinc-500 text-xs uppercase">Insurance</p>
+                                <p className="text-zinc-300 text-sm">{user.insurance}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Clinical & Safety Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Critical Alerts - Contraindications & Allergies */}
+                <div className="bg-rose-50 dark:bg-rose-950/30 rounded-2xl p-6 border border-rose-200 dark:border-rose-900/50">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-rose-100 dark:bg-rose-500/20 rounded-lg">
+                            <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-rose-900 dark:text-rose-200">Safety Alerts</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-xs text-rose-700 dark:text-rose-400 uppercase font-bold tracking-wider mb-2">Areas to Avoid</p>
+                            <div className="flex flex-wrap gap-2">
+                                {user?.contraindications && user.contraindications.length > 0 ? (
+                                    user.contraindications.map((item: string, i: number) => (
+                                        <span key={i} className="px-3 py-1.5 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg text-rose-900 dark:text-rose-200 font-medium text-sm">
+                                            {item}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <p className="text-rose-600/50 dark:text-rose-400/50 italic text-sm">None listed</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {(user?.allergies && user.allergies.length > 0) || (user?.medications && user.medications.length > 0) ? (
+                            <div className="pt-4 border-t border-rose-200 dark:border-rose-500/20">
+                                <p className="text-xs text-rose-700 dark:text-rose-400 uppercase font-bold tracking-wider mb-2">Meds & Allergies</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {user?.allergies?.map((item: string, i: number) => (
+                                        <span key={`alg-${i}`} className="px-3 py-1.5 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg text-rose-900 dark:text-rose-200 font-medium text-sm">
+                                            Allergy: {item}
+                                        </span>
+                                    ))}
+                                    {user?.medications?.map((item: string, i: number) => (
+                                        <span key={`med-${i}`} className="px-3 py-1.5 bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg text-rose-900 dark:text-rose-200 font-medium text-sm">
+                                            Med: {item}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
+
+                {/* Mobility & Medical History */}
+                <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-lg">
+                            <Activity className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-200">Clinical History</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Mobility & ROM</p>
+                            <div className="flex flex-wrap gap-2">
+                                {user?.mobilityStatus && user.mobilityStatus.length > 0 ? (
+                                    user.mobilityStatus.map((item: string, i: number) => (
+                                        <span key={i} className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-300 font-medium text-sm">
+                                            {item}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <p className="text-zinc-500 dark:text-zinc-600 italic text-sm">No mobility issues noted</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Medical History</p>
+                            <div className="flex flex-wrap gap-2">
+                                {user?.medicalHistory && user.medicalHistory.length > 0 ? (
+                                    user.medicalHistory.map((item: string, i: number) => (
+                                        <span key={i} className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-300 font-medium text-sm">
+                                            {item}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <p className="text-zinc-500 dark:text-zinc-600 italic text-sm">No history listed</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Mobility & Medical History */}
-            <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            {/* Focus Areas - Complaints */}
+            <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl p-6 border border-amber-200 dark:border-amber-900/50">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-lg">
-                        <Activity className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
+                    <div className="p-2 bg-amber-100 dark:bg-amber-500/20 rounded-lg">
+                        <Target className="w-6 h-6 text-amber-600 dark:text-amber-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-200">Clinical History</h3>
+                    <h3 className="text-xl font-bold text-amber-900 dark:text-amber-200">Focus Areas</h3>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                    {user?.primaryComplaints && user.primaryComplaints.length > 0 ? (
+                        user.primaryComplaints.map((item: string, i: number) => (
+                            <span key={i} className="px-3 py-1.5 bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg text-amber-900 dark:text-amber-200 font-medium text-sm">
+                                {item}
+                            </span>
+                        ))
+                    ) : (
+                        <p className="text-amber-600/50 dark:text-amber-400/50 italic">No specific complaints</p>
+                    )}
+                </div>
+                <p className="text-xs text-amber-700 dark:text-amber-400 mt-4 uppercase font-bold tracking-wider">Prioritize These Areas</p>
+            </div>
 
-                <div className="space-y-4">
-                    <div>
-                        <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Mobility & ROM</p>
-                        <div className="flex flex-wrap gap-2">
-                            {user?.mobilityStatus && user.mobilityStatus.length > 0 ? (
-                                user.mobilityStatus.map((item: string, i: number) => (
-                                    <span key={i} className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-300 font-medium text-sm">
-                                        {item}
-                                    </span>
-                                ))
-                            ) : (
-                                <p className="text-zinc-500 dark:text-zinc-600 italic text-sm">No mobility issues noted</p>
-                            )}
-                        </div>
+            {/* Preferences */}
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-6 border border-blue-200 dark:border-blue-900/50">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg">
+                        <Heart className="w-6 h-6 text-blue-600 dark:text-blue-500" />
                     </div>
-
-                    <div>
-                        <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Medical History</p>
-                        <div className="flex flex-wrap gap-2">
-                            {user?.medicalHistory && user.medicalHistory.length > 0 ? (
-                                user.medicalHistory.map((item: string, i: number) => (
-                                    <span key={i} className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-300 font-medium text-sm">
-                                        {item}
-                                    </span>
-                                ))
-                            ) : (
-                                <p className="text-zinc-500 dark:text-zinc-600 italic text-sm">No history listed</p>
-                            )}
-                        </div>
-                    </div>
+                    <h3 className="text-xl font-bold text-blue-900 dark:text-blue-200">Preferences</h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {user?.preferences && user.preferences.length > 0 ? (
+                        user.preferences.map((item: string, i: number) => (
+                            <span key={i} className="px-3 py-1.5 bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-lg text-blue-900 dark:text-blue-200 font-medium text-sm">
+                                {item}
+                            </span>
+                        ))
+                    ) : (
+                        <p className="text-blue-600/50 dark:text-blue-400/50 italic">No preferences listed</p>
+                    )}
                 </div>
             </div>
-        </div>
 
-        {/* Focus Areas - Complaints */}
-        <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl p-6 border border-amber-200 dark:border-amber-900/50">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-amber-100 dark:bg-amber-500/20 rounded-lg">
-                    <Target className="w-6 h-6 text-amber-600 dark:text-amber-500" />
-                </div>
-                <h3 className="text-xl font-bold text-amber-900 dark:text-amber-200">Focus Areas</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-                {user?.primaryComplaints && user.primaryComplaints.length > 0 ? (
-                    user.primaryComplaints.map((item: string, i: number) => (
-                        <span key={i} className="px-3 py-1.5 bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg text-amber-900 dark:text-amber-200 font-medium text-sm">
-                            {item}
-                        </span>
-                    ))
-                ) : (
-                    <p className="text-amber-600/50 dark:text-amber-400/50 italic">No specific complaints</p>
-                )}
-            </div>
-            <p className="text-xs text-amber-700 dark:text-amber-400 mt-4 uppercase font-bold tracking-wider">Prioritize These Areas</p>
+            {/* Data Management */}
+            <DataManagement />
         </div>
-
-        {/* Preferences */}
-        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-6 border border-blue-200 dark:border-blue-900/50">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg">
-                    <Heart className="w-6 h-6 text-blue-600 dark:text-blue-500" />
-                </div>
-                <h3 className="text-xl font-bold text-blue-900 dark:text-blue-200">Preferences</h3>
-            </div>
-            <div className="flex flex-wrap gap-2">
-                {user?.preferences && user.preferences.length > 0 ? (
-                    user.preferences.map((item: string, i: number) => (
-                        <span key={i} className="px-3 py-1.5 bg-blue-100 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-lg text-blue-900 dark:text-blue-200 font-medium text-sm">
-                            {item}
-                        </span>
-                    ))
-                ) : (
-                    <p className="text-blue-600/50 dark:text-blue-400/50 italic">No preferences listed</p>
-                )}
-            </div>
-        </div>
-
-        {/* Data Management */}
-        <DataManagement />
-    </div>
-);
+    );
+}
 
 const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, setFormData: React.Dispatch<React.SetStateAction<FormData>>, handleSave: () => void }) => (
     <Card className="p-6 space-y-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="font-medium mb-1">How to add items</p>
+                <p>Type and press <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Comma</kbd> to add items.</p>
+            </div>
+        </div>
         <Input
             label="Your Name"
             value={formData.name}
@@ -382,6 +493,13 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             value={formData.address}
             onChange={e => setFormData((prev: FormData) => ({ ...prev, address: e.target.value }))}
             placeholder="123 Wellness Way, Healing City, HC 90210"
+            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+        />
+        <Input
+            label="Insurance Provider & Policy #"
+            value={formData.insurance}
+            onChange={e => setFormData((prev: FormData) => ({ ...prev, insurance: e.target.value }))}
+            placeholder="e.g. Blue Cross #123456789"
             className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
         />
 
@@ -434,93 +552,88 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
         />
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Medical History (Surgeries, Accidents)
-            </label>
-            <textarea
-                className="w-full h-20 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                placeholder="e.g. ACL Reconstruction 2018, Car Accident 2020"
-                value={formData.medicalHistory}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, medicalHistory: e.target.value }))}
-            />
-        </div>
+        <TagInput
+            label="Physical Activities"
+            value={formData.physicalActivities}
+            onChange={(tags) => setFormData(prev => ({ ...prev, physicalActivities: tags }))}
+            placeholder="e.g. Yoga, Running"
+        />
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    Medications
-                </label>
-                <textarea
-                    className="w-full h-20 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    placeholder="e.g. Blood Thinners"
-                    value={formData.medications}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, medications: e.target.value }))}
-                />
-            </div>
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    Allergies
-                </label>
-                <textarea
-                    className="w-full h-20 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                    placeholder="e.g. Latex, Nut Oils"
-                    value={formData.allergies}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, allergies: e.target.value }))}
-                />
-            </div>
+            <TagInput
+                label="Diet"
+                value={formData.diet}
+                onChange={(tags) => setFormData(prev => ({ ...prev, diet: tags }))}
+                placeholder="e.g. Vegan"
+            />
+            <TagInput
+                label="Supplements"
+                value={formData.supplements}
+                onChange={(tags) => setFormData(prev => ({ ...prev, supplements: tags }))}
+                placeholder="e.g. Vitamin D"
+            />
         </div>
+        <Input
+            label="Hydration"
+            value={formData.hydration}
+            onChange={e => setFormData((prev: FormData) => ({ ...prev, hydration: e.target.value }))}
+            placeholder="e.g. 2L/day"
+            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+        />
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Mobility & ROM Status
-            </label>
-            <textarea
-                className="w-full h-20 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                placeholder="e.g. Limited Right Shoulder Flexion, Tight Hamstrings"
-                value={formData.mobilityStatus}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, mobilityStatus: e.target.value }))}
+        <TagInput
+            label="Medical History (Surgeries, Accidents)"
+            value={formData.medicalHistory}
+            onChange={(tags) => setFormData(prev => ({ ...prev, medicalHistory: tags }))}
+            placeholder="e.g. ACL Reconstruction 2018"
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+            <TagInput
+                label="Medications"
+                value={formData.medications}
+                onChange={(tags) => setFormData(prev => ({ ...prev, medications: tags }))}
+                placeholder="e.g. Blood Thinners"
+            />
+            <TagInput
+                label="Allergies"
+                value={formData.allergies}
+                onChange={(tags) => setFormData(prev => ({ ...prev, allergies: tags }))}
+                placeholder="e.g. Latex, Nut Oils"
             />
         </div>
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Primary Complaints (comma separated)
-            </label>
-            <textarea
-                className="w-full h-24 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                placeholder="e.g. Lower Back Pain, Sciatica, Neck Stiffness"
-                value={formData.primaryComplaints}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, primaryComplaints: e.target.value }))}
-            />
-        </div>
+        <TagInput
+            label="Mobility & ROM Status"
+            value={formData.mobilityStatus}
+            onChange={(tags) => setFormData(prev => ({ ...prev, mobilityStatus: tags }))}
+            placeholder="e.g. Limited Right Shoulder Flexion"
+        />
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Contraindications (What to avoid)
-            </label>
-            <textarea
-                className="w-full h-24 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                placeholder="e.g. No deep tissue on calves, Recent shoulder surgery"
-                value={formData.contraindications}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, contraindications: e.target.value }))}
-            />
-        </div>
+        <TagInput
+            label="Primary Complaints"
+            value={formData.primaryComplaints}
+            onChange={(tags) => setFormData(prev => ({ ...prev, primaryComplaints: tags }))}
+            placeholder="e.g. Lower Back Pain, Sciatica"
+        />
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Preferences
-            </label>
-            <textarea
-                className="w-full h-24 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 text-sm text-zinc-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                placeholder="e.g. Lighter pressure, Focus on neck, Scalp massage"
-                value={formData.preferences}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, preferences: e.target.value }))}
-            />
-        </div>
+        <TagInput
+            label="Areas to Avoid (Contraindications)"
+            value={formData.contraindications}
+            onChange={(tags) => setFormData(prev => ({ ...prev, contraindications: tags }))}
+            placeholder="e.g. No deep tissue on calves"
+        />
+
+        <TagInput
+            label="Preferences"
+            value={formData.preferences}
+            onChange={(tags) => setFormData(prev => ({ ...prev, preferences: tags }))}
+            placeholder="e.g. Lighter pressure, Scalp massage"
+        />
 
         <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white" onClick={handleSave}>
             <Save className="w-4 h-4 mr-2" /> Save Profile
         </Button>
     </Card>
+
 );

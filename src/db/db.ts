@@ -11,6 +11,7 @@ export type UserProfile = {
     email?: string;
     phone?: string;
     address?: string;
+    insurance?: string;
     // Bodywork Profile
     primaryComplaints: string[]; // e.g. "Lower Back Pain"
     contraindications: string[]; // e.g. "No deep tissue on calves"
@@ -21,6 +22,10 @@ export type UserProfile = {
     dateOfBirth?: string;
     activityLevel?: 'Sedentary' | 'Light' | 'Moderate' | 'Active' | 'Athlete';
     occupation?: string;
+    physicalActivities?: string[]; // e.g. "Yoga", "Running"
+    diet?: string[]; // e.g. "Vegan", "Gluten-Free"
+    hydration?: string; // e.g. "2L/day"
+    supplements?: string[]; // e.g. "Vitamin D", "Magnesium"
     // Clinical & Safety
     medicalHistory?: string[]; // Surgeries, accidents
     medications?: string[]; // Blood thinners, etc.

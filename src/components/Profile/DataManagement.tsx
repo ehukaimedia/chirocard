@@ -56,14 +56,14 @@ export const DataManagement = () => {
     };
 
     return (
-        <div className="bg-zinc-900/50 rounded-2xl p-6 border border-zinc-800 space-y-6">
+        <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 space-y-6 shadow-sm">
             <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-500/10 rounded-lg">
                     <RefreshCw className="w-6 h-6 text-emerald-500" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-zinc-100">Data Management</h3>
-                    <p className="text-zinc-400 text-sm">Backup your passport or switch devices.</p>
+                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Data Management</h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">Backup your passport or switch devices.</p>
                 </div>
             </div>
 
@@ -79,7 +79,7 @@ export const DataManagement = () => {
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Backup</label>
                     <Button
                         variant="outline"
-                        className="w-full justify-start border-zinc-700 hover:bg-zinc-800 text-zinc-300"
+                        className="w-full justify-start border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
                         onClick={handleExport}
                         disabled={isExporting}
                     >
@@ -103,7 +103,7 @@ export const DataManagement = () => {
                         />
                         <Button
                             variant="outline"
-                            className="w-full justify-start border-zinc-700 hover:bg-zinc-800 text-zinc-300"
+                            className="w-full justify-start border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
                             disabled={isImporting}
                         >
                             <Upload className="w-4 h-4 mr-2" />
