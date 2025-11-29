@@ -16,7 +16,10 @@ function ProtectedGuestRoute({ children }: { children: React.ReactElement }) {
   return children;
 }
 
+import { useReminders } from "./hooks/useReminders";
+
 function App() {
+  useReminders();
   return (
     <BrowserRouter>
       <Routes>

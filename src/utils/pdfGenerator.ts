@@ -6,6 +6,12 @@ interface SessionData {
     notes: string;
     bodyLog: Record<string, string>;
     signatureImage: string; // Base64
+    recommendations?: {
+        title: string;
+        description?: string;
+        frequency: string;
+        category: string;
+    }[];
 }
 
 export function generateSessionPDF(data: SessionData) {
@@ -75,6 +81,34 @@ export function generateSessionPDF(data: SessionData) {
         y += 30;
     }
 
+    // Recommendations
+    if (data.recommendations && data.recommendations.length > 0) {
+        doc.addPage();
+        y = 20;
+        doc.setFontSize(16);
+        doc.setTextColor(23, 125, 79);
+        doc.text("Holistic Recommendations", margin, y);
+        y += 15;
+
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+
+        data.recommendations.forEach(rec => {
+            doc.setFont(undefined, 'bold');
+            doc.text(`• ${rec.title} (${rec.category})`, margin, y);
+            doc.setFont(undefined, 'normal');
+            y += 6;
+
+            if (rec.description) {
+                doc.text(`  Details: ${rec.description}`, margin, y);
+                y += 6;
+            }
+
+            doc.text(`  Frequency: ${rec.frequency || ''}`, margin, y);
+            y += 10;
+        });
+    }
+
     // Footer Disclaimer
     const pageHeight = doc.internal.pageSize.height;
     doc.setFontSize(8);
@@ -86,4 +120,16 @@ export function generateSessionPDF(data: SessionData) {
     );
 
     return doc;
+}
+
+export function downloadPDF(doc: jsPDF, filename: string) {
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }

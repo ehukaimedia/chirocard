@@ -11,7 +11,10 @@ import { PractitionerManager } from "../components/Practitioner/PractitionerMana
 export default function Calendar() {
     const navigate = useNavigate();
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").toArray());
-    const homework = useLiveQuery(() => db.homework.toArray());
+    const allHomework = useLiveQuery(() => db.homework.toArray());
+
+    const activeHomework = allHomework?.filter(h => h.status === 'active' || !h.status) || [];
+    const pendingHomework = allHomework?.filter(h => h.status === 'pending') || [];
 
     const [isAddingAppt, setIsAddingAppt] = useState(false);
     const [isAddingHomework, setIsAddingHomework] = useState(false);
@@ -51,6 +54,9 @@ export default function Calendar() {
             title: homeworkTitle,
             description: homeworkDesc,
             frequency: "daily",
+            category: 'custom',
+            status: 'active',
+            createdAt: Date.now(),
             isCompletedToday: false
         });
 
@@ -74,6 +80,13 @@ export default function Calendar() {
         }
     };
 
+    const activateHomework = async (id: string, time?: string) => {
+        await db.homework.update(id, {
+            status: 'active',
+            reminderTimes: time ? [time] : []
+        });
+    };
+
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
             <div className="flex items-center gap-4 mb-8">
@@ -84,6 +97,59 @@ export default function Calendar() {
             </div>
 
             <div className="space-y-8 max-w-md mx-auto">
+
+                {/* Pending Recommendations Review */}
+                {pendingHomework.length > 0 && (
+                    <section className="space-y-4">
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                            <h2 className="text-lg font-medium text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                                <Plus className="w-5 h-5" /> New Recommendations
+                            </h2>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                                Your practitioner has added new recommendations. Review and schedule them to add to your daily routine.
+                            </p>
+                            <div className="space-y-3">
+                                {pendingHomework.map(hw => (
+                                    <div key={hw.id} className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 mb-1 inline-block">
+                                                    {hw.category}
+                                                </span>
+                                                <h3 className="font-medium text-zinc-900 dark:text-zinc-100">{hw.title}</h3>
+                                                <p className="text-xs text-zinc-500">{hw.frequency} • {hw.description}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 items-center mt-3">
+                                            <Input
+                                                type="time"
+                                                className="h-8 text-xs w-32"
+                                                defaultValue={hw.reminderTimes?.[0] || ""}
+                                                onChange={(e) => {
+                                                    // This is a bit hacky for inline update, but works for the activation flow
+                                                    // Ideally we'd have local state for each item, but for now we'll just pass the value to activate
+                                                    const btn = document.getElementById(`activate-${hw.id}`);
+                                                    if (btn) btn.dataset.time = e.target.value;
+                                                }}
+                                            />
+                                            <Button
+                                                id={`activate-${hw.id}`}
+                                                size="sm"
+                                                className="flex-1 h-8 text-xs"
+                                                onClick={(e) => {
+                                                    const time = (e.currentTarget as HTMLElement).dataset.time;
+                                                    activateHomework(hw.id, time);
+                                                }}
+                                            >
+                                                Add to Schedule
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
 
                 {/* Appointments Section */}
                 <section className="space-y-4">
@@ -178,7 +244,7 @@ export default function Calendar() {
                     )}
 
                     <div className="space-y-3">
-                        {homework?.map((hw: Homework) => (
+                        {activeHomework?.map((hw: Homework) => (
                             <div
                                 key={hw.id}
                                 className={`
@@ -197,9 +263,16 @@ export default function Calendar() {
                                 </div>
 
                                 <div className="flex-1">
-                                    <p className={`font-medium ${hw.isCompletedToday ? 'text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                                        {hw.title}
-                                    </p>
+                                    <div className="flex justify-between items-start">
+                                        <p className={`font-medium ${hw.isCompletedToday ? 'text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                                            {hw.title}
+                                        </p>
+                                        {hw.reminderTimes && hw.reminderTimes.length > 0 && (
+                                            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                                {hw.reminderTimes[0]}
+                                            </span>
+                                        )}
+                                    </div>
                                     {hw.description && (
                                         <p className="text-xs text-zinc-500">{hw.description}</p>
                                     )}
@@ -213,7 +286,7 @@ export default function Calendar() {
                                 </button>
                             </div>
                         ))}
-                        {homework?.length === 0 && !isAddingHomework && (
+                        {activeHomework?.length === 0 && !isAddingHomework && (
                             <p className="text-center text-sm text-zinc-500 py-4">No active homework.</p>
                         )}
                     </div>

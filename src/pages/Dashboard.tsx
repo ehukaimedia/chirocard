@@ -75,13 +75,13 @@ export default function Dashboard() {
                             <h2 className="text-xl md:text-2xl font-bold text-zinc-100">
                                 "Chiro" means <span className="text-emerald-400">Hand</span>.
                             </h2>
-                            <p className="text-zinc-400 leading-relaxed">
-                                ChiroCard is your digital passport for <strong>all</strong> hands-on therapies—massage, physical therapy, acupuncture, and chiropractic, giving you full control of your body work holistic data.
+                            <p className="text-zinc-400 max-w-2xl mx-auto text-lg leading-relaxed">
+                                ChiroCard is your digital passport for holistic hands-on therapies—chiropractic, massage, physical therapy, cupping, and acupuncture, giving you full control of your holistic body-work data.
                             </p>
                         </div>
 
                         <div className="flex gap-3 flex-wrap">
-                            {['Massage', 'PT', 'Chiro', 'Acupuncture'].map(tag => (
+                            {['Chiropractic', 'Massage', 'PT', 'Cupping', 'Acupuncture'].map(tag => (
                                 <span key={tag} className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-700">
                                     {tag}
                                 </span>

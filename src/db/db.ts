@@ -73,8 +73,14 @@ export type Homework = {
     title: string; // e.g. "Ice Lower Back"
     description?: string; // "20 mins, 3x a day"
     frequency: string; // Flexible: 'daily', '2x daily', 'as needed', etc.
+    category: 'relief' | 'movement' | 'lifestyle' | 'custom';
+    reminderTimes?: string[]; // ["08:00", "20:00"]
+    daysOfWeek?: number[]; // [0, 1, 2, 3, 4, 5, 6]
     isCompletedToday: boolean;
     lastCompletedAt?: number;
+    status: 'active' | 'pending' | 'archived';
+    sourceSessionId?: string;
+    createdAt: number;
 };
 
 // Database Class
@@ -88,13 +94,13 @@ export class ChiroCardDB extends Dexie {
 
     constructor() {
         super('ChiroCardDB');
-        this.version(12).stores({
+        this.version(13).stores({
             users: 'id', // Simple key-value for user settings
             practitioners: 'id, name, role, order', // UUIDs, not auto-increment
             sessions: 'id, date, practitionerId', // UUIDs, not auto-increment
             bodyLogs: '++id, timestamp, status', // Keep auto-increment for logs if they don’t use UUIDs (check usage)
             appointments: '++id, date, practitionerId',
-            homework: '++id, isCompletedToday'
+            homework: '++id, isCompletedToday, status'
         });
     }
 }
