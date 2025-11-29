@@ -5,25 +5,40 @@ type AppMode = 'user' | 'guest';
 
 import { type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
 
+// Full practitioner type for PDF generation
+interface StoredPractitioner {
+    id: string;
+    name: string;
+    role: string;
+    clinicName?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    website?: string;
+}
+
 interface AppState {
     mode: AppMode;
     theme: 'dark' | 'light';
     activeSessionId: string | null;
-    activePractitioner: { id: string; name: string; role: string } | null;
+    activePractitioner: StoredPractitioner | null;
     intakeData: {
         bodyMap: Record<string, BodyStatus>;
         bodyNotes: Record<string, string>;
         notes: string;
+        userSignature?: string; // User's signature from intake
     } | null;
 
     // Actions
     setMode: (mode: AppMode) => void;
     setTheme: (theme: 'dark' | 'light') => void;
-    startSession: (sessionId: string, practitioner?: { id: string; name: string; role: string }, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string }) => void;
+    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string; userSignature?: string }) => void;
     updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; notes: string }) => void;
     endSession: () => void;
     toggleTheme: () => void;
 }
+
+export type { StoredPractitioner };
 
 export const useAppStore = create<AppState>()(
     persist(

@@ -4,6 +4,7 @@ export default {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             colors: {
@@ -14,7 +15,7 @@ export default {
                     card: 'rgba(24, 24, 27, 0.6)',
                 },
                 light: {
-                    bg: '#F8FAF9', // Off-white
+                    bg: '#fafafa', // Zinc-50
                     card: 'rgba(255, 255, 255, 0.8)',
                 }
             },

@@ -9,9 +9,14 @@ Unlike traditional medical records held by clinics, **ChiroCard is user-owned**.
 ### Key Features
 
 *   **🪪 Digital Passport Profile:** A professional-grade, read-only view for practitioners. Instantly communicates:
+    *   **Contact Info:** Email, Phone, and Address for seamless communication.
     *   **Biometrics:** Height, Weight, Age, Activity Level, Occupation.
     *   **Clinical Data:** Medical History, Medications, Allergies, Mobility/ROM limitations.
     *   **Critical Alerts:** Contraindications (Red) and Focus Areas (Amber).
+*   **📄 Professional PDF Reports:** Generate universally compatible, professionally styled PDF session records.
+    *   **Comprehensive Data:** Includes patient contact info, practitioner details, body log, notes, and recommendations.
+    *   **Digital Signature:** Authenticated with practitioner signature.
+    *   **Universal Compatibility:** Robust generation ensures correct formatting and download across devices.
 *   **📊 Gen Z Dashboard:** A modern, high-contrast "Bioluminescent" dark mode interface with a Bento Grid layout for intuitive insights.
 *   **🔒 Local-First Privacy:** All data is stored locally on your device using IndexedDB (Dexie.js). No cloud servers, no tracking.
 *   **🌍 Global Compliance:** Designed for HIPAA, GDPR, and CCPA adherence. Your data never leaves your device unless *you* export it.

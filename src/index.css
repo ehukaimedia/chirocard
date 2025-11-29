@@ -11,7 +11,7 @@
   }
 
   body {
-    @apply font-sans antialiased transition-colors duration-300 bg-zinc-950 text-zinc-100;
+    @apply font-sans antialiased transition-colors duration-300 bg-zinc-50 text-zinc-900;
   }
 }
 
@@ -25,5 +25,5 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-zinc-300 dark:bg-zinc-700 rounded-full;
+  @apply bg-zinc-400 dark:bg-zinc-600 rounded-full;
 }

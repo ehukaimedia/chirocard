@@ -152,7 +152,7 @@ function drawSectionHeader(doc: jsPDF, title: string, y: number, margin: number)
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.25);
     doc.line(margin, y + 15, doc.internal.pageSize.width - margin, y + 15);
-    
+
     return y + 24;
 }
 
@@ -162,14 +162,14 @@ function drawPill(doc: jsPDF, text: string, x: number, y: number, color: [number
     doc.setFontSize(FONT.xs);
     const textWidth = doc.getTextWidth(text);
     const pillWidth = textWidth + padding * 2;
-    
+
     doc.setFillColor(...bgColor);
     doc.roundedRect(x, y - 4, pillWidth, 10, 5, 5, 'F');
-    
+
     doc.setTextColor(...color);
     doc.setFont("helvetica", 'bold');
     doc.text(text, x + padding, y + 2);
-    
+
     return pillWidth;
 }
 
@@ -184,9 +184,9 @@ export function generateSessionPDF(data: SessionData) {
     // ============================================================
     // HEADER
     // ============================================================
-    
+
     y = margin;
-    
+
     // Logo image and brand text
     const logoSize = 14;
     try {
@@ -194,23 +194,23 @@ export function generateSessionPDF(data: SessionData) {
         doc.roundedRect(margin, y - 2, logoSize, logoSize, 4, 4, 'F');
         doc.addImage(LOGO_IMAGE, "PNG", margin, y - 2, logoSize, logoSize, undefined, 'FAST');
     } catch (e) { /* ignore */ }
-    
+
     const brandX = margin + logoSize + 6;
     doc.setFontSize(FONT.title);
     doc.setFont("helvetica", 'bold');
     doc.setTextColor(...COLORS.primary);
     doc.text("Chiro", brandX, y + 8);
-    
+
     const chiroWidth = doc.getTextWidth("Chiro");
     doc.setTextColor(...COLORS.dark);
     doc.text("Card", brandX + chiroWidth, y + 8);
-    
+
     // Tagline
     doc.setFontSize(FONT.sm);
     doc.setTextColor(...COLORS.muted);
     doc.setFont("helvetica", 'normal');
     doc.text("The Digital Body Work Passport", brandX, y + 13);
-    
+
     // Date badge on right
     const dateText = data.date;
     doc.setFontSize(FONT.base);
@@ -220,43 +220,43 @@ export function generateSessionPDF(data: SessionData) {
     doc.setFont("helvetica", 'bold');
     doc.setTextColor(...COLORS.dark);
     doc.text(dateText, pageWidth - margin, y + 10, { align: 'right' });
-    
+
     y += 24;
-    
+
     // Divider
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.25);
     doc.line(margin, y, pageWidth - margin, y);
-    
+
     y += SPACING.lg;
 
     // ============================================================
     // CONTACT CARDS - Two columns
     // ============================================================
-    
+
     const cardGap = 10;
     const cardWidth = (contentWidth - cardGap) / 2;
     const cardHeight = 52;
-    
+
     // Patient Card
     drawCard(doc, margin, y, cardWidth, cardHeight, { fill: COLORS.bgLight, border: COLORS.border });
-    
+
     let cardY = y + SPACING.md;
     doc.setFontSize(FONT.xs);
     doc.setTextColor(...COLORS.primary);
     doc.setFont("helvetica", 'bold');
     doc.text("PATIENT", margin + SPACING.md, cardY);
-    
+
     cardY += SPACING.sm;
     doc.setFontSize(FONT.lg);
     doc.setTextColor(...COLORS.dark);
     doc.text(data.userContact?.name || "Patient", margin + SPACING.md, cardY);
-    
+
     cardY += SPACING.sm;
     doc.setFontSize(FONT.base);
     doc.setTextColor(...COLORS.text);
     doc.setFont("helvetica", 'normal');
-    
+
     const patientDetails: string[] = [];
     if (data.userContact?.phone) patientDetails.push(data.userContact.phone);
     if (data.userContact?.email) patientDetails.push(data.userContact.email);
@@ -264,32 +264,32 @@ export function generateSessionPDF(data: SessionData) {
         doc.text(detail, margin + SPACING.md, cardY);
         cardY += SPACING.xs + 1;
     });
-    
+
     // Practitioner Card
     const rightCardX = margin + cardWidth + cardGap;
     drawCard(doc, rightCardX, y, cardWidth, cardHeight, { fill: COLORS.greenLight, border: COLORS.border });
-    
+
     cardY = y + SPACING.md;
     doc.setFontSize(FONT.xs);
     doc.setTextColor(...COLORS.primary);
     doc.setFont("helvetica", 'bold');
     doc.text("PRACTITIONER", rightCardX + SPACING.md, cardY);
-    
+
     cardY += SPACING.sm;
     doc.setFontSize(FONT.lg);
     doc.setTextColor(...COLORS.dark);
     doc.text(data.practitionerName || "Practitioner", rightCardX + SPACING.md, cardY);
-    
+
     cardY += SPACING.sm;
     doc.setFontSize(FONT.base);
     doc.setFont("helvetica", 'normal');
-    
+
     if (data.practitioner?.role) {
         doc.setTextColor(...COLORS.primary);
         doc.text(data.practitioner.role, rightCardX + SPACING.md, cardY);
         cardY += SPACING.xs + 1;
     }
-    
+
     doc.setTextColor(...COLORS.text);
     const practDetails: string[] = [];
     if (data.practitioner?.clinicName) practDetails.push(data.practitioner.clinicName);
@@ -298,54 +298,54 @@ export function generateSessionPDF(data: SessionData) {
         doc.text(detail, rightCardX + SPACING.md, cardY);
         cardY += SPACING.xs + 1;
     });
-    
+
     y += cardHeight + SPACING.section;
 
     // ============================================================
     // PATIENT INTAKE (if exists)
     // ============================================================
-    
+
     const hasIntakeNotes = data.patientIntake?.notes;
-    const intakeAreas = data.patientIntake?.bodyAreas ? 
+    const intakeAreas = data.patientIntake?.bodyAreas ?
         Object.entries(data.patientIntake.bodyAreas).filter(([_, s]) => s !== 'normal') : [];
-    
+
     if (hasIntakeNotes || intakeAreas.length > 0) {
         y = drawSectionHeader(doc, "Patient Intake", y, margin);
-        
+
         if (hasIntakeNotes) {
             const noteLines = doc.splitTextToSize(`"${data.patientIntake!.notes}"`, contentWidth - SPACING.xl);
             const noteBoxH = Math.max(20, noteLines.length * 5 + SPACING.md);
-            
+
             drawCard(doc, margin, y, contentWidth, noteBoxH, { fill: COLORS.amberLight });
-            
+
             doc.setFontSize(FONT.md);
             doc.setTextColor(...COLORS.text);
             doc.setFont("helvetica", 'italic');
             doc.text(noteLines, margin + SPACING.md, y + SPACING.md);
-            
+
             y += noteBoxH + SPACING.sm;
         }
-        
+
         if (intakeAreas.length > 0) {
             doc.setFontSize(FONT.sm);
             doc.setTextColor(...COLORS.muted);
             doc.setFont("helvetica", 'normal');
             doc.text("Areas of Concern:", margin + SPACING.xs, y + 4);
             y += SPACING.md;
-            
+
             intakeAreas.forEach(([partId, status]) => {
                 const config = getStatusConfig(status);
                 const label = formatBodyPart(partId);
                 const note = data.patientIntake?.bodyNotes?.[partId];
-                
+
                 doc.setFontSize(FONT.md);
                 doc.setTextColor(...COLORS.dark);
                 doc.setFont("helvetica", 'normal');
                 doc.text(label, margin + SPACING.sm, y + 4);
-                
+
                 const pillX = margin + SPACING.sm + doc.getTextWidth(label) + SPACING.sm;
                 drawPill(doc, config.label.toUpperCase(), pillX, y + 2, config.color, COLORS.bgCard);
-                
+
                 if (note) {
                     doc.setFontSize(FONT.base);
                     doc.setTextColor(...COLORS.muted);
@@ -354,43 +354,43 @@ export function generateSessionPDF(data: SessionData) {
                 y += SPACING.md;
             });
         }
-        
+
         y += SPACING.md;
     }
 
     // ============================================================
     // BODYWORK LOG
     // ============================================================
-    
+
     y = drawSectionHeader(doc, "Bodywork Log", y, margin);
-    
+
     const bodyEntries = Object.entries(data.bodyLog).filter(([_, status]) => status !== 'normal');
-    
+
     if (bodyEntries.length > 0) {
         bodyEntries.forEach(([partId, status]) => {
             if (y > pageHeight - 50) {
                 doc.addPage();
                 y = margin;
             }
-            
+
             const config = getStatusConfig(status);
             const label = formatBodyPart(partId);
             const treatmentNote = data.treatmentNotes?.[partId];
             const rowHeight = treatmentNote ? 26 : 18;
-            
+
             // Row card
             drawCard(doc, margin, y, contentWidth, rowHeight, { fill: COLORS.bgCard, border: COLORS.border });
-            
+
             // Body part name
             doc.setFontSize(FONT.lg);
             doc.setTextColor(...COLORS.dark);
             doc.setFont("helvetica", 'bold');
             doc.text(label, margin + SPACING.md, y + 11);
-            
+
             // Status pill
             const pillX = margin + SPACING.md + doc.getTextWidth(label) + SPACING.sm;
             drawPill(doc, config.label.toUpperCase(), pillX, y + 9, config.color, config.bgColor);
-            
+
             // Treatment note
             if (treatmentNote) {
                 doc.setFontSize(FONT.base);
@@ -399,7 +399,7 @@ export function generateSessionPDF(data: SessionData) {
                 const noteLines = doc.splitTextToSize(treatmentNote, contentWidth - SPACING.xl * 2);
                 doc.text(noteLines[0], margin + SPACING.md, y + 20);
             }
-            
+
             y += rowHeight + SPACING.sm;
         });
     } else {
@@ -410,144 +410,144 @@ export function generateSessionPDF(data: SessionData) {
         doc.text("No specific body areas logged in this session.", margin + SPACING.md, y + 14);
         y += 24;
     }
-    
+
     y += SPACING.lg;
 
     // ============================================================
     // PRACTITIONER NOTES
     // ============================================================
-    
+
     if (y > pageHeight - 80) {
         doc.addPage();
         y = margin;
     }
-    
+
     y = drawSectionHeader(doc, "Practitioner Notes", y, margin);
-    
+
     const notesText = data.notes || "No additional notes recorded.";
     const splitNotes = doc.splitTextToSize(notesText, contentWidth - SPACING.xl);
     const notesBoxH = Math.max(28, splitNotes.length * 5 + SPACING.lg);
-    
+
     drawCard(doc, margin, y, contentWidth, notesBoxH, { fill: COLORS.bgLight, border: COLORS.border });
-    
+
     doc.setFontSize(FONT.md);
     doc.setTextColor(...COLORS.text);
     doc.setFont("helvetica", 'normal');
     doc.text(splitNotes, margin + SPACING.md, y + SPACING.md);
-    
+
     y += notesBoxH + SPACING.section;
 
     // ============================================================
     // RECOMMENDATIONS
     // ============================================================
-    
+
     if (data.recommendations && data.recommendations.length > 0) {
         if (y > pageHeight - 100) {
             doc.addPage();
             y = margin;
         }
-        
+
         y = drawSectionHeader(doc, "Recommendations & Homework", y, margin);
-        
-        data.recommendations.forEach((rec, index) => {
+
+        data.recommendations.forEach((rec) => {
             if (y > pageHeight - 50) {
                 doc.addPage();
                 y = margin;
             }
-            
+
             const config = getCategoryConfig(rec.category);
             const rowHeight = rec.description ? 28 : 18;
-            
+
             // Card
             drawCard(doc, margin, y, contentWidth, rowHeight, { fill: COLORS.bgCard, border: COLORS.border });
-            
+
             // Title
             doc.setFontSize(FONT.lg);
             doc.setTextColor(...COLORS.dark);
             doc.text(rec.title, margin + SPACING.md, y + 12);
-            
+
             // Frequency badge
             const freqX = margin + SPACING.md + doc.getTextWidth(rec.title) + SPACING.sm;
             drawPill(doc, rec.frequency, freqX, y + 10, config.color, config.bgColor);
-            
+
             // Category on right
             doc.setFontSize(FONT.xs);
             doc.setTextColor(...COLORS.light);
             doc.setFont("helvetica", 'normal');
             doc.text(rec.category.toUpperCase(), pageWidth - margin - SPACING.sm, y + 12, { align: 'right' });
-            
+
             // Description
             if (rec.description) {
                 doc.setFontSize(FONT.base);
                 doc.setTextColor(...COLORS.muted);
                 doc.text(rec.description, margin + SPACING.md, y + 22);
             }
-            
+
             y += rowHeight + SPACING.sm;
         });
-        
+
         y += SPACING.md;
     }
 
     // ============================================================
     // SIGNATURES
     // ============================================================
-    
+
     if (y > pageHeight - 80) {
         doc.addPage();
         y = margin;
     }
-    
+
     // Divider
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.25);
     doc.line(margin, y, pageWidth - margin, y);
     y += SPACING.lg;
-    
+
     doc.setFontSize(FONT.lg);
     doc.setTextColor(...COLORS.dark);
     doc.setFont("helvetica", 'bold');
     doc.text("Session Authorization", margin, y);
     y += SPACING.lg;
-    
+
     const sigWidth = (contentWidth - cardGap) / 2;
     const sigHeight = 45;
-    
+
     // Patient Signature
     drawCard(doc, margin, y, sigWidth, sigHeight, { fill: COLORS.bgLight, border: COLORS.border });
-    
+
     doc.setFontSize(FONT.sm);
     doc.setTextColor(...COLORS.muted);
     doc.setFont("helvetica", 'normal');
     doc.text("Patient Signature", margin + SPACING.sm, y + SPACING.md);
-    
+
     if (data.userSignature) {
         try {
             doc.addImage(data.userSignature, "PNG", margin + SPACING.sm, y + 14, 50, 20);
         } catch (e) { /* ignore */ }
     }
-    
+
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.25);
     doc.line(margin + SPACING.sm, y + 36, margin + sigWidth - SPACING.sm, y + 36);
     doc.setFontSize(FONT.sm);
     doc.setTextColor(...COLORS.text);
     doc.text(data.userContact?.name || "Patient", margin + SPACING.sm, y + 42);
-    
+
     // Practitioner Signature
     const sigRightX = margin + sigWidth + cardGap;
     drawCard(doc, sigRightX, y, sigWidth, sigHeight, { fill: COLORS.greenLight, border: COLORS.border });
-    
+
     doc.setFontSize(FONT.sm);
     doc.setTextColor(...COLORS.muted);
     doc.text("Practitioner Signature", sigRightX + SPACING.sm, y + SPACING.md);
-    
+
     if (data.signatureImage) {
         try {
             doc.addImage(data.signatureImage, "PNG", sigRightX + SPACING.sm, y + 14, 50, 20);
         } catch (e) { /* ignore */ }
     }
-    
+
     doc.setDrawColor(...COLORS.border);
     doc.setLineWidth(0.25);
     doc.line(sigRightX + SPACING.sm, y + 36, sigRightX + sigWidth - SPACING.sm, y + 36);
@@ -558,17 +558,17 @@ export function generateSessionPDF(data: SessionData) {
     // ============================================================
     // FOOTER ON ALL PAGES
     // ============================================================
-    
+
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         const footerY = pageHeight - 12;
-        
+
         // Footer line
         doc.setDrawColor(...COLORS.border);
         doc.setLineWidth(0.25);
         doc.line(margin, footerY - 6, pageWidth - margin, footerY - 6);
-        
+
         // Brand on left
         doc.setFontSize(FONT.sm);
         doc.setFont("helvetica", 'bold');
@@ -576,13 +576,13 @@ export function generateSessionPDF(data: SessionData) {
         doc.text("Chiro", margin, footerY);
         doc.setTextColor(...COLORS.dark);
         doc.text("Card", margin + doc.getTextWidth("Chiro"), footerY);
-        
+
         // Disclaimer in center
         doc.setFontSize(FONT.xs);
         doc.setTextColor(...COLORS.light);
         doc.setFont("helvetica", 'normal');
         doc.text("ChiroCard Holistic body-work documentation— does not replace official medical records.", pageWidth / 2, footerY, { align: 'center' });
-        
+
         // Page number on right
         doc.setTextColor(...COLORS.muted);
         doc.text(`${i} / ${pageCount}`, pageWidth - margin, footerY, { align: 'right' });

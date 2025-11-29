@@ -5,7 +5,8 @@ import { db, type Homework, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
-import { Plus, History, Calendar as CalendarIcon, User, Info, ArrowRight, ShieldCheck, Users, Trash2 } from "lucide-react";
+import { Plus, History, Calendar as CalendarIcon, User, Info, ShieldCheck, Users } from "lucide-react";
+import { SessionCard } from "../components/Dashboard/SessionCard";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function Dashboard() {
                     <img src="/chirocard-icon.png" alt="ChiroCard" className="w-14 h-14 rounded-2xl shadow-lg shadow-emerald-500/20" />
                     <div>
                         <h1 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter mb-0 leading-none">
-                            <span className="text-emerald-500">Chiro</span>Card<span className="text-emerald-500">.</span>
+                            <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card<span className="text-emerald-600 dark:text-emerald-500">.</span>
                         </h1>
                         <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-wide uppercase text-[10px] md:text-xs">The Digital Body Work Passport</p>
                     </div>
@@ -102,27 +103,27 @@ export default function Dashboard() {
                     </Link>
                 </div>
 
-                <Card className="bg-zinc-900 border-zinc-800 p-6 relative overflow-hidden">
+                <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-6 relative overflow-hidden shadow-sm">
                     {/* Status Indicator */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
                         <div>
-                            <span className="text-emerald-500 text-xs font-bold tracking-wider uppercase mb-1 block">Active Care Plan</span>
-                            <h3 className="text-3xl font-bold text-zinc-100">Maintenance</h3>
+                            <span className="text-emerald-600 dark:text-emerald-500 text-xs font-bold tracking-wider uppercase mb-1 block">Active Care Plan</span>
+                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Maintenance</h3>
                         </div>
                         <div className="h-3 w-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
                     </div>
 
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-2 gap-4 relative z-10">
-                        <div className="bg-zinc-950/50 rounded-xl p-4 border border-zinc-800/50">
+                        <div className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50">
                             <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Next Session</p>
-                            <p className="text-zinc-200 font-semibold truncate">
+                            <p className="text-zinc-900 dark:text-zinc-200 font-semibold truncate">
                                 {nextAppointment ? new Date(nextAppointment.date).toLocaleDateString() : "None scheduled"}
                             </p>
                         </div>
-                        <div className="bg-zinc-950/50 rounded-xl p-4 border border-zinc-800/50">
+                        <div className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50">
                             <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Daily Habits</p>
-                            <p className="text-zinc-200 font-semibold">
+                            <p className="text-zinc-900 dark:text-zinc-200 font-semibold">
                                 {activeHomeworkCount > 0 ? `${activeHomeworkCount} remaining` : "All done!"}
                             </p>
                         </div>
@@ -142,42 +143,26 @@ export default function Dashboard() {
                 </Button>
                 <Button
                     variant="outline"
-                    className="h-32 flex flex-col items-center justify-center gap-3 text-lg bg-white/50 dark:bg-zinc-900/50"
+                    className="h-32 flex flex-col items-center justify-center gap-3 text-lg bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 shadow-sm"
                     onClick={() => navigate("/calendar")}
                 >
                     <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-full">
-                        <History className="w-6 h-6" />
+                        <History className="w-6 h-6 text-zinc-700 dark:text-zinc-300" />
                     </div>
-                    History
+                    <span className="text-zinc-900 dark:text-zinc-100">History</span>
                 </Button>
             </div>
 
             {/* Recent Activity */}
             <section>
                 <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Recent Activity</h2>
-                <div className="space-y-3">
+                <div className="space-y-4">
                     {sessions?.map((session: Session) => (
-                        <Card key={session.id} className="p-4 flex items-center justify-between group hover:border-emerald-500/30 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 font-bold text-sm">
-                                    {new Date(session.date).getDate()}
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-zinc-900 dark:text-zinc-100">{session.practitionerName}</h4>
-                                    <p className="text-xs text-zinc-500">{session.practitionerClass}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={(e) => handleDeleteClick(session.id, e)}
-                                    className="p-2 text-zinc-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                    title="Delete Session"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                <ArrowRight className="w-5 h-5 text-zinc-300 group-hover:text-emerald-500 transition-colors" />
-                            </div>
-                        </Card>
+                        <SessionCard
+                            key={session.id}
+                            session={session}
+                            onDelete={handleDeleteClick}
+                        />
                     ))}
                     {sessions?.length === 0 && (
                         <p className="text-center text-zinc-500 py-8">No sessions yet. Start one above!</p>

@@ -59,10 +59,21 @@ export default function Intake() {
             createdAt: Date.now()
         });
 
-        startSession(sessionId, selectedPractitioner, {
+        // Pass full practitioner data including contact info for PDF
+        startSession(sessionId, {
+            id: selectedPractitioner.id,
+            name: selectedPractitioner.name,
+            role: selectedPractitioner.role,
+            clinicName: selectedPractitioner.clinicName,
+            phone: selectedPractitioner.phone,
+            email: selectedPractitioner.email,
+            address: selectedPractitioner.address,
+            website: selectedPractitioner.website
+        }, {
             bodyMap: bodyStatus,
             bodyNotes: bodyNotes,
-            notes: notes
+            notes: notes,
+            userSignature: signature || undefined
         });
 
         navigate("/guest-session");
@@ -108,7 +119,7 @@ export default function Intake() {
                             </p>
                         </div>
                     ) : (
-                        <div className="text-center py-8 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                        <div className="text-center py-8 bg-white dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
                             <p className="text-zinc-500 mb-4">No practitioners found.</p>
                             <Button onClick={() => navigate("/team")}>Add Practitioner</Button>
                         </div>
@@ -150,7 +161,7 @@ export default function Intake() {
                                                 value={bodyNotes[partId] || ""}
                                                 onChange={(e) => setBodyNotes(prev => ({ ...prev, [partId]: e.target.value }))}
                                                 placeholder={`Specifics for ${region.label}...`}
-                                                className="w-full h-10 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                             />
                                         </div>
                                     );
@@ -168,7 +179,7 @@ export default function Intake() {
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Type or dictate notes here..."
-                        className="w-full h-24 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full h-24 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                 </section>
             </div>
@@ -201,7 +212,7 @@ export default function Intake() {
                         <p className="text-sm text-zinc-500">
                             Please verify your information before handing over to the practitioner.
                         </p>
-                        <div className="bg-zinc-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2 text-sm">
+                        <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-zinc-500">Practitioner:</span>
                                 <span className="font-medium text-zinc-900 dark:text-zinc-100">{selectedPractitioner?.name}</span>

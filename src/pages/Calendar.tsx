@@ -5,7 +5,8 @@ import { db, type Appointment, type Homework } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ArrowLeft, Calendar as CalendarIcon, CheckCircle, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, CheckCircle, Plus, Trash2, Edit2, Clock } from "lucide-react";
+import { Modal } from "../components/ui/Modal";
 import { PractitionerManager } from "../components/Practitioner/PractitionerManager";
 
 export default function Calendar() {
@@ -27,6 +28,14 @@ export default function Calendar() {
     // Homework Form State
     const [homeworkTitle, setHomeworkTitle] = useState("");
     const [homeworkDesc, setHomeworkDesc] = useState("");
+
+    // Edit Homework State
+    const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editDesc, setEditDesc] = useState("");
+    const [editTime, setEditTime] = useState("");
+    const [editFreq, setEditFreq] = useState("");
+    const [editCategory, setEditCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
 
     const handleAddAppointment = async () => {
         if (!selectedPractitioner || !apptDate || !apptTime) return;
@@ -85,6 +94,30 @@ export default function Calendar() {
             status: 'active',
             reminderTimes: time ? [time] : []
         });
+    };
+
+    const handleEditClick = (hw: Homework, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingHomework(hw);
+        setEditTitle(hw.title);
+        setEditDesc(hw.description || "");
+        setEditTime(hw.reminderTimes?.[0] || "");
+        setEditFreq(hw.frequency || "daily");
+        setEditCategory(hw.category || 'custom');
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingHomework) return;
+
+        await db.homework.update(editingHomework.id, {
+            title: editTitle,
+            description: editDesc,
+            reminderTimes: editTime ? [editTime] : [],
+            frequency: editFreq,
+            category: editCategory
+        });
+
+        setEditingHomework(null);
     };
 
     return (
@@ -278,12 +311,22 @@ export default function Calendar() {
                                     )}
                                 </div>
 
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
-                                    className="text-zinc-400 hover:text-red-500 p-2"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={(e) => handleEditClick(hw, e)}
+                                        className="text-zinc-400 hover:text-emerald-500 p-2"
+                                        title="Edit"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
+                                        className="text-zinc-400 hover:text-red-500 p-2"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                         {activeHomework?.length === 0 && !isAddingHomework && (
@@ -293,6 +336,74 @@ export default function Calendar() {
                 </section>
 
             </div>
+
+            {/* Edit Modal */}
+            <Modal
+                isOpen={!!editingHomework}
+                onClose={() => setEditingHomework(null)}
+                title="Edit Recommendation"
+                description="Update the details or schedule for this habit."
+                confirmLabel="Save Changes"
+                cancelLabel="Cancel"
+                onConfirm={handleSaveEdit}
+            >
+                <div className="space-y-4 py-2">
+                    <Input
+                        label="Title"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                    />
+                    <Input
+                        label="Description"
+                        value={editDesc}
+                        onChange={(e) => setEditDesc(e.target.value)}
+                    />
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-1 block">Daily Reminder Time</label>
+                        <div className="relative">
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <Input
+                                type="time"
+                                value={editTime}
+                                onChange={(e) => setEditTime(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="text-xs font-medium text-zinc-500 mb-1 block">Frequency</label>
+                            <select
+                                value={editFreq}
+                                onChange={(e) => setEditFreq(e.target.value)}
+                                className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                                <option value="Daily">Daily</option>
+                                <option value="2x Daily">2x Daily</option>
+                                <option value="Morning/Night">Morning/Night</option>
+                                <option value="As Needed">As Needed</option>
+                                <option value="Acute (3x/day)">Acute (3x/day)</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Once">Once</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
+                            <select
+                                value={editCategory}
+                                onChange={(e) => setEditCategory(e.target.value as any)}
+                                className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                                <option value="relief">Relief & Recovery</option>
+                                <option value="movement">Movement & Mobility</option>
+                                <option value="lifestyle">Lifestyle & Wellness</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

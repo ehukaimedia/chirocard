@@ -6,6 +6,7 @@ import Profile from "./pages/Profile";
 import Team from "./pages/Team";
 import Calendar from "./pages/Calendar";
 import GuestSession from "./pages/GuestSession";
+import SessionDetails from "./pages/SessionDetails";
 import { useAppStore } from "./store/useAppStore";
 
 function ProtectedGuestRoute({ children }: { children: React.ReactElement }) {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/team" element={<Team />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/calendar" element={<Calendar />} />
+        <Route path="/session/:id" element={<SessionDetails />} />
         <Route
           path="/guest-session"
           element={

@@ -51,8 +51,6 @@ export default function GuestSession() {
     const [newRecDesc, setNewRecDesc] = useState("");
     const [newRecFreq, setNewRecFreq] = useState<string>("Daily");
     const [newRecCategory, setNewRecCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
-    const [newRecTime, setNewRecTime] = useState<string>("");
-
     const handleAddRec = () => {
         if (!newRecTitle) return;
         setRecommendations(prev => [...prev, {
@@ -61,7 +59,7 @@ export default function GuestSession() {
             description: newRecDesc,
             frequency: newRecFreq,
             category: newRecCategory,
-            reminderTimes: newRecTime ? [newRecTime] : [],
+            reminderTimes: [], // Time set in Calendar
             isCompletedToday: false,
             status: 'pending',
             createdAt: Date.now()
@@ -70,7 +68,6 @@ export default function GuestSession() {
         setNewRecDesc("");
         setNewRecFreq("Daily");
         setNewRecCategory('custom');
-        setNewRecTime("");
     };
 
     const { toast } = useToast();
@@ -88,21 +85,40 @@ export default function GuestSession() {
                 // Generate PDF
                 const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || "";
 
-                // Note: PDF generation is synchronous but heavy. In a real app, might want to offload to worker.
+                // Build comprehensive PDF with all session data
                 const pdf = generateSessionPDF({
                     date: new Date().toLocaleDateString(),
                     practitionerName,
-                    practitioner: activePractitioner || undefined,
+                    practitioner: activePractitioner ? {
+                        name: activePractitioner.name,
+                        role: activePractitioner.role,
+                        clinicName: activePractitioner.clinicName,
+                        phone: activePractitioner.phone,
+                        email: activePractitioner.email,
+                        website: activePractitioner.website,
+                        address: activePractitioner.address
+                    } : undefined,
                     userContact: {
                         name: user?.name || "Guest User",
                         email: user?.email,
                         phone: user?.phone,
                         address: user?.address
                     },
+                    // Patient's pre-session intake data
+                    patientIntake: {
+                        notes: intakeData?.notes,
+                        bodyAreas: intakeData?.bodyMap,
+                        bodyNotes: intakeData?.bodyNotes
+                    },
+                    // Practitioner's session work
                     notes,
                     bodyLog: bodyStatus,
+                    treatmentNotes: treatmentNotes,
+                    // Signatures
+                    userSignature: intakeData?.userSignature,
                     signatureImage: signature,
-                    recommendations: recommendations // Pass recommendations
+                    // Recommendations
+                    recommendations: recommendations
                 });
 
                 // Save to DB
@@ -150,9 +166,9 @@ export default function GuestSession() {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-50 p-4 pb-24">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 p-4 pb-24">
             {/* Locked Header */}
-            <header className="flex justify-between items-center mb-6 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800">
+            <header className="flex justify-between items-center mb-6 p-4 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-lg">
                 <div className="flex items-center gap-2 text-emerald-500">
                     <Lock className="w-5 h-5" />
                     <span className="font-mono text-sm uppercase tracking-widest">
@@ -189,7 +205,7 @@ export default function GuestSession() {
                     <>
                         {/* Patient Context Card */}
                         {(user?.primaryComplaints?.length || user?.contraindications?.length) && (
-                            <Card className="bg-zinc-900/80 border-zinc-800 p-4 space-y-3">
+                            <Card className="bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 p-4 space-y-3 shadow-sm">
                                 <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                     <Info className="w-4 h-4" /> Patient Context
                                 </h3>
@@ -224,11 +240,11 @@ export default function GuestSession() {
 
                         {/* Intake Notes Display */}
                         {intakeData?.notes && (
-                            <Card className="bg-amber-950/30 border-amber-900/50 p-4 space-y-2">
+                            <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
                                 <h3 className="text-sm font-medium text-amber-500 uppercase tracking-wider flex items-center gap-2">
                                     <Info className="w-4 h-4" /> Patient Intake Notes
                                 </h3>
-                                <p className="text-zinc-300 text-sm whitespace-pre-wrap italic">
+                                <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap italic">
                                     "{intakeData.notes}"
                                 </p>
                             </Card>
@@ -236,7 +252,7 @@ export default function GuestSession() {
 
 
                         <section>
-                            <h2 className="text-lg font-medium mb-3 text-zinc-300">1. Log Bodywork</h2>
+                            <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">1. Log Bodywork</h2>
                             <BodyRegionSelector
                                 value={bodyStatus}
                                 onChange={(part, status) => setBodyStatus(prev => ({ ...prev, [part]: status }))}
@@ -267,7 +283,7 @@ export default function GuestSession() {
 
                                 {/* Hint if nothing selected */}
                                 {Object.values(bodyStatus).every(s => s === 'normal') && (
-                                    <div className="text-center py-8 border-2 border-dashed border-zinc-800 rounded-xl">
+                                    <div className="text-center py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
                                         <p className="text-zinc-500">Tap areas on the body map above to add them to the session.</p>
                                     </div>
                                 )}
@@ -283,14 +299,14 @@ export default function GuestSession() {
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="Tap microphone to dictate or type notes..."
-                                    className="w-full h-32 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className="w-full h-32 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 />
                             </div>
                         </section>
 
                         <section>
-                            <h2 className="text-lg font-medium mb-3 text-zinc-300">3. Holistic Recommendations</h2>
-                            <Card className="bg-zinc-900/50 border-zinc-800 p-4 space-y-4">
+                            <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">3. Holistic Recommendations</h2>
+                            <Card className="bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 p-4 space-y-4 shadow-sm">
                                 {/* Quick Add Options */}
                                 <div className="space-y-3 mb-4">
                                     <div>
@@ -311,7 +327,7 @@ export default function GuestSession() {
                                                         setNewRecFreq(opt.freq);
                                                         setNewRecCategory('relief');
                                                     }}
-                                                    className="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-200 px-3 py-1.5 rounded-full border border-blue-500/20 transition-colors"
+                                                    className="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-200 px-3 py-1.5 rounded-full border border-blue-500/20 transition-colors"
                                                 >
                                                     + {opt.label}
                                                 </button>
@@ -337,7 +353,7 @@ export default function GuestSession() {
                                                         setNewRecFreq(opt.freq);
                                                         setNewRecCategory('movement');
                                                     }}
-                                                    className="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 px-3 py-1.5 rounded-full border border-emerald-500/20 transition-colors"
+                                                    className="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 px-3 py-1.5 rounded-full border border-emerald-500/20 transition-colors"
                                                 >
                                                     + {opt.label}
                                                 </button>
@@ -363,7 +379,7 @@ export default function GuestSession() {
                                                         setNewRecFreq(opt.freq);
                                                         setNewRecCategory('lifestyle');
                                                     }}
-                                                    className="text-xs bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 px-3 py-1.5 rounded-full border border-purple-500/20 transition-colors"
+                                                    className="text-xs bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-200 px-3 py-1.5 rounded-full border border-purple-500/20 transition-colors"
                                                 >
                                                     + {opt.label}
                                                 </button>
@@ -378,12 +394,12 @@ export default function GuestSession() {
                                             placeholder="Recommendation (e.g. Ice Back)"
                                             value={newRecTitle}
                                             onChange={(e) => setNewRecTitle(e.target.value)}
-                                            className="bg-zinc-950 border-zinc-800 text-zinc-100"
+                                            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100"
                                         />
                                         <select
                                             value={newRecFreq}
                                             onChange={(e) => setNewRecFreq(e.target.value)}
-                                            className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                         >
                                             <option value="Daily">Daily</option>
                                             <option value="2x Daily">2x Daily</option>
@@ -399,16 +415,9 @@ export default function GuestSession() {
                                             placeholder="Details (e.g. 20 mins)"
                                             value={newRecDesc}
                                             onChange={(e) => setNewRecDesc(e.target.value)}
-                                            className="bg-zinc-950 border-zinc-800 text-zinc-100"
+                                            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100"
                                         />
-                                        <Input
-                                            type="time"
-                                            value={newRecTime}
-                                            onChange={(e) => setNewRecTime(e.target.value)}
-                                            className="bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-400"
-                                            style={{ colorScheme: 'dark' }}
-                                            title="Set a daily reminder time (optional)"
-                                        />
+
                                     </div>
                                     <div className="flex justify-end">
                                         <Button size="sm" onClick={handleAddRec} disabled={!newRecTitle}>
@@ -418,9 +427,9 @@ export default function GuestSession() {
                                 </div>
 
                                 {recommendations.length > 0 && (
-                                    <div className="space-y-2 pt-2 border-t border-zinc-800">
+                                    <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                                         {recommendations.map((rec) => (
-                                            <div key={rec.id} className="flex justify-between items-center bg-zinc-950 p-2 rounded-lg border border-zinc-800">
+                                            <div key={rec.id} className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800">
                                                 <div>
                                                     <div className="flex items-center gap-2">
                                                         <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded border ${rec.category === 'relief' ? 'bg-blue-500/10 text-blue-300 border-blue-500/20' :
@@ -430,7 +439,7 @@ export default function GuestSession() {
                                                             }`}>
                                                             {rec.category}
                                                         </span>
-                                                        <p className="text-sm font-medium text-zinc-200">{rec.title}</p>
+                                                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-200">{rec.title}</p>
                                                     </div>
                                                     <p className="text-xs text-zinc-500 mt-1">
                                                         {rec.frequency} • {rec.description}
@@ -456,23 +465,23 @@ export default function GuestSession() {
                 {step === "sign" && (
                     <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 max-w-3xl mx-auto">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-zinc-100">Review & Sign</h2>
-                            <Button variant="ghost" onClick={() => setStep("work")} className="text-zinc-400 hover:text-white">
+                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Review & Sign</h2>
+                            <Button variant="ghost" onClick={() => setStep("work")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
                                 Edit Session
                             </Button>
                         </div>
 
                         {/* Digital Document Preview */}
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
                             {/* Watermark/Background decoration */}
                             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                                 <Info className="w-32 h-32" />
                             </div>
 
                             {/* Header */}
-                            <div className="border-b border-zinc-800 pb-6 mb-6">
-                                <h1 className="text-2xl font-serif text-emerald-500 mb-2">ChiroCard Session Record</h1>
-                                <div className="flex justify-between text-sm text-zinc-400">
+                            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
+                                <h1 className="text-2xl font-serif text-emerald-600 dark:text-emerald-500 mb-2">ChiroCard Session Record</h1>
+                                <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400">
                                     <span>Date: {new Date().toLocaleDateString()}</span>
                                     <span>Practitioner: {practitionerName || "Guest Practitioner"}</span>
                                 </div>
@@ -483,7 +492,7 @@ export default function GuestSession() {
                                 {intakeData?.notes && (
                                     <div className="space-y-2">
                                         <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Patient Intake</h3>
-                                        <p className="text-zinc-300 text-sm italic border-l-2 border-zinc-700 pl-3 py-1">
+                                        <p className="text-zinc-700 dark:text-zinc-300 text-sm italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-3 py-1">
                                             "{intakeData.notes}"
                                         </p>
                                     </div>
@@ -500,10 +509,10 @@ export default function GuestSession() {
                                                     const region = REGIONS.find(r => r.id === partId);
                                                     const note = treatmentNotes[partId];
                                                     return (
-                                                        <div key={partId} className="bg-zinc-950/50 p-3 rounded-lg border border-zinc-800/50 flex justify-between items-start">
+                                                        <div key={partId} className="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50 flex justify-between items-start">
                                                             <div>
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="font-medium text-zinc-200">{region?.label}</span>
+                                                                    <span className="font-medium text-zinc-900 dark:text-zinc-200">{region?.label}</span>
                                                                     <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${status === 'issue' ? 'bg-red-500/10 text-red-400' :
                                                                         status === 'addressed' ? 'bg-emerald-500/10 text-emerald-400' :
                                                                             'bg-amber-500/10 text-amber-400'
@@ -525,8 +534,8 @@ export default function GuestSession() {
                                 {/* 3. Session Notes */}
                                 <div className="space-y-2">
                                     <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Session Notes</h3>
-                                    <div className="bg-zinc-950/50 p-4 rounded-lg border border-zinc-800/50 min-h-[60px]">
-                                        <p className="text-zinc-300 text-sm whitespace-pre-wrap">
+                                    <div className="bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800/50 min-h-[60px]">
+                                        <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap">
                                             {notes || "No general notes added."}
                                         </p>
                                     </div>
@@ -538,13 +547,13 @@ export default function GuestSession() {
                                     {recommendations.length > 0 ? (
                                         <div className="space-y-2">
                                             {recommendations.map((rec) => (
-                                                <div key={rec.id} className="flex items-start gap-3 bg-zinc-950/50 p-3 rounded-lg border border-zinc-800/50">
+                                                <div key={rec.id} className="flex items-start gap-3 bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50">
                                                     <div className={`mt-1 w-2 h-2 rounded-full ${rec.category === 'relief' ? 'bg-blue-500' :
                                                         rec.category === 'movement' ? 'bg-emerald-500' :
                                                             rec.category === 'lifestyle' ? 'bg-purple-500' : 'bg-zinc-500'
                                                         }`} />
                                                     <div>
-                                                        <p className="text-sm font-medium text-zinc-200">{rec.title}</p>
+                                                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-200">{rec.title}</p>
                                                         <p className="text-xs text-zinc-500">
                                                             {rec.frequency} • {rec.category}
                                                             {rec.reminderTimes && rec.reminderTimes.length > 0 && ` • ⏰ ${rec.reminderTimes[0]}`}
@@ -560,8 +569,8 @@ export default function GuestSession() {
                                 </div>
 
                                 {/* Footer Disclaimer */}
-                                <div className="pt-6 border-t border-zinc-800 mt-8">
-                                    <p className="text-[10px] text-zinc-600 text-center">
+                                <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 mt-8">
+                                    <p className="text-[10px] text-zinc-500 dark:text-zinc-600 text-center">
                                         Disclaimer: This is a user-owned personal record and does not replace the official legal medical record maintained by the provider.
                                     </p>
                                 </div>
@@ -569,17 +578,17 @@ export default function GuestSession() {
                         </div>
 
                         {/* Signature Section */}
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-                            <h3 className="text-lg font-medium text-zinc-200 mb-4">Sign to Complete</h3>
+                        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
+                            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-200 mb-4">Sign to Complete</h3>
                             <Input
                                 label="Practitioner Name"
                                 value={practitionerName}
                                 onChange={(e) => setPractitionerName(e.target.value)}
                                 placeholder="Dr. Name or Therapist Name"
-                                className="bg-zinc-950 border-zinc-800 text-white mb-4"
+                                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white mb-4"
                             />
                             <div>
-                                <label className="block text-sm font-medium text-zinc-400 mb-2">Signature</label>
+                                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Signature</label>
                                 <SignaturePad ref={sigPadRef} />
                             </div>
                         </div>
@@ -591,7 +600,7 @@ export default function GuestSession() {
                         <div className="bg-emerald-500/10 p-6 rounded-full mb-6">
                             <CheckCircle className="w-16 h-16 text-emerald-500" />
                         </div>
-                        <h2 className="text-2xl font-bold text-zinc-100 mb-2">Session Completed!</h2>
+                        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Session Completed!</h2>
                         <p className="text-zinc-400 text-center max-w-md mb-8">
                             The session has been recorded and the PDF has been generated.
                         </p>
@@ -606,15 +615,30 @@ export default function GuestSession() {
                                         const pdf = generateSessionPDF({
                                             date: new Date().toLocaleDateString(),
                                             practitionerName,
-                                            practitioner: activePractitioner || undefined,
+                                            practitioner: activePractitioner ? {
+                                                name: activePractitioner.name,
+                                                role: activePractitioner.role,
+                                                clinicName: activePractitioner.clinicName,
+                                                phone: activePractitioner.phone,
+                                                email: activePractitioner.email,
+                                                website: activePractitioner.website,
+                                                address: activePractitioner.address
+                                            } : undefined,
                                             userContact: {
                                                 name: user?.name || "Guest User",
                                                 email: user?.email,
                                                 phone: user?.phone,
                                                 address: user?.address
                                             },
+                                            patientIntake: {
+                                                notes: intakeData?.notes,
+                                                bodyAreas: intakeData?.bodyMap,
+                                                bodyNotes: intakeData?.bodyNotes
+                                            },
                                             notes,
                                             bodyLog: bodyStatus,
+                                            treatmentNotes: treatmentNotes,
+                                            userSignature: intakeData?.userSignature,
                                             signatureImage: signature,
                                             recommendations: recommendations
                                         });
@@ -645,7 +669,7 @@ export default function GuestSession() {
 
             {/* Footer Action */}
             {step !== "completed" && (
-                <div className="fixed bottom-0 left-0 right-0 p-6 bg-zinc-950 border-t border-zinc-900">
+                <div className="fixed bottom-0 left-0 right-0 p-6 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900">
                     <div className="flex gap-4">
                         {step === "sign" && (
                             <Button variant="ghost" onClick={() => setStep("work")} className="flex-1">
