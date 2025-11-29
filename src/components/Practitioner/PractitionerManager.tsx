@@ -4,6 +4,7 @@ import { db, type Practitioner } from "../../db/db";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/Input";
+import { PlacesAutocomplete } from "../ui/PlacesAutocomplete";
 import { Modal } from "../ui/Modal";
 import { Plus, User, Trash2, GripVertical, Pencil, X } from "lucide-react";
 import { Reorder } from "framer-motion";
@@ -121,10 +122,25 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                     </div>
 
                     <div className="grid gap-4">
-                        <Input
-                            label="Name"
-                            placeholder="Dr. Smith"
-                            value={formData.name || ""}
+                        <PlacesAutocomplete
+                            label="Name / Search Google Maps"
+                            placeholder="Search for a practitioner or clinic..."
+                            defaultValue={formData.name || ""}
+                            onSelect={(place) => {
+                                const address = place.formatted_address || "";
+                                const phone = place.formatted_phone_number || "";
+                                const website = place.website || "";
+                                const name = place.name || "";
+
+                                setFormData(prev => ({
+                                    ...prev,
+                                    name: name,
+                                    address: address,
+                                    phone: phone,
+                                    website: website,
+                                    clinicName: name // Default clinic name to place name, user can edit
+                                }));
+                            }}
                             onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                         />
 

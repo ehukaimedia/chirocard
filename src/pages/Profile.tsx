@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer } from "lucide-react";
 
 import { TagInput } from "../components/ui/TagInput";
+import { PlacesAutocomplete } from "../components/ui/PlacesAutocomplete";
 import { useToast } from "../components/ui/Toast";
 
 export default function Profile() {
@@ -506,9 +507,15 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />
         </div>
-        <Input
+        <PlacesAutocomplete
             label="Address"
-            value={formData.address}
+            defaultValue={formData.address}
+            onSelect={(place) => {
+                setFormData((prev: FormData) => ({
+                    ...prev,
+                    address: place.formatted_address || ""
+                }));
+            }}
             onChange={e => setFormData((prev: FormData) => ({ ...prev, address: e.target.value }))}
             placeholder="123 Wellness Way, Healing City, HC 90210"
             className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
