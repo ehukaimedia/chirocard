@@ -68,8 +68,8 @@
 *   **PDF Export:** Generate professional PDF reports for insurance or personal records.
 
 ### 6.6. Profile
-*   **User Details:** Name, biometrics, and preferences.
-*   **Practitioner List:** Manage saved practitioners.
+*   **User Details:** Name, biometrics, and preferences. Address auto-fill via Google Places.
+*   **Practitioner List:** Manage saved practitioners. Add new practitioners instantly using Google Places search.
 
 ### 6.7. Settings & Data Management
 *   **Dedicated Settings Page:** Central location for app configuration.

@@ -22,6 +22,7 @@ Unlike traditional medical records held by clinics, **ChiroCard is user-owned**.
 *   **🌍 Global Compliance:** Designed for HIPAA, GDPR, and CCPA adherence. Your data never leaves your device unless *you* export it.
 *   **🤝 Practitioner Mode (Guest View):** A zero-friction flow where you hand your unlocked device to a practitioner to log a session without them needing an account or app.
 *   **📅 Smart Scheduling:** Track appointments and assigned "Homework" (stretches, exercises).
+*   **📍 Google Places Integration:** Instantly add practitioners and auto-fill addresses using Google Maps data.
 
 ## 🛠 Tech Stack
 
