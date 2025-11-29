@@ -57,6 +57,13 @@ Unlike traditional medical records held by clinics, **ChiroCard is user-owned**.
 
 ChiroCard is designed as a PWA. For the best experience, use Chrome or Safari on mobile and "Add to Home Screen" to install it as a native-feeling app.
 
+## 🚀 Future Roadmap
+
+We are actively working on bringing ChiroCard to the Apple App Store and Google Play Store.
+*   **Native Mobile Apps:** Using Capacitor to wrap the existing web app for iOS and Android.
+*   **Cloud Sync (Optional):** Future ability to sync data between devices (currently local-only).
+*   **Practitioner Portal:** A dedicated app for practitioners to manage multiple client "Passports".
+
 ## 📄 License
 
 MIT

@@ -5,9 +5,14 @@ import { db, type Appointment, type Homework } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ArrowLeft, Calendar as CalendarIcon, CheckCircle, Plus, Trash2, Edit2, Clock } from "lucide-react";
+import { ChevronLeft, CheckCircle, Plus, Trash2, Edit2, Clock, Download } from "lucide-react";
 import { Modal } from "../components/ui/Modal";
 import { PractitionerManager } from "../components/Practitioner/PractitionerManager";
+import CalendarComponent from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+
+type ValuePiece = Date | null;
+type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 export default function Calendar() {
     const navigate = useNavigate();
@@ -17,6 +22,7 @@ export default function Calendar() {
     const activeHomework = allHomework?.filter(h => h.status === 'active' || !h.status) || [];
     const pendingHomework = allHomework?.filter(h => h.status === 'pending') || [];
 
+    const [date, setDate] = useState<Value>(new Date());
     const [isAddingAppt, setIsAddingAppt] = useState(false);
     const [isAddingHomework, setIsAddingHomework] = useState(false);
 
@@ -36,6 +42,18 @@ export default function Calendar() {
     const [editTime, setEditTime] = useState("");
     const [editFreq, setEditFreq] = useState("");
     const [editCategory, setEditCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
+
+    // Filter items for selected date
+    const selectedDateStr = date instanceof Date ? date.toDateString() : "";
+
+    // We show ALL active homework regardless of date (since they are daily habits), 
+    // but we could filter completed history if we tracked completion history per day.
+    // For now, we just show the active list.
+
+    // Filter appointments for selected date
+    const dayAppointments = appointments?.filter(appt =>
+        new Date(appt.date).toDateString() === selectedDateStr
+    ) || [];
 
     const handleAddAppointment = async () => {
         if (!selectedPractitioner || !apptDate || !apptTime) return;
@@ -120,16 +138,163 @@ export default function Calendar() {
         setEditingHomework(null);
     };
 
+    const downloadICS = (appt: Appointment) => {
+        const dateObj = new Date(appt.date);
+        const endDateObj = new Date(appt.date + 60 * 60 * 1000); // Assume 1 hour duration
+
+        const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, "");
+
+        const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ChiroCard//BodyWork Passport//EN
+BEGIN:VEVENT
+UID:${appt.id}
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(dateObj)}
+DTEND:${formatDate(endDateObj)}
+SUMMARY:Appointment with ${appt.practitionerName}
+DESCRIPTION:Bodywork session via ChiroCard.
+END:VEVENT
+END:VCALENDAR`;
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `appointment-${appt.practitionerName}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Calendar Tile Content
+    const getTileContent = ({ date, view }: { date: Date, view: string }) => {
+        if (view !== 'month') return null;
+
+        const dateStr = date.toDateString();
+        const hasAppt = appointments?.some(a => new Date(a.date).toDateString() === dateStr);
+
+        // In a real app, we'd check historical completion data here.
+        // For now, we'll just show a dot for today if habits are done.
+        const isToday = dateStr === new Date().toDateString();
+        const allHabitsDone = activeHomework.length > 0 && activeHomework.every(h => h.isCompletedToday);
+        const hasCompletedHabits = isToday && allHabitsDone;
+
+        return (
+            <div className="flex justify-center gap-1 mt-1">
+                {hasAppt && <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>}
+                {hasCompletedHabits && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
+            </div>
+        );
+    };
+
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
-            <div className="flex items-center gap-4 mb-8">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                    <ArrowLeft className="w-6 h-6" />
-                </Button>
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Schedule & Habits</h1>
+            {/* Top Navigation Bar */}
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
+                <button
+                    onClick={() => navigate("/")}
+                    className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium text-sm flex items-center gap-2 transition-colors"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                    Return to Dashboard
+                </button>
+            </nav>
+
+            <div className="mt-16 mb-6 pt-6 flex items-center gap-4">
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Calendar</h1>
             </div>
 
-            <div className="space-y-8 max-w-md mx-auto">
+            <div className="max-w-md mx-auto space-y-8">
+
+                {/* Visual Calendar */}
+                <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+                    <CalendarComponent
+                        onChange={setDate}
+                        value={date}
+                        tileContent={getTileContent}
+                        className="w-full border-none font-sans"
+                    />
+                </div>
+
+                {/* Selected Date Header */}
+                <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+                        {date instanceof Date ? date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'Selected Date'}
+                    </h2>
+                </div>
+
+                {/* Appointments Section */}
+                <section className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                            Appointments
+                        </h3>
+                        <Button size="sm" variant="outline" onClick={() => setIsAddingAppt(!isAddingAppt)}>
+                            <Plus className="w-4 h-4 mr-1" /> Add
+                        </Button>
+                    </div>
+
+                    {isAddingAppt && (
+                        <Card className="p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                            <h3 className="font-medium">New Appointment</h3>
+                            {!selectedPractitioner ? (
+                                <div className="space-y-2">
+                                    <label className="text-xs text-zinc-500">Select Practitioner</label>
+                                    <PractitionerManager onSelect={(p) => setSelectedPractitioner({ id: p.id, name: p.name })} />
+                                </div>
+                            ) : (
+                                <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
+                                    <span className="text-sm font-medium">{selectedPractitioner.name}</span>
+                                    <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)}>Change</Button>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-2">
+                                <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
+                                <Input type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button className="flex-1" onClick={handleAddAppointment}>Save</Button>
+                                <Button variant="ghost" onClick={() => setIsAddingAppt(false)}>Cancel</Button>
+                            </div>
+                        </Card>
+                    )}
+
+                    <div className="space-y-3">
+                        {/* Show appointments for selected day OR all upcoming if today is selected? 
+                            Let's show ALL upcoming if no specific day selected, or just the day's.
+                            For simplicity, let's show the selected day's appointments.
+                        */}
+                        {dayAppointments.length > 0 ? (
+                            dayAppointments.map((appt: Appointment) => (
+                                <Card key={appt.id} className="p-4 flex justify-between items-center">
+                                    <div>
+                                        <p className="font-medium text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
+                                        <p className="text-sm text-zinc-500">
+                                            {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => downloadICS(appt)}
+                                            className="text-zinc-400 hover:text-blue-500 p-2"
+                                            title="Add to Calendar"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={() => deleteItem('appointment', appt.id)} className="text-zinc-400 hover:text-red-500 p-2">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </Card>
+                            ))
+                        ) : (
+                            <p className="text-center text-sm text-zinc-500 py-4 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+                                No appointments for this day.
+                            </p>
+                        )}
+                    </div>
+                </section>
 
                 {/* Pending Recommendations Review */}
                 {pendingHomework.length > 0 && (
@@ -138,9 +303,6 @@ export default function Calendar() {
                             <h2 className="text-lg font-medium text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
                                 <Plus className="w-5 h-5" /> New Recommendations
                             </h2>
-                            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                                Your practitioner has added new recommendations. Review and schedule them to add to your daily routine.
-                            </p>
                             <div className="space-y-3">
                                 {pendingHomework.map(hw => (
                                     <div key={hw.id} className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -159,8 +321,6 @@ export default function Calendar() {
                                                 className="h-8 text-xs w-32"
                                                 defaultValue={hw.reminderTimes?.[0] || ""}
                                                 onChange={(e) => {
-                                                    // This is a bit hacky for inline update, but works for the activation flow
-                                                    // Ideally we'd have local state for each item, but for now we'll just pass the value to activate
                                                     const btn = document.getElementById(`activate-${hw.id}`);
                                                     if (btn) btn.dataset.time = e.target.value;
                                                 }}
@@ -184,71 +344,12 @@ export default function Calendar() {
                     </section>
                 )}
 
-                {/* Appointments Section */}
-                <section className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
-                            <CalendarIcon className="w-5 h-5" /> Upcoming Appointments
-                        </h2>
-                        <Button size="sm" variant="outline" onClick={() => setIsAddingAppt(!isAddingAppt)}>
-                            <Plus className="w-4 h-4 mr-1" /> Add
-                        </Button>
-                    </div>
-
-                    {isAddingAppt && (
-                        <Card className="p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                            <h3 className="font-medium">New Appointment</h3>
-
-                            {!selectedPractitioner ? (
-                                <div className="space-y-2">
-                                    <label className="text-xs text-zinc-500">Select Practitioner</label>
-                                    <PractitionerManager onSelect={(p) => setSelectedPractitioner({ id: p.id, name: p.name })} />
-                                </div>
-                            ) : (
-                                <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
-                                    <span className="text-sm font-medium">{selectedPractitioner.name}</span>
-                                    <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)}>Change</Button>
-                                </div>
-                            )}
-
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
-                                <Input type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} />
-                            </div>
-
-                            <div className="flex gap-2">
-                                <Button className="flex-1" onClick={handleAddAppointment}>Save</Button>
-                                <Button variant="ghost" onClick={() => setIsAddingAppt(false)}>Cancel</Button>
-                            </div>
-                        </Card>
-                    )}
-
-                    <div className="space-y-3">
-                        {appointments?.map((appt: Appointment) => (
-                            <Card key={appt.id} className="p-4 flex justify-between items-center">
-                                <div>
-                                    <p className="font-medium text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
-                                    <p className="text-sm text-zinc-500">
-                                        {new Date(appt.date).toLocaleDateString()} at {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                </div>
-                                <button onClick={() => deleteItem('appointment', appt.id)} className="text-zinc-400 hover:text-red-500">
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </Card>
-                        ))}
-                        {appointments?.length === 0 && !isAddingAppt && (
-                            <p className="text-center text-sm text-zinc-500 py-4">No upcoming appointments.</p>
-                        )}
-                    </div>
-                </section>
-
                 {/* Homework Section */}
                 <section className="space-y-4">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
-                            <CheckCircle className="w-5 h-5" /> Daily Homework
-                        </h2>
+                        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                            Daily Habits
+                        </h3>
                         <Button size="sm" variant="outline" onClick={() => setIsAddingHomework(!isAddingHomework)}>
                             <Plus className="w-4 h-4 mr-1" /> Add
                         </Button>
