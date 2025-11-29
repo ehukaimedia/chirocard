@@ -47,11 +47,13 @@ export default function SessionReport() {
                 {/* Header */}
                 <header className="border-b-2 border-zinc-100 pb-6 flex justify-between items-start">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <img src="/chirocard-icon.png" alt="ChiroCard Icon" className="w-8 h-8" />
-                            <h1 className="text-2xl font-bold text-zinc-900">Chiro<span className="text-emerald-600">Card</span></h1>
+                        <div className="flex items-center gap-3 mb-1">
+                            <img src="/chirocard-icon.png" alt="ChiroCard Icon" className="w-10 h-10 rounded-xl shadow-sm" />
+                            <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
+                                <span className="text-emerald-600">Chiro</span>Card<span className="text-emerald-600">.</span>
+                            </h1>
                         </div>
-                        <p className="text-sm text-zinc-500">The Digital Body Work Passport</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] ml-1">The Digital Body Work Passport</p>
                     </div>
                     <div className="text-right">
                         <p className="text-sm text-zinc-500 mb-1">Session Date</p>
