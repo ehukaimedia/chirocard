@@ -10,7 +10,7 @@ import { Input } from "../components/ui/Input";
 import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { generateSessionPDF } from "../utils/pdfGenerator";
-import { Lock, Mic, AlertTriangle, Info, Plus, Trash2 } from "lucide-react";
+import { Lock, AlertTriangle, Info, Plus, Trash2 } from "lucide-react";
 import { type Homework } from "../db/db";
 import { useToast } from "../components/ui/Toast";
 
@@ -296,9 +296,6 @@ export default function GuestSession() {
                                     placeholder="Tap microphone to dictate or type notes..."
                                     className="w-full h-32 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 />
-                                <button className="absolute bottom-4 right-4 p-2 bg-emerald-600 rounded-full hover:bg-emerald-500 transition-colors">
-                                    <Mic className="w-5 h-5 text-white" />
-                                </button>
                             </div>
                         </section>
 

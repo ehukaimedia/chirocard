@@ -7,6 +7,8 @@ import { Modal } from "../components/ui/Modal";
 import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { ArrowLeft, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
+import { useRef } from "react";
 import { useToast } from "../components/ui/Toast";
 
 export default function Intake() {
@@ -22,6 +24,8 @@ export default function Intake() {
     const [notes, setNotes] = useState(intakeData?.notes || "");
 
     const [showStartModal, setShowStartModal] = useState(false);
+    const sigPadRef = useRef<SignaturePadRef>(null);
+    const [hasSignature, setHasSignature] = useState(false);
 
     const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
 
@@ -38,6 +42,9 @@ export default function Intake() {
     const handleConfirmStart = async () => {
         if (!selectedPractitioner) return;
 
+        // Get signature
+        const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || null;
+
         // Create new session
         const sessionId = crypto.randomUUID();
         await db.sessions.add({
@@ -47,7 +54,7 @@ export default function Intake() {
             practitionerName: selectedPractitioner.name,
             practitionerClass: selectedPractitioner.role,
             notes: "",
-            signatureBase64: null,
+            signatureBase64: signature,
             isLocked: false,
             createdAt: Date.now()
         });
@@ -143,7 +150,7 @@ export default function Intake() {
                                                 value={bodyNotes[partId] || ""}
                                                 onChange={(e) => setBodyNotes(prev => ({ ...prev, [partId]: e.target.value }))}
                                                 placeholder={`Specifics for ${region.label}...`}
-                                                className="w-full h-10 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                                className="w-full h-10 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                             />
                                         </div>
                                     );
@@ -161,7 +168,7 @@ export default function Intake() {
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Type or dictate notes here..."
-                        className="w-full h-24 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full h-24 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                 </section>
             </div>
@@ -184,11 +191,45 @@ export default function Intake() {
             <Modal
                 isOpen={showStartModal}
                 onClose={() => setShowStartModal(false)}
-                title="Ready to Start Session?"
-                description={`You are about to hand over your device to ${selectedPractitioner?.name}. They will review your intake notes and begin the session.`}
-                confirmLabel="Confirm & Hand Over"
+                title="Verify & Sign"
+                confirmLabel="Start Session"
+                confirmDisabled={!hasSignature}
                 onConfirm={handleConfirmStart}
-            />
+            >
+                <div className="space-y-6">
+                    <div className="space-y-2">
+                        <p className="text-sm text-zinc-500">
+                            Please verify your information before handing over to the practitioner.
+                        </p>
+                        <div className="bg-zinc-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-zinc-500">Practitioner:</span>
+                                <span className="font-medium text-zinc-900 dark:text-zinc-100">{selectedPractitioner?.name}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-zinc-500">Areas of Concern:</span>
+                                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                                    {Object.entries(bodyStatus).filter(([_, s]) => s === 'issue').length} areas
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                            Signature
+                        </label>
+                        <SignaturePad
+                            ref={sigPadRef}
+                            onEnd={() => setHasSignature(true)}
+                            onClear={() => setHasSignature(false)}
+                        />
+                        <p className="text-xs text-zinc-500">
+                            By signing, you confirm that the information provided is accurate.
+                        </p>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

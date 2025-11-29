@@ -8,7 +8,12 @@ export interface SignaturePadRef {
     isEmpty: () => boolean;
 }
 
-const SignaturePad = forwardRef<SignaturePadRef>((_, ref) => {
+export interface SignaturePadProps {
+    onEnd?: () => void;
+    onClear?: () => void;
+}
+
+const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(({ onEnd, onClear }, ref) => {
     const sigPad = useRef<SignatureCanvas>(null);
 
     useImperativeHandle(ref, () => ({
@@ -27,6 +32,7 @@ const SignaturePad = forwardRef<SignaturePadRef>((_, ref) => {
             <div className="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden bg-white dark:bg-zinc-800">
                 <SignatureCanvas
                     ref={sigPad}
+                    onEnd={onEnd}
                     penColor="#10b981" // Emerald 500
                     canvasProps={{
                         className: "w-full h-40 touch-none",
@@ -38,7 +44,10 @@ const SignaturePad = forwardRef<SignaturePadRef>((_, ref) => {
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => sigPad.current?.clear()}
+                    onClick={() => {
+                        sigPad.current?.clear();
+                        onClear?.();
+                    }}
                     className="text-xs text-zinc-500"
                 >
                     Clear Signature

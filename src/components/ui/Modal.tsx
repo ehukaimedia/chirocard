@@ -12,6 +12,7 @@ interface ModalProps {
     confirmLabel?: string;
     cancelLabel?: string;
     onConfirm?: () => void;
+    confirmDisabled?: boolean;
     variant?: "default" | "danger";
 }
 
@@ -24,6 +25,7 @@ export function Modal({
     confirmLabel = "Confirm",
     cancelLabel = "Cancel",
     onConfirm,
+    confirmDisabled = false,
     variant = "default"
 }: ModalProps) {
     useEffect(() => {
@@ -82,8 +84,10 @@ export function Modal({
                     {onConfirm && (
                         <Button
                             variant={variant === "danger" ? "danger" : "primary"}
+                            disabled={confirmDisabled}
                             onClick={() => {
                                 onConfirm();
+                                // Only close if not disabled (though button is disabled so click won't fire, good to be safe)
                                 onClose();
                             }}
                         >
