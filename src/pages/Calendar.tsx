@@ -39,9 +39,15 @@ export default function Calendar() {
     const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [editDesc, setEditDesc] = useState("");
-    const [editTime, setEditTime] = useState("");
-    const [editFreq, setEditFreq] = useState("");
+    const [editTimes, setEditTimes] = useState<string[]>([]);
+    const [newTimeInput, setNewTimeInput] = useState("");
+
     const [editCategory, setEditCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
+    const [editDays, setEditDays] = useState<number[]>([]); // 0-6 for Sun-Sat
+
+    // Delete State
+    const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [deleteType, setDeleteType] = useState<'appointment' | 'homework' | null>(null);
 
     // Edit Appointment State
     const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
@@ -61,6 +67,13 @@ export default function Calendar() {
     const dayAppointments = appointments?.filter(appt =>
         new Date(appt.date).toDateString() === selectedDateStr
     ) || [];
+
+    // Filter Wellness Routine for selected date
+    const dayRoutine = activeHomework.filter(hw => {
+        if (!hw.daysOfWeek || hw.daysOfWeek.length === 0) return true; // Default to daily if not specified
+        const dayIndex = (date instanceof Date ? date : new Date()).getDay();
+        return hw.daysOfWeek.includes(dayIndex);
+    });
 
     const handleAddAppointment = async () => {
         if (!selectedPractitioner || !apptDate || !apptTime) return;
@@ -87,7 +100,9 @@ export default function Calendar() {
             id: crypto.randomUUID(),
             title: homeworkTitle,
             description: homeworkDesc,
-            frequency: "daily",
+            frequency: editDays.length > 0 && editDays.length < 7 ? "custom" : "daily",
+            daysOfWeek: editDays.length > 0 ? editDays : [0, 1, 2, 3, 4, 5, 6],
+            reminderTimes: editTimes,
             category: 'custom',
             status: 'active',
             createdAt: Date.now(),
@@ -97,6 +112,8 @@ export default function Calendar() {
         setIsAddingHomework(false);
         setHomeworkTitle("");
         setHomeworkDesc("");
+        setEditDays([]); // Reset days
+        setEditTimes([]); // Reset times
     };
 
     const toggleHomework = async (id: string, currentStatus: boolean) => {
@@ -107,11 +124,31 @@ export default function Calendar() {
         });
     };
 
-    const deleteItem = async (type: 'appointment' | 'homework', id: string) => {
-        if (confirm("Delete this item?")) {
-            if (type === 'appointment') await db.appointments.delete(id);
-            else await db.homework.delete(id);
+    const deleteItem = (type: 'appointment' | 'homework', id: string) => {
+        setDeleteType(type);
+        setDeleteId(id);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId || !deleteType) return;
+
+        if (deleteType === 'appointment') {
+            await db.appointments.delete(deleteId);
+            // If we are editing this appointment, close the modal
+            if (editingAppt?.id === deleteId) {
+                setEditingAppt(null);
+                setPractitionerDetails(null);
+            }
+        } else {
+            await db.homework.delete(deleteId);
+            // If we are editing this homework, close the modal
+            if (editingHomework?.id === deleteId) {
+                setEditingHomework(null);
+            }
         }
+
+        setDeleteId(null);
+        setDeleteType(null);
     };
 
     const activateHomework = async (id: string, time?: string) => {
@@ -126,9 +163,11 @@ export default function Calendar() {
         setEditingHomework(hw);
         setEditTitle(hw.title);
         setEditDesc(hw.description || "");
-        setEditTime(hw.reminderTimes?.[0] || "");
-        setEditFreq(hw.frequency || "daily");
+        setEditTimes(hw.reminderTimes || []);
+        setNewTimeInput("");
+
         setEditCategory(hw.category || 'custom');
+        setEditDays(hw.daysOfWeek || [0, 1, 2, 3, 4, 5, 6]);
     };
 
     const handleSaveEdit = async () => {
@@ -137,8 +176,9 @@ export default function Calendar() {
         await db.homework.update(editingHomework.id, {
             title: editTitle,
             description: editDesc,
-            reminderTimes: editTime ? [editTime] : [],
-            frequency: editFreq,
+            reminderTimes: editTimes,
+            frequency: editDays.length === 7 ? "daily" : "custom",
+            daysOfWeek: editDays,
             category: editCategory
         });
 
@@ -185,13 +225,9 @@ export default function Calendar() {
         setPractitionerDetails(null);
     };
 
-    const handleDeleteApptFromModal = async () => {
+    const handleDeleteApptFromModal = () => {
         if (!editingAppt) return;
-        if (confirm("Delete this appointment?")) {
-            await db.appointments.delete(editingAppt.id);
-            setEditingAppt(null);
-            setPractitionerDetails(null);
-        }
+        deleteItem('appointment', editingAppt.id);
     };
 
     // Calendar Tile Content
@@ -234,8 +270,13 @@ export default function Calendar() {
 
             <div className="max-w-md mx-auto space-y-8">
 
-                {/* Visual Calendar */}
-                <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
+                <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 relative">
+                    <button
+                        onClick={() => setDate(new Date())}
+                        className="absolute top-4 right-4 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors z-10"
+                    >
+                        Today
+                    </button>
                     <CalendarComponent
                         onChange={setDate}
                         value={date}
@@ -262,30 +303,7 @@ export default function Calendar() {
                         </Button>
                     </div>
 
-                    {isAddingAppt && (
-                        <Card className="p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                            <h3 className="font-medium">New Appointment</h3>
-                            {!selectedPractitioner ? (
-                                <div className="space-y-2">
-                                    <label className="text-xs text-zinc-500">Select Practitioner</label>
-                                    <PractitionerManager onSelect={(p) => setSelectedPractitioner({ id: p.id, name: p.name })} />
-                                </div>
-                            ) : (
-                                <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
-                                    <span className="text-sm font-medium">{selectedPractitioner.name}</span>
-                                    <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)}>Change</Button>
-                                </div>
-                            )}
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
-                                <Input type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} />
-                            </div>
-                            <div className="flex gap-2">
-                                <Button className="flex-1" onClick={handleAddAppointment}>Save</Button>
-                                <Button variant="ghost" onClick={() => setIsAddingAppt(false)}>Cancel</Button>
-                            </div>
-                        </Card>
-                    )}
+
 
                     <div className="space-y-3">
                         {/* Show appointments for selected day OR all upcoming if today is selected? 
@@ -341,6 +359,13 @@ export default function Calendar() {
                                                 <h3 className="font-medium text-zinc-900 dark:text-zinc-100">{hw.title}</h3>
                                                 <p className="text-xs text-zinc-500">{hw.frequency} • {hw.description}</p>
                                             </div>
+                                            <button
+                                                onClick={() => deleteItem('homework', hw.id)}
+                                                className="text-zinc-400 hover:text-red-500 p-1"
+                                                title="Remove Recommendation"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                         <div className="flex gap-2 items-center mt-3">
                                             <Input
@@ -371,41 +396,21 @@ export default function Calendar() {
                     </section>
                 )}
 
-                {/* Homework Section */}
+                {/* Wellness Routine Section */}
                 <section className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            Daily Habits
+                            Wellness Routine
                         </h3>
                         <Button size="sm" variant="outline" onClick={() => setIsAddingHomework(!isAddingHomework)}>
                             <Plus className="w-4 h-4 mr-1" /> Add
                         </Button>
                     </div>
 
-                    {isAddingHomework && (
-                        <Card className="p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-                            <h3 className="font-medium">New Habit / Homework</h3>
-                            <Input
-                                label="Title"
-                                placeholder="e.g. Ice Lower Back"
-                                value={homeworkTitle}
-                                onChange={e => setHomeworkTitle(e.target.value)}
-                            />
-                            <Input
-                                label="Description"
-                                placeholder="e.g. 20 mins, 3x a day"
-                                value={homeworkDesc}
-                                onChange={e => setHomeworkDesc(e.target.value)}
-                            />
-                            <div className="flex gap-2">
-                                <Button className="flex-1" onClick={handleAddHomework}>Save</Button>
-                                <Button variant="ghost" onClick={() => setIsAddingHomework(false)}>Cancel</Button>
-                            </div>
-                        </Card>
-                    )}
+
 
                     <div className="space-y-3">
-                        {activeHomework?.map((hw: Homework) => (
+                        {dayRoutine.map((hw: Homework) => (
                             <div
                                 key={hw.id}
                                 className={`
@@ -429,14 +434,24 @@ export default function Calendar() {
                                             {hw.title}
                                         </p>
                                         {hw.reminderTimes && hw.reminderTimes.length > 0 && (
-                                            <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                                                {hw.reminderTimes[0]}
-                                            </span>
+                                            <div className="flex flex-wrap gap-1">
+                                                {hw.reminderTimes.map((t, i) => (
+                                                    <span key={i} className="text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {t}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         )}
                                     </div>
-                                    {hw.description && (
-                                        <p className="text-xs text-zinc-500">{hw.description}</p>
-                                    )}
+                                    <div className="flex gap-2 text-xs text-zinc-500 mt-0.5">
+                                        {hw.daysOfWeek && hw.daysOfWeek.length < 7 && (
+                                            <span className="uppercase tracking-wide">
+                                                {hw.daysOfWeek.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
+                                            </span>
+                                        )}
+                                        {hw.description && <span>• {hw.description}</span>}
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center gap-1">
@@ -457,8 +472,8 @@ export default function Calendar() {
                                 </div>
                             </div>
                         ))}
-                        {activeHomework?.length === 0 && !isAddingHomework && (
-                            <p className="text-center text-sm text-zinc-500 py-4">No active homework.</p>
+                        {dayRoutine.length === 0 && !isAddingHomework && (
+                            <p className="text-center text-sm text-zinc-500 py-4">No routine items for this day.</p>
                         )}
                     </div>
                 </section>
@@ -486,49 +501,85 @@ export default function Calendar() {
                         value={editDesc}
                         onChange={(e) => setEditDesc(e.target.value)}
                     />
+
                     <div>
-                        <label className="text-xs font-medium text-zinc-500 mb-1 block">Daily Reminder Time</label>
-                        <div className="relative">
-                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                            <Input
-                                type="time"
-                                value={editTime}
-                                onChange={(e) => setEditTime(e.target.value)}
-                                className="pl-9"
-                            />
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
+                        <div className="flex justify-between gap-1">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
+                                const isSelected = editDays.includes(i);
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => {
+                                            if (isSelected) setEditDays(editDays.filter(d => d !== i));
+                                            else setEditDays([...editDays, i].sort());
+                                        }}
+                                        className={`
+                                            w-8 h-8 rounded-full text-xs font-medium transition-all
+                                            ${isSelected
+                                                ? 'bg-emerald-500 text-white shadow-sm scale-110'
+                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'}
+                                        `}
+                                    >
+                                        {day}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-medium text-zinc-500 mb-1 block">Frequency</label>
-                            <select
-                                value={editFreq}
-                                onChange={(e) => setEditFreq(e.target.value)}
-                                className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            >
-                                <option value="Daily">Daily</option>
-                                <option value="2x Daily">2x Daily</option>
-                                <option value="Morning/Night">Morning/Night</option>
-                                <option value="As Needed">As Needed</option>
-                                <option value="Acute (3x/day)">Acute (3x/day)</option>
-                                <option value="Weekly">Weekly</option>
-                                <option value="Once">Once</option>
-                            </select>
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Reminders</label>
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                                {editTimes.map((time, i) => (
+                                    <div key={i} className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-sm">
+                                        <Clock className="w-3 h-3 text-zinc-400" />
+                                        <span>{time}</span>
+                                        <button
+                                            onClick={() => setEditTimes(editTimes.filter((_, idx) => idx !== i))}
+                                            className="text-zinc-400 hover:text-red-500 ml-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="time"
+                                    value={newTimeInput}
+                                    onChange={(e) => setNewTimeInput(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (newTimeInput && !editTimes.includes(newTimeInput)) {
+                                            setEditTimes([...editTimes, newTimeInput].sort());
+                                            setNewTimeInput("");
+                                        }
+                                    }}
+                                >
+                                    Add
+                                </Button>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
-                            <select
-                                value={editCategory}
-                                onChange={(e) => setEditCategory(e.target.value as any)}
-                                className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            >
-                                <option value="relief">Relief & Recovery</option>
-                                <option value="movement">Movement & Mobility</option>
-                                <option value="lifestyle">Lifestyle & Wellness</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                        </div>
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
+                        <select
+                            value={editCategory}
+                            onChange={(e) => setEditCategory(e.target.value as any)}
+                            className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                            <option value="relief">Relief & Recovery</option>
+                            <option value="movement">Movement & Mobility</option>
+                            <option value="lifestyle">Lifestyle & Wellness</option>
+                            <option value="custom">Custom</option>
+                        </select>
                     </div>
                 </div>
             </Modal>
@@ -634,6 +685,137 @@ export default function Calendar() {
                     </div>
                 </div>
             </Modal>
+            {/* Add Appointment Modal */}
+            <Modal
+                isOpen={isAddingAppt}
+                onClose={() => setIsAddingAppt(false)}
+                title="New Appointment"
+                description="Schedule a new session."
+                confirmLabel="Add Appointment"
+                cancelLabel="Cancel"
+                onConfirm={handleAddAppointment}
+            >
+                <div className="space-y-4 py-2">
+                    {!selectedPractitioner ? (
+                        <div className="space-y-2">
+                            <label className="text-xs text-zinc-500">Select Practitioner</label>
+                            <PractitionerManager onSelect={(p) => setSelectedPractitioner({ id: p.id, name: p.name })} />
+                        </div>
+                    ) : (
+                        <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
+                            <span className="text-sm font-medium">{selectedPractitioner.name}</span>
+                            <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)}>Change</Button>
+                        </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
+                        <Input type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} />
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Add Habit Modal */}
+            <Modal
+                isOpen={isAddingHomework}
+                onClose={() => { setIsAddingHomework(false); setEditDays([]); }}
+                title="New Wellness Routine"
+                description="Add a routine activity."
+                confirmLabel="Add Routine"
+                cancelLabel="Cancel"
+                onConfirm={handleAddHomework}
+            >
+                <div className="space-y-4 py-2">
+                    <Input
+                        label="Title"
+                        placeholder="e.g. Cold Plunge"
+                        value={homeworkTitle}
+                        onChange={e => setHomeworkTitle(e.target.value)}
+                    />
+                    <Input
+                        label="Description"
+                        placeholder="e.g. 3 minutes @ 50F"
+                        value={homeworkDesc}
+                        onChange={e => setHomeworkDesc(e.target.value)}
+                    />
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
+                        <div className="flex justify-between gap-1">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
+                                const isSelected = editDays.includes(i);
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => {
+                                            if (isSelected) setEditDays(editDays.filter(d => d !== i));
+                                            else setEditDays([...editDays, i].sort());
+                                        }}
+                                        className={`
+                                            w-8 h-8 rounded-full text-xs font-medium transition-all
+                                            ${isSelected
+                                                ? 'bg-emerald-500 text-white shadow-sm scale-110'
+                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'}
+                                        `}
+                                    >
+                                        {day}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-[10px] text-zinc-400 mt-1 text-center">Select days to schedule (leave empty for daily)</p>
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Reminders</label>
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                                {editTimes.map((time, i) => (
+                                    <div key={i} className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-sm">
+                                        <Clock className="w-3 h-3 text-zinc-400" />
+                                        <span>{time}</span>
+                                        <button
+                                            onClick={() => setEditTimes(editTimes.filter((_, idx) => idx !== i))}
+                                            className="text-zinc-400 hover:text-red-500 ml-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="time"
+                                    value={newTimeInput}
+                                    onChange={(e) => setNewTimeInput(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (newTimeInput && !editTimes.includes(newTimeInput)) {
+                                            setEditTimes([...editTimes, newTimeInput].sort());
+                                            setNewTimeInput("");
+                                        }
+                                    }}
+                                >
+                                    Add
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={!!deleteId}
+                onClose={() => { setDeleteId(null); setDeleteType(null); }}
+                title={deleteType === 'appointment' ? "Delete Appointment" : "Delete Routine Item"}
+                description={`Are you sure you want to delete this ${deleteType === 'appointment' ? 'appointment' : 'routine item'}? This cannot be undone.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                onConfirm={confirmDelete}
+                variant="danger"
+            />
         </div>
     );
 }
