@@ -22,6 +22,18 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
     // Extract recommendations count
     const recCount = session.recommendations?.length || 0;
 
+    // Calculate Max Pain Level
+    const maxPainLevel = session.bodyLevels
+        ? Math.max(...Object.values(session.bodyLevels), 0)
+        : 0;
+
+    // Extract unique badges
+    const allBadges = session.bodyBadges
+        ? Array.from(new Set(Object.values(session.bodyBadges).flat()))
+        : [];
+    const displayBadges = allBadges.slice(0, 3);
+    const moreBadgesCount = allBadges.length - 3;
+
     return (
         <Card className="group relative overflow-hidden transition-all hover:shadow-md border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
             <div className="p-5 flex flex-col gap-4">
@@ -52,6 +64,30 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
                         </button>
                     )}
                 </div>
+
+                {/* Key Metrics Row */}
+                {(maxPainLevel > 0 || displayBadges.length > 0) && (
+                    <div className="flex flex-wrap gap-2 items-center">
+                        {maxPainLevel > 0 && (
+                            <span className={`
+                                px-2 py-1 rounded-md text-xs font-bold border
+                                ${maxPainLevel >= 7 ? 'bg-red-50 text-red-700 border-red-100' :
+                                    maxPainLevel >= 4 ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                                        'bg-blue-50 text-blue-700 border-blue-100'}
+                            `}>
+                                Max Pain: {maxPainLevel}/10
+                            </span>
+                        )}
+                        {displayBadges.map(badge => (
+                            <span key={badge} className="px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                {badge}
+                            </span>
+                        ))}
+                        {moreBadgesCount > 0 && (
+                            <span className="text-xs text-zinc-400">+{moreBadgesCount} more</span>
+                        )}
+                    </div>
+                )}
 
                 {/* Body: Details */}
                 <div className="space-y-3">
@@ -91,8 +127,8 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
             </div>
 
             {/* Footer / Action */}
-            <Link to={`/session/${session.id}`} className="block bg-zinc-50 dark:bg-zinc-950/50 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
-                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">Session Record</span>
+            <Link to={`/session/${session.id}/report`} className="block bg-zinc-50 dark:bg-zinc-950/50 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
+                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">View Report</span>
                 <ArrowRight className="w-4 h-4 text-emerald-500 transform group-hover:translate-x-1 transition-transform" />
             </Link>
         </Card>
