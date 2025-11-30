@@ -1,70 +1,62 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, Sun, Moon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
 
 export default function Settings() {
     const navigate = useNavigate();
-    const { theme, toggleTheme, calendarViewSpan, setCalendarViewSpan } = useAppStore();
+    const { calendarViewSpan, setCalendarViewSpan } = useAppStore();
 
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
+        <div className="min-h-screen bg-zinc-50 p-6 pb-24">
             {/* Top Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
-                <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2 pl-0 hover:bg-transparent">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200 flex items-center px-6 z-50">
+                <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
                     Return to Dashboard
                 </Button>
             </nav>
 
             {/* Header Content */}
-            <div className="mt-16 mb-6 pt-6 flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Settings</h1>
+            <div className="mt-16 mb-8 pt-6 max-w-2xl mx-auto">
+                <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Settings</h1>
+                <p className="text-zinc-500 mt-2">Manage your app preferences and data.</p>
             </div>
 
-            <div className="max-w-md mx-auto space-y-6">
-                {/* Appearance */}
-                <section className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
-                    <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">Appearance</h2>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-                                {theme === 'dark' ? <Moon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" /> : <Sun className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />}
-                            </div>
-                            <div>
-                                <p className="font-medium text-zinc-900 dark:text-zinc-100">Dark Mode</p>
-                                <p className="text-xs text-zinc-500">Adjust the screen brightness</p>
-                            </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} className="sr-only peer" />
-                            <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
-                        </label>
-                    </div>
-                </section>
-
+            <div className="max-w-2xl mx-auto space-y-8">
                 {/* Calendar Settings */}
-                <section className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800">
-                    <h2 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mb-4">Calendar</h2>
+                <section className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2.5 bg-indigo-50 rounded-xl">
+                            <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-zinc-900">Calendar Preferences</h2>
+                            <p className="text-sm text-zinc-500">Customize how your schedule is displayed</p>
+                        </div>
+                    </div>
+
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
-                                Calendar Look Ahead
+                            <label className="block text-sm font-medium text-zinc-900 mb-2">
+                                Upcoming View Range
                             </label>
-                            <p className="text-xs text-zinc-500 mb-3">
-                                How many days of upcoming items to show in the list.
+                            <p className="text-xs text-zinc-500 mb-4">
+                                Select how many days of future events to display in your upcoming list.
                             </p>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-4 gap-3">
                                 {[7, 14, 30, 60].map((days) => (
                                     <button
                                         key={days}
                                         onClick={() => setCalendarViewSpan(days)}
                                         className={`
-                                            py-2 px-3 rounded-lg text-sm font-medium border transition-all
+                                            py-2.5 px-3 rounded-xl text-sm font-medium border transition-all duration-200
                                             ${calendarViewSpan === days
-                                                ? 'bg-emerald-500 text-white border-emerald-500'
-                                                : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/50'}
+                                                ? 'bg-zinc-900 text-white border-zinc-900 shadow-sm'
+                                                : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'}
                                         `}
                                     >
                                         {days} Days
@@ -74,6 +66,7 @@ export default function Settings() {
                         </div>
                     </div>
                 </section>
+
                 <DataManagement />
             </div>
         </div>

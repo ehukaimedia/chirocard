@@ -19,7 +19,6 @@ interface StoredPractitioner {
 
 interface AppState {
     mode: AppMode;
-    theme: 'dark' | 'light';
     activeSessionId: string | null;
     activePractitioner: StoredPractitioner | null;
     intakeData: {
@@ -34,13 +33,11 @@ interface AppState {
 
     // Actions
     setMode: (mode: AppMode) => void;
-    setTheme: (theme: 'dark' | 'light') => void;
     startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }) => void;
     resumeSession: (session: any) => void;
     updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string }) => void;
     clearIntakeData: () => void;
     endSession: () => void;
-    toggleTheme: () => void;
 
     // Settings
     calendarViewSpan: number;
@@ -53,14 +50,12 @@ export const useAppStore = create<AppState>()(
     persist(
         (set) => ({
             mode: 'user',
-            theme: 'dark', // Default to "Bioluminescent"
             activeSessionId: null,
             activePractitioner: null,
             intakeData: null,
             resumedSessionData: null,
 
             setMode: (mode) => set({ mode }),
-            setTheme: (theme) => set({ theme }),
 
             startSession: (sessionId, practitioner, intakeData) => set({
                 activeSessionId: sessionId,
@@ -99,17 +94,12 @@ export const useAppStore = create<AppState>()(
 
             endSession: () => set({ activeSessionId: null, mode: 'user', activePractitioner: null, intakeData: null, resumedSessionData: null }),
 
-            toggleTheme: () => set((state) => ({
-                theme: state.theme === 'dark' ? 'light' : 'dark'
-            })),
-
             calendarViewSpan: 30, // Default to 30 days
             setCalendarViewSpan: (days) => set({ calendarViewSpan: days }),
         }),
         {
             name: 'chirocard-storage',
             partialize: (state) => ({
-                theme: state.theme,
                 activeSessionId: state.activeSessionId,
                 activePractitioner: state.activePractitioner,
                 mode: state.mode,

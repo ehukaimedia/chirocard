@@ -56,63 +56,65 @@ export const DataManagement = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-zinc-900/50 rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 space-y-6 shadow-sm">
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/10 rounded-lg">
-                    <RefreshCw className="w-6 h-6 text-emerald-500" />
+        <section className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-emerald-50 rounded-xl">
+                    <RefreshCw className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Data Management</h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">Backup your passport or switch devices.</p>
+                    <h3 className="text-lg font-semibold text-zinc-900">Data Management</h3>
+                    <p className="text-sm text-zinc-500">Backup your passport or switch devices.</p>
                 </div>
             </div>
 
             {message && (
-                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                    {message.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                <div className={`mb-6 p-4 rounded-xl text-sm flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
+                    {message.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <AlertTriangle className="w-5 h-5 shrink-0" />}
                     {message.text}
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Backup</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Backup</label>
                     <Button
                         variant="outline"
-                        className="w-full justify-start border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
+                        className="w-full justify-start h-12 border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium"
                         onClick={handleExport}
                         disabled={isExporting}
                     >
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-4 h-4 mr-3 text-zinc-400" />
                         {isExporting ? "Exporting..." : "Download Backup"}
                     </Button>
-                    <p className="text-[10px] text-zinc-500 mt-2">
-                        <strong>Includes:</strong> Profile, Medical History, All Sessions, Practitioners, & Homework.
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                        Includes: Profile, Medical History, All Sessions, Practitioners, & Homework.
                     </p>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Restore</label>
+                <div className="space-y-3">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Restore</label>
                     <div className="relative">
                         <input
                             type="file"
                             accept=".json"
                             onChange={handleImport}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             disabled={isImporting}
                         />
                         <Button
                             variant="outline"
-                            className="w-full justify-start border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
+                            className="w-full justify-start h-12 border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium"
                             disabled={isImporting}
                         >
-                            <Upload className="w-4 h-4 mr-2" />
+                            <Upload className="w-4 h-4 mr-3 text-zinc-400" />
                             {isImporting ? "Restoring..." : "Restore from Backup"}
                         </Button>
                     </div>
-                    <p className="text-[10px] text-zinc-500">Warning: This will replace all current data.</p>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                        <span className="text-rose-500 font-medium">Warning:</span> This will replace all current data.
+                    </p>
                 </div>
             </div>
-        </div>
+        </section>
     );
 };
