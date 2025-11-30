@@ -135,19 +135,19 @@ export default function GuestSession() {
                     // 3. Compare Recommendations
                     // Added
                     recommendations.forEach(r => {
-                        if (!resumedSessionData.recommendations?.some(old => old.id === r.id)) {
+                        if (!resumedSessionData.recommendations?.some((old: Homework) => old.id === r.id)) {
                             changes.push(`Added Rec: ${r.title}`);
                         }
                     });
                     // Removed
-                    resumedSessionData.recommendations?.forEach(old => {
+                    resumedSessionData.recommendations?.forEach((old: Homework) => {
                         if (!recommendations.some(r => r.id === old.id)) {
                             changes.push(`Removed Rec: ${old.title}`);
                         }
                     });
                     // Modified (title/freq/desc)
                     recommendations.forEach(r => {
-                        const old = resumedSessionData.recommendations?.find(o => o.id === r.id);
+                        const old = resumedSessionData.recommendations?.find((o: Homework) => o.id === r.id);
                         if (old) {
                             if (r.title !== old.title) changes.push(`Updated Rec: ${r.title}`);
                             else if (r.frequency !== old.frequency) changes.push(`${r.title} freq: ${r.frequency}`);
