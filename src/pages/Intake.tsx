@@ -9,6 +9,7 @@ import { useAppStore } from "../store/useAppStore";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { useToast } from "../components/ui/Toast";
 import { Modal } from "../components/ui/Modal";
+import { AddPractitionerModal } from "../components/Practitioner/AddPractitionerModal";
 
 export default function Intake() {
     const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function Intake() {
 
     const [step, setStep] = useState<"intake" | "review">("intake");
     const [showResumeModal, setShowResumeModal] = useState(false);
+    const [showAddPractitionerModal, setShowAddPractitionerModal] = useState(false);
     const sigPadRef = useRef<SignaturePadRef>(null);
 
     const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
@@ -145,16 +147,33 @@ export default function Intake() {
                                             </option>
                                         ))}
                                     </select>
-                                    <p className="text-xs text-zinc-500 px-2">
-                                        Manage your team order in the <span className="font-bold cursor-pointer hover:text-emerald-500" onClick={() => navigate('/team')}>Team</span> page.
-                                    </p>
+                                    <div className="flex justify-between items-center px-2 mt-2">
+                                        <p className="text-xs text-zinc-500">
+                                            Manage your team order in the <span className="font-bold cursor-pointer hover:text-emerald-500" onClick={() => navigate('/team')}>Team</span> page.
+                                        </p>
+                                        <button
+                                            onClick={() => setShowAddPractitionerModal(true)}
+                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+                                        >
+                                            + Add New
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="text-center py-8 bg-white dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
                                     <p className="text-zinc-500 mb-4">No practitioners found.</p>
-                                    <Button onClick={() => navigate("/team")}>Add Practitioner</Button>
+                                    <Button onClick={() => setShowAddPractitionerModal(true)}>Add Practitioner</Button>
                                 </div>
                             )}
+
+                            <AddPractitionerModal
+                                isOpen={showAddPractitionerModal}
+                                onClose={() => setShowAddPractitionerModal(false)}
+                                onAdded={(newPractitioner) => {
+                                    setSelectedPractitioner(newPractitioner);
+                                    toast(`Added ${newPractitioner.name} to your team.`, "success");
+                                }}
+                            />
                         </section>
 
                         {/* Question 3 */}
