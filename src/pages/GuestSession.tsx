@@ -107,14 +107,80 @@ export default function GuestSession() {
                 // Add system log entry if editing
                 let updatedLog = existingSession.postSessionLog || [];
                 if (resumedSessionData) {
-                    const editEntry = {
-                        id: crypto.randomUUID(),
-                        timestamp: Date.now(),
-                        author: 'practitioner',
-                        type: 'update_log',
-                        content: "Session updated."
-                    };
-                    updatedLog = [...updatedLog, editEntry];
+                    const changes: string[] = [];
+
+                    // 1. Compare Notes
+                    if (notes !== resumedSessionData.notes) {
+                        changes.push(`Notes: "${notes}"`);
+                    }
+
+                    // 2. Compare Body Map (Status)
+                    const allRegions = new Set([
+                        ...Object.keys(bodyStatus),
+                        ...Object.keys(resumedSessionData.bodyMap || {})
+                    ]);
+
+                    allRegions.forEach(key => {
+                        const newVal = bodyStatus[key];
+                        const oldVal = resumedSessionData.bodyMap?.[key];
+                        if (newVal !== oldVal) {
+                            const regionName = REGIONS.find(r => r.id === key)?.label || key;
+                            // If it was removed/undefined, maybe say 'cleared'? But usually it just changes status.
+                            // If new val is 'normal' (which might be undefined in storage), we can say 'normal' or 'cleared'.
+                            // Assuming 'normal' is the default/cleared state.
+                            changes.push(`${regionName}: ${newVal || 'normal'}`);
+                        }
+                    });
+
+                    // 3. Compare Recommendations
+                    // Added
+                    recommendations.forEach(r => {
+                        if (!resumedSessionData.recommendations?.some(old => old.id === r.id)) {
+                            changes.push(`Added Rec: ${r.title}`);
+                        }
+                    });
+                    // Removed
+                    resumedSessionData.recommendations?.forEach(old => {
+                        if (!recommendations.some(r => r.id === old.id)) {
+                            changes.push(`Removed Rec: ${old.title}`);
+                        }
+                    });
+                    // Modified (title/freq/desc)
+                    recommendations.forEach(r => {
+                        const old = resumedSessionData.recommendations?.find(o => o.id === r.id);
+                        if (old) {
+                            if (r.title !== old.title) changes.push(`Updated Rec: ${r.title}`);
+                            else if (r.frequency !== old.frequency) changes.push(`${r.title} freq: ${r.frequency}`);
+                        }
+                    });
+
+                    // 4. Compare Treatment Notes
+                    const allTreatments = new Set([
+                        ...Object.keys(treatmentNotes),
+                        ...Object.keys(resumedSessionData.treatmentNotes || {})
+                    ]);
+                    allTreatments.forEach(key => {
+                        const newVal = treatmentNotes[key];
+                        const oldVal = resumedSessionData.treatmentNotes?.[key];
+                        if (newVal !== oldVal) {
+                            const regionName = REGIONS.find(r => r.id === key)?.label || key;
+                            changes.push(`${regionName} Note: "${newVal}"`);
+                        }
+                    });
+
+                    // If we have changes, log them. If not, maybe just "Session saved." or skip?
+                    // User wants data.
+                    if (changes.length > 0) {
+                        const logContent = changes.join(", ");
+                        const editEntry = {
+                            id: crypto.randomUUID(),
+                            timestamp: Date.now(),
+                            author: 'practitioner',
+                            type: 'update_log',
+                            content: logContent
+                        };
+                        updatedLog = [...updatedLog, editEntry];
+                    }
                 }
 
                 await db.sessions.put({
