@@ -38,6 +38,7 @@ interface AppState {
     startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }) => void;
     resumeSession: (session: any) => void;
     updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string }) => void;
+    clearIntakeData: () => void;
     endSession: () => void;
     toggleTheme: () => void;
 }
@@ -89,6 +90,8 @@ export const useAppStore = create<AppState>()(
             updateIntakeData: (data) => set((state) => ({
                 intakeData: { ...state.intakeData, ...data }
             })),
+
+            clearIntakeData: () => set({ intakeData: null }),
 
             endSession: () => set({ activeSessionId: null, mode: 'user', activePractitioner: null, intakeData: null, resumedSessionData: null }),
 

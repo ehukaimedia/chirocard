@@ -12,6 +12,7 @@ interface ModalProps {
     confirmLabel?: string;
     cancelLabel?: string;
     onConfirm?: () => void;
+    onCancel?: () => void;
     confirmDisabled?: boolean;
     variant?: "default" | "danger";
 }
@@ -25,6 +26,7 @@ export function Modal({
     confirmLabel = "Confirm",
     cancelLabel = "Cancel",
     onConfirm,
+    onCancel,
     confirmDisabled = false,
     variant = "default"
 }: ModalProps) {
@@ -78,7 +80,10 @@ export function Modal({
 
                 {/* Footer */}
                 <div className="flex justify-end gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
-                    <Button variant="ghost" onClick={onClose}>
+                    <Button variant="ghost" onClick={() => {
+                        if (onCancel) onCancel();
+                        else onClose();
+                    }}>
                         {cancelLabel}
                     </Button>
                     {onConfirm && (

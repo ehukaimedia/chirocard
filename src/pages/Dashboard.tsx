@@ -32,6 +32,16 @@ export default function Dashboard() {
         }
     };
 
+    const user = useLiveQuery(() => db.users.get("me"));
+
+    const activeFocus = user?.primaryComplaints && user.primaryComplaints.length > 0
+        ? user.primaryComplaints.join(", ")
+        : "Maintenance & Prevention";
+
+    const statusLabel = user?.primaryComplaints && user.primaryComplaints.length > 0
+        ? "Active Focus"
+        : "Current Status";
+
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 space-y-8 pb-24">
             {/* Header */}
@@ -112,8 +122,8 @@ export default function Dashboard() {
                     {/* Status Indicator */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
                         <div>
-                            <span className="text-emerald-600 dark:text-emerald-500 text-xs font-bold tracking-wider uppercase mb-1 block">Active Care Plan</span>
-                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">Maintenance</h3>
+                            <span className="text-emerald-600 dark:text-emerald-500 text-xs font-bold tracking-wider uppercase mb-1 block">{statusLabel}</span>
+                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight" title={activeFocus}>{activeFocus}</h3>
                         </div>
                         <div className="h-3 w-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
                     </div>
@@ -127,7 +137,7 @@ export default function Dashboard() {
                             </p>
                         </div>
                         <div className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50">
-                            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Daily Habits</p>
+                            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Wellness Routine</p>
                             <p className="text-zinc-900 dark:text-zinc-200 font-semibold">
                                 {activeHomeworkCount > 0 ? `${activeHomeworkCount} remaining` : "All done!"}
                             </p>

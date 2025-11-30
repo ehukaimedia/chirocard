@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Practitioner } from "../db/db";
@@ -8,10 +8,11 @@ import { ArrowLeft, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { useToast } from "../components/ui/Toast";
+import { Modal } from "../components/ui/Modal";
 
 export default function Intake() {
     const navigate = useNavigate();
-    const { startSession, intakeData, activePractitioner } = useAppStore();
+    const { startSession, intakeData, activePractitioner, clearIntakeData } = useAppStore();
 
     // Initialize with existing data if returning from session
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
@@ -24,11 +25,36 @@ export default function Intake() {
     const [notes, setNotes] = useState(intakeData?.notes || "");
 
     const [step, setStep] = useState<"intake" | "review">("intake");
+    const [showResumeModal, setShowResumeModal] = useState(false);
     const sigPadRef = useRef<SignaturePadRef>(null);
 
     const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
 
     const { toast } = useToast();
+
+    useEffect(() => {
+        // Check if there is existing intake data when the component mounts
+        if (intakeData && (Object.keys(intakeData.bodyMap).length > 0 || intakeData.notes)) {
+            setShowResumeModal(true);
+        }
+    }, []);
+
+    const handleResume = () => {
+        setShowResumeModal(false);
+        toast("Resumed previous session intake.", "info");
+    };
+
+    const handleStartNew = () => {
+        clearIntakeData();
+        setBodyStatus({});
+        setBodyNotes({});
+        setBodyLevels({});
+        setBodyBadges({});
+        setNotes("");
+        setSelectedPractitioner(null);
+        setShowResumeModal(false);
+        toast("Started a new session intake.", "success");
+    };
 
     const handleStartClick = () => {
         if (!selectedPractitioner) {
@@ -85,6 +111,17 @@ export default function Intake() {
                 </Button>
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Session Intake</h1>
             </div>
+
+            <Modal
+                isOpen={showResumeModal}
+                onClose={() => { /* Prevent closing by clicking outside to force choice? Or just default to resume? Let's default to resume if they click out */ setShowResumeModal(false); }}
+                title="Resume Session?"
+                description="You have an unfinished session intake in progress. Would you like to resume it or start over?"
+                confirmLabel="Resume Session"
+                cancelLabel="Start New"
+                onConfirm={handleResume}
+                onCancel={handleStartNew}
+            />
 
             <div className="flex-1 space-y-8">
                 {step === "intake" ? (
