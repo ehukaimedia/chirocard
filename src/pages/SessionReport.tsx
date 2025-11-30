@@ -198,6 +198,7 @@ export default function SessionReport() {
                         <Edit className="w-4 h-4" />
                         Edit Session
                     </button>
+
                     <button
                         onClick={() => window.print()}
                         className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 shadow-sm shadow-emerald-900/10"
@@ -309,7 +310,7 @@ export default function SessionReport() {
                                             area.status === 'addressed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
                                                 'bg-blue-50 text-blue-700 border border-blue-100'
                                             }`}>
-                                            {area.status}
+                                            {area.status === 'issue' ? 'Client Concern' : area.status === 'addressed' ? 'Treated' : area.status === 'watch' ? 'Monitor' : area.status}
                                         </span>
                                     </div>
                                     {area.notes && (

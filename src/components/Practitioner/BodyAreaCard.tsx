@@ -99,7 +99,7 @@ export function BodyAreaCard({
                             )}
                             title="Mark to Watch"
                         >
-                            <Eye className="w-3.5 h-3.5" /> Watch
+                            <Eye className="w-3.5 h-3.5" /> Monitor
                         </button>
                         <button
                             onClick={() => onStatusChange('normal')}
@@ -154,7 +154,7 @@ export function BodyAreaCard({
                             <div>
                                 <span className="text-xs text-zinc-500 block mb-2">Findings</span>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {["Hypertonic", "Subluxation", "Inflamed", "Trigger Point", "Spasm", "Restricted", "Weak", "Stable"].map(badge => {
+                                    {["High Tension", "Misalignment", "Inflammation", "Muscle Knot", "Muscle Spasm", "Limited Mobility", "Weakness", "Stable"].map(badge => {
                                         const isSelected = (practitionerBadges || []).includes(badge);
                                         return (
                                             <button
