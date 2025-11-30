@@ -7,6 +7,7 @@ export type UserProfile = {
     pin: string | null;
     biometricEnabled: boolean;
     theme: 'dark' | 'light';
+    photo?: string; // Base64 encoded image
     // Contact Info
     email?: string;
     phone?: string;

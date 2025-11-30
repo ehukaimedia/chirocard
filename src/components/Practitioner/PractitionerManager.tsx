@@ -131,6 +131,19 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                                 const phone = place.formatted_phone_number || "";
                                 const website = place.website || "";
                                 const name = place.name || "";
+                                const types = place.types || [];
+
+                                let role: "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other" = "Other";
+
+                                if (types.includes("chiropractor")) {
+                                    role = "Chiropractor";
+                                } else if (types.includes("physiotherapist") || types.includes("physical_therapist")) {
+                                    role = "Physical Therapist";
+                                } else if (types.includes("spa") || types.includes("health") || name.toLowerCase().includes("massage")) {
+                                    role = "Massage Therapist";
+                                } else if (name.toLowerCase().includes("acupuncture")) {
+                                    role = "Acupuncturist";
+                                }
 
                                 setFormData(prev => ({
                                     ...prev,
@@ -138,7 +151,8 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                                     address: address,
                                     phone: phone,
                                     website: website,
-                                    clinicName: name // Default clinic name to place name, user can edit
+                                    clinicName: name, // Default clinic name to place name, user can edit
+                                    role: role
                                 }));
                             }}
                             onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}

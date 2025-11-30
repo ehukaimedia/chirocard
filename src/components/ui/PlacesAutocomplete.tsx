@@ -80,7 +80,7 @@ export function PlacesAutocomplete({
             if (google.maps.places.Place) {
                 const place = new google.maps.places.Place({ id: suggestion.place_id });
                 await place.fetchFields({
-                    fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'location']
+                    fields: ['displayName', 'formattedAddress', 'nationalPhoneNumber', 'websiteURI', 'location', 'types']
                 });
 
                 const result = {
@@ -88,7 +88,8 @@ export function PlacesAutocomplete({
                     formatted_address: place.formattedAddress,
                     formatted_phone_number: place.nationalPhoneNumber,
                     website: place.websiteURI,
-                    geometry: { location: place.location }
+                    geometry: { location: place.location },
+                    types: place.types
                 } as any; // Cast to any to match expected PlaceResult shape roughly
 
                 console.log("Places API (New) result:", result);
@@ -109,7 +110,7 @@ export function PlacesAutocomplete({
             placesService.getDetails(
                 {
                     placeId: suggestion.place_id,
-                    fields: ["name", "formatted_address", "formatted_phone_number", "website", "geometry", "address_components"],
+                    fields: ["name", "formatted_address", "formatted_phone_number", "website", "geometry", "address_components", "types"],
                 },
                 (place, status) => {
                     console.log("Places Details result:", place, status);

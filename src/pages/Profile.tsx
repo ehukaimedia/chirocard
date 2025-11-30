@@ -5,7 +5,7 @@ import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer } from "lucide-react";
+import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer, Camera, Trash2, User } from "lucide-react";
 
 import { TagInput } from "../components/ui/TagInput";
 import { PlacesAutocomplete } from "../components/ui/PlacesAutocomplete";
@@ -18,6 +18,7 @@ export default function Profile() {
 
     const [formData, setFormData] = useState({
         name: "",
+        photo: "",
         email: "",
         phone: "",
         address: "",
@@ -44,6 +45,7 @@ export default function Profile() {
         if (user) {
             setFormData({
                 name: user.name || "",
+                photo: user.photo || "",
                 email: user.email || "",
                 phone: user.phone || "",
                 address: user.address || "",
@@ -75,6 +77,7 @@ export default function Profile() {
             await db.users.put({
                 id: "me",
                 name: formData.name,
+                photo: formData.photo,
                 primaryComplaints: formData.primaryComplaints,
                 contraindications: formData.contraindications,
                 preferences: formData.preferences,
@@ -178,6 +181,7 @@ import { type UserProfile } from "../db/db";
 
 interface FormData {
     name: string;
+    photo: string;
     email: string;
     phone: string;
     address: string;
@@ -210,8 +214,21 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                 <div className="relative z-10 flex justify-between items-start">
                     <div>
                         <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">DIGITAL BODYWORK PASSPORT</p>
-                        <h2 className="text-3xl font-black text-white tracking-tight mb-1">{user?.name || "Guest User"}</h2>
-                        <p className="text-zinc-500 text-sm font-mono mb-4">ID: {user?.id === "me" ? "8829-1920-4492" : "UNKNOWN"}</p>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                                {user?.photo ? (
+                                    <img src={user.photo} alt={user.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-xl font-bold text-zinc-400">
+                                        {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : <User className="w-8 h-8" />}
+                                    </span>
+                                )}
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-white tracking-tight mb-1">{user?.name || "Guest User"}</h2>
+                                <p className="text-zinc-500 text-sm font-mono">ID: {user?.id === "me" ? "8829-1920-4492" : "UNKNOWN"}</p>
+                            </div>
+                        </div>
 
                         {/* Vitals Grid */}
                         <div className="flex gap-6 text-sm">
@@ -490,6 +507,57 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
             placeholder="Jane Doe"
             className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
         />
+
+        <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Profile Photo</label>
+            <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                    {formData.photo ? (
+                        <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                        <User className="w-8 h-8 text-zinc-400" />
+                    )}
+                </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('photo-upload')?.click()}
+                        className="border-zinc-200 dark:border-zinc-700"
+                    >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Upload Photo
+                    </Button>
+                    {formData.photo && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFormData(prev => ({ ...prev, photo: "" }))}
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remove
+                        </Button>
+                    )}
+                    <input
+                        id="photo-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                    setFormData(prev => ({ ...prev, photo: reader.result as string }));
+                                };
+                                reader.readAsDataURL(file);
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
             <Input
