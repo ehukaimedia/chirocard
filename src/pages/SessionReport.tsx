@@ -2,12 +2,66 @@ import { useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
-import { Info, AlertTriangle, ChevronLeft, History, Printer } from "lucide-react";
+import { Info, AlertTriangle, ChevronLeft, History, Printer, Calendar, Check, Clock, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Modal } from "../components/ui/Modal";
+import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
 
 export default function SessionReport() {
     const { id } = useParams();
     const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
     const user = useLiveQuery(() => db.users.get("me"));
+    const [addedRecs, setAddedRecs] = useState<Set<number>>(new Set());
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingRecIndex, setEditingRecIndex] = useState<number | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editDesc, setEditDesc] = useState("");
+    const [editCategory, setEditCategory] = useState("");
+    const [editDays, setEditDays] = useState<number[]>([]);
+    const [editTimes, setEditTimes] = useState<string[]>([]);
+    const [newTimeInput, setNewTimeInput] = useState("");
+
+    const handleAddToCalendar = (rec: any, index: number) => {
+        setEditingRecIndex(index);
+        setEditTitle(rec.title);
+        setEditDesc(rec.description || "");
+        setEditCategory(rec.category);
+        setEditDays(rec.daysOfWeek || [0, 1, 2, 3, 4, 5, 6]);
+        setEditTimes(rec.reminderTimes || []);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmAdd = async () => {
+        if (editingRecIndex === null) return;
+
+        try {
+            await db.homework.add({
+                id: crypto.randomUUID(),
+                title: editTitle,
+                description: editDesc,
+                frequency: editDays.length === 7 ? "daily" : "custom",
+                category: editCategory as any,
+                reminderTimes: editTimes,
+                daysOfWeek: editDays,
+                status: 'active',
+                isCompletedToday: false,
+                createdAt: Date.now()
+            });
+
+            setAddedRecs(prev => {
+                const next = new Set(prev);
+                next.add(editingRecIndex);
+                return next;
+            });
+            setIsModalOpen(false);
+            setEditingRecIndex(null);
+        } catch (error) {
+            console.error("Failed to add to calendar:", error);
+        }
+    };
 
     if (!session) {
         return (
@@ -236,6 +290,26 @@ export default function SessionReport() {
                                             {rec.description && <span className="text-xs text-zinc-500">• {rec.description}</span>}
                                         </div>
                                     </div>
+                                    <button
+                                        onClick={() => handleAddToCalendar(rec, i)}
+                                        disabled={addedRecs.has(i)}
+                                        className={`
+                                            flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                                            ${addedRecs.has(i)
+                                                ? 'bg-emerald-100 text-emerald-700 cursor-default'
+                                                : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-900 print:hidden'}
+                                        `}
+                                    >
+                                        {addedRecs.has(i) ? (
+                                            <>
+                                                <Check className="w-3 h-3" /> Added
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Calendar className="w-3 h-3" /> Add to Calendar
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -286,6 +360,97 @@ export default function SessionReport() {
                     </p>
                 </footer>
             </div>
-        </div>
+
+            {/* Add to Calendar Modal */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Add to Wellness Routine"
+                description="Customize this recommendation for your calendar."
+                confirmLabel="Add Routine"
+                cancelLabel="Cancel"
+                onConfirm={handleConfirmAdd}
+            >
+                <div className="space-y-4 py-2">
+                    <Input
+                        label="Title"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                    />
+                    <Input
+                        label="Description"
+                        value={editDesc}
+                        onChange={(e) => setEditDesc(e.target.value)}
+                    />
+
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
+                        <div className="flex justify-between gap-1">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
+                                const isSelected = editDays.includes(i);
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => {
+                                            if (isSelected) setEditDays(editDays.filter(d => d !== i));
+                                            else setEditDays([...editDays, i].sort());
+                                        }}
+                                        className={`
+                                            w-8 h-8 rounded-full text-xs font-medium transition-all
+                                            ${isSelected
+                                                ? 'bg-emerald-500 text-white shadow-sm scale-110'
+                                                : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}
+                                        `}
+                                    >
+                                        {day}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-[10px] text-zinc-400 mt-1 text-center">Select days to schedule</p>
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Reminders</label>
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                                {editTimes.map((time, i) => (
+                                    <div key={i} className="flex items-center gap-1 bg-zinc-100 px-2 py-1 rounded-md text-sm">
+                                        <Clock className="w-3 h-3 text-zinc-400" />
+                                        <span>{time}</span>
+                                        <button
+                                            onClick={() => setEditTimes(editTimes.filter((_, idx) => idx !== i))}
+                                            className="text-zinc-400 hover:text-red-500 ml-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="time"
+                                    value={newTimeInput}
+                                    onChange={(e) => setNewTimeInput(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (newTimeInput && !editTimes.includes(newTimeInput)) {
+                                            setEditTimes([...editTimes, newTimeInput].sort());
+                                            setNewTimeInput("");
+                                        }
+                                    }}
+                                >
+                                    Add
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+        </div >
     );
 }
