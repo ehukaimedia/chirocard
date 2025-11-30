@@ -686,7 +686,7 @@ export default function GuestSession() {
                                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white mb-4"
                             />
                             <div>
-                                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Signature</label>
+                                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Initials</label>
                                 <SignaturePad ref={sigPadRef} />
                             </div>
                         </div>
