@@ -41,6 +41,10 @@ interface AppState {
     clearIntakeData: () => void;
     endSession: () => void;
     toggleTheme: () => void;
+
+    // Settings
+    calendarViewSpan: number;
+    setCalendarViewSpan: (days: number) => void;
 }
 
 export type { StoredPractitioner };
@@ -98,6 +102,9 @@ export const useAppStore = create<AppState>()(
             toggleTheme: () => set((state) => ({
                 theme: state.theme === 'dark' ? 'light' : 'dark'
             })),
+
+            calendarViewSpan: 30, // Default to 30 days
+            setCalendarViewSpan: (days) => set({ calendarViewSpan: days }),
         }),
         {
             name: 'chirocard-storage',
@@ -107,7 +114,8 @@ export const useAppStore = create<AppState>()(
                 activePractitioner: state.activePractitioner,
                 mode: state.mode,
                 intakeData: state.intakeData,
-                resumedSessionData: state.resumedSessionData
+                resumedSessionData: state.resumedSessionData,
+                calendarViewSpan: state.calendarViewSpan
             }),
         }
     )

@@ -14,8 +14,11 @@ import 'react-calendar/dist/Calendar.css';
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
+import { useAppStore } from "../store/useAppStore";
+
 export default function Calendar() {
     const navigate = useNavigate();
+    const { calendarViewSpan } = useAppStore();
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").toArray());
     const allHomework = useLiveQuery(() => db.homework.toArray());
 
@@ -56,24 +59,43 @@ export default function Calendar() {
     const [editApptPractitioner, setEditApptPractitioner] = useState<{ id: string, name: string } | null>(null);
     const [practitionerDetails, setPractitionerDetails] = useState<Practitioner | null>(null);
 
-    // Filter items for selected date
-    const selectedDateStr = date instanceof Date ? date.toDateString() : "";
+    // Filter items for selected date (Specific Day)
+    const selectedDateStr = date instanceof Date ? date.toDateString() : new Date().toDateString();
+    const selectedDateObj = date instanceof Date ? date : new Date();
 
-    // We show ALL active homework regardless of date (since they are daily habits), 
-    // but we could filter completed history if we tracked completion history per day.
-    // For now, we just show the active list.
-
-    // Filter appointments for selected date
-    const dayAppointments = appointments?.filter(appt =>
+    const selectedDateAppointments = appointments?.filter(appt =>
         new Date(appt.date).toDateString() === selectedDateStr
     ) || [];
 
-    // Filter Wellness Routine for selected date
-    const dayRoutine = activeHomework.filter(hw => {
-        if (!hw.daysOfWeek || hw.daysOfWeek.length === 0) return true; // Default to daily if not specified
-        const dayIndex = (date instanceof Date ? date : new Date()).getDay();
-        return hw.daysOfWeek.includes(dayIndex);
+    const selectedDateRoutine = activeHomework.filter(hw => {
+        if (!hw.daysOfWeek || hw.daysOfWeek.length === 0) return true;
+        return hw.daysOfWeek.includes(selectedDateObj.getDay());
     });
+
+    // Filter items for Upcoming (Next 30 Days starting from tomorrow)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(tomorrow);
+    endDate.setDate(tomorrow.getDate() + (calendarViewSpan || 30));
+
+    const upcomingAppointments = appointments?.filter(appt => {
+        const apptDate = new Date(appt.date);
+        return apptDate >= tomorrow && apptDate <= endDate;
+    }) || [];
+
+    // For upcoming routine, we just show the active list that *would* appear in the future.
+    // Since routines are recurring, we can just show all active routines in the upcoming section
+    // or maybe group them? For now, let's show all active routines as "Active Habits".
+    // actually, the user asked for "30 day list". Listing every occurrence of a daily habit for 30 days is too much.
+    // Let's list the *unique* appointments and *unique* active routines in a separate list?
+    // "Upcoming Appointments" and "Active Routine" might be better.
+    // But the request said "30 day list".
+    // Let's stick to:
+    // 1. Selected Date (Appointments + Routine for that day)
+    // 2. Upcoming Appointments (Next 30 days)
+    // 3. Active Routine (General list of habits that will occur)
 
     const handleAddAppointment = async () => {
         if (!selectedPractitioner || !apptDate || !apptTime) return;
@@ -253,7 +275,7 @@ export default function Calendar() {
 
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
-            {/* Top Navigation Bar */}
+            {/* ... Navigation ... */}
             <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
                 <button
                     onClick={() => navigate("/")}
@@ -285,198 +307,247 @@ export default function Calendar() {
                     />
                 </div>
 
-                {/* Selected Date Header */}
-                <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-                        {date instanceof Date ? date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : 'Selected Date'}
-                    </h2>
-                </div>
-
-                {/* Appointments Section */}
-                <section className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            Appointments
-                        </h3>
-                        <Button size="sm" variant="outline" onClick={() => setIsAddingAppt(!isAddingAppt)}>
-                            <Plus className="w-4 h-4 mr-1" /> Add
-                        </Button>
-                    </div>
-
-
-
-                    <div className="space-y-3">
-                        {/* Show appointments for selected day OR all upcoming if today is selected? 
-                            Let's show ALL upcoming if no specific day selected, or just the day's.
-                            For simplicity, let's show the selected day's appointments.
-                        */}
-                        {dayAppointments.length > 0 ? (
-                            dayAppointments.map((appt: Appointment) => (
-                                <Card
-                                    key={appt.id}
-                                    className="p-4 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-colors"
-                                    onClick={() => handleApptClick(appt)}
-                                >
-                                    <div>
-                                        <p className="font-medium text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
-                                        <p className="text-sm text-zinc-500">
-                                            {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); deleteItem('appointment', appt.id); }}
-                                            className="text-zinc-400 hover:text-red-500 p-2"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </Card>
-                            ))
-                        ) : (
-                            <p className="text-center text-sm text-zinc-500 py-4 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                                No appointments for this day.
-                            </p>
+                {/* --- SELECTED DATE SECTION --- */}
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                            {selectedDateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                        </h2>
+                        {selectedDateStr === new Date().toDateString() && (
+                            <span className="text-xs font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-full">
+                                TODAY
+                            </span>
                         )}
                     </div>
-                </section>
 
-                {/* Pending Recommendations Review */}
-                {pendingHomework.length > 0 && (
-                    <section className="space-y-4">
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
-                            <h2 className="text-lg font-medium text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
-                                <Plus className="w-5 h-5" /> New Recommendations
-                            </h2>
-                            <div className="space-y-3">
-                                {pendingHomework.map(hw => (
-                                    <div key={hw.id} className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 mb-1 inline-block">
-                                                    {hw.category}
-                                                </span>
-                                                <h3 className="font-medium text-zinc-900 dark:text-zinc-100">{hw.title}</h3>
-                                                <p className="text-xs text-zinc-500">{hw.frequency} • {hw.description}</p>
-                                            </div>
+                    {/* Selected Date Appointments */}
+                    <section className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                                Appointments
+                            </h3>
+                            <Button size="sm" variant="outline" onClick={() => setIsAddingAppt(!isAddingAppt)} className="h-7 text-xs">
+                                <Plus className="w-3 h-3 mr-1" /> Add
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            {selectedDateAppointments.length > 0 ? (
+                                selectedDateAppointments.map((appt: Appointment) => (
+                                    <Card
+                                        key={appt.id}
+                                        className="p-4 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-colors"
+                                        onClick={() => handleApptClick(appt)}
+                                    >
+                                        <div>
+                                            <p className="font-medium text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
+                                            <p className="text-sm text-zinc-500">
+                                                {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-2">
                                             <button
-                                                onClick={() => deleteItem('homework', hw.id)}
-                                                className="text-zinc-400 hover:text-red-500 p-1"
-                                                title="Remove Recommendation"
+                                                onClick={(e) => { e.stopPropagation(); deleteItem('appointment', appt.id); }}
+                                                className="text-zinc-400 hover:text-red-500 p-2"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                        <div className="flex gap-2 items-center mt-3">
-                                            <Input
-                                                type="time"
-                                                className="h-8 text-xs w-32"
-                                                defaultValue={hw.reminderTimes?.[0] || ""}
-                                                onChange={(e) => {
-                                                    const btn = document.getElementById(`activate-${hw.id}`);
-                                                    if (btn) btn.dataset.time = e.target.value;
-                                                }}
-                                            />
-                                            <Button
-                                                id={`activate-${hw.id}`}
-                                                size="sm"
-                                                className="flex-1 h-8 text-xs"
-                                                onClick={(e) => {
-                                                    const time = (e.currentTarget as HTMLElement).dataset.time;
-                                                    activateHomework(hw.id, time);
-                                                }}
-                                            >
-                                                Add to Schedule
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    </Card>
+                                ))
+                            ) : (
+                                <p className="text-sm text-zinc-400 italic">No appointments.</p>
+                            )}
                         </div>
                     </section>
-                )}
 
-                {/* Wellness Routine Section */}
-                <section className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                            Wellness Routine
-                        </h3>
-                        <Button size="sm" variant="outline" onClick={() => setIsAddingHomework(!isAddingHomework)}>
-                            <Plus className="w-4 h-4 mr-1" /> Add
-                        </Button>
-                    </div>
+                    {/* Selected Date Routine */}
+                    <section className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                                Wellness Routine
+                            </h3>
+                            <Button size="sm" variant="outline" onClick={() => setIsAddingHomework(!isAddingHomework)} className="h-7 text-xs">
+                                <Plus className="w-3 h-3 mr-1" /> Add
+                            </Button>
+                        </div>
+                        <div className="space-y-2">
+                            {selectedDateRoutine.length > 0 ? (
+                                selectedDateRoutine.map((hw: Homework) => (
+                                    <div
+                                        key={hw.id}
+                                        className={`
+                                            p-3 rounded-xl border transition-all flex items-center gap-3 cursor-pointer
+                                            ${hw.isCompletedToday
+                                                ? 'bg-emerald-500/10 border-emerald-500/20'
+                                                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}
+                                        `}
+                                        onClick={() => toggleHomework(hw.id, hw.isCompletedToday)}
+                                    >
+                                        <div className={`
+                                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0
+                                            ${hw.isCompletedToday ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-zinc-300 dark:border-zinc-600'}
+                                        `}>
+                                            {hw.isCompletedToday && <CheckCircle className="w-3 h-3" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`font-medium text-sm truncate ${hw.isCompletedToday ? 'text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                                                {hw.title}
+                                            </p>
+                                            <p className="text-xs text-zinc-500 truncate">{hw.description}</p>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <button
+                                                onClick={(e) => handleEditClick(hw, e)}
+                                                className="text-zinc-400 hover:text-emerald-500 p-1.5"
+                                            >
+                                                <Edit2 className="w-3 h-3" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
+                                                className="text-zinc-400 hover:text-red-500 p-1.5"
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-zinc-400 italic">No routine items.</p>
+                            )}
+                        </div>
+                    </section>
+                </div>
 
+                {/* --- UPCOMING SECTION --- */}
+                <div className="pt-8 border-t-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                    <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
+                        Upcoming <span className="text-sm font-normal text-zinc-500">Next {calendarViewSpan || 30} Days</span>
+                    </h2>
 
-
-                    <div className="space-y-3">
-                        {dayRoutine.map((hw: Homework) => (
-                            <div
-                                key={hw.id}
-                                className={`
-                  p-4 rounded-xl border transition-all flex items-center gap-3 cursor-pointer
-                  ${hw.isCompletedToday
-                                        ? 'bg-emerald-500/10 border-emerald-500/20'
-                                        : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}
-                `}
-                                onClick={() => toggleHomework(hw.id, hw.isCompletedToday)}
-                            >
-                                <div className={`
-                  w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
-                  ${hw.isCompletedToday ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-zinc-300 dark:border-zinc-600'}
-                `}>
-                                    {hw.isCompletedToday && <CheckCircle className="w-4 h-4" />}
-                                </div>
-
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start">
-                                        <p className={`font-medium ${hw.isCompletedToday ? 'text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
-                                            {hw.title}
-                                        </p>
-                                        {hw.reminderTimes && hw.reminderTimes.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {hw.reminderTimes.map((t, i) => (
-                                                    <span key={i} className="text-xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                        <Clock className="w-3 h-3" />
-                                                        {t}
+                    {/* Pending Recommendations Review */}
+                    {pendingHomework.length > 0 && (
+                        <section className="space-y-4 mb-6">
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                                <h2 className="text-lg font-medium text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                                    <Plus className="w-5 h-5" /> New Recommendations
+                                </h2>
+                                <div className="space-y-3">
+                                    {pendingHomework.map(hw => (
+                                        <div key={hw.id} className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <span className="text-[10px] uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 mb-1 inline-block">
+                                                        {hw.category}
                                                     </span>
-                                                ))}
+                                                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100">{hw.title}</h3>
+                                                    <p className="text-xs text-zinc-500">{hw.frequency} • {hw.description}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => deleteItem('homework', hw.id)}
+                                                    className="text-zinc-400 hover:text-red-500 p-1"
+                                                    title="Remove Recommendation"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2 text-xs text-zinc-500 mt-0.5">
-                                        {hw.daysOfWeek && hw.daysOfWeek.length < 7 && (
-                                            <span className="uppercase tracking-wide">
-                                                {hw.daysOfWeek.map(d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ')}
-                                            </span>
-                                        )}
-                                        {hw.description && <span>• {hw.description}</span>}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={(e) => handleEditClick(hw, e)}
-                                        className="text-zinc-400 hover:text-emerald-500 p-2"
-                                        title="Edit"
-                                    >
-                                        <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
-                                        className="text-zinc-400 hover:text-red-500 p-2"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                            <div className="flex gap-2 items-center mt-3">
+                                                <Input
+                                                    type="time"
+                                                    className="h-8 text-xs w-32"
+                                                    defaultValue={hw.reminderTimes?.[0] || ""}
+                                                    onChange={(e) => {
+                                                        const btn = document.getElementById(`activate-${hw.id}`);
+                                                        if (btn) btn.dataset.time = e.target.value;
+                                                    }}
+                                                />
+                                                <Button
+                                                    id={`activate-${hw.id}`}
+                                                    size="sm"
+                                                    className="flex-1 h-8 text-xs"
+                                                    onClick={(e) => {
+                                                        const time = (e.currentTarget as HTMLElement).dataset.time;
+                                                        activateHomework(hw.id, time);
+                                                    }}
+                                                >
+                                                    Add to Schedule
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ))}
-                        {dayRoutine.length === 0 && !isAddingHomework && (
-                            <p className="text-center text-sm text-zinc-500 py-4">No routine items for this day.</p>
-                        )}
-                    </div>
-                </section>
+                        </section>
+                    )}
+
+                    {/* Upcoming Appointments */}
+                    <section className="space-y-3 mb-6">
+                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                            Appointments
+                        </h3>
+                        <div className="space-y-2">
+                            {upcomingAppointments.length > 0 ? (
+                                upcomingAppointments.map((appt: Appointment) => (
+                                    <Card
+                                        key={appt.id}
+                                        className="p-3 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-colors bg-zinc-50 dark:bg-zinc-900/50"
+                                        onClick={() => handleApptClick(appt)}
+                                    >
+                                        <div>
+                                            <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
+                                            <p className="text-xs text-zinc-500">
+                                                {new Date(appt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })} • {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    </Card>
+                                ))
+                            ) : (
+                                <p className="text-sm text-zinc-400 italic">No upcoming appointments.</p>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Active Routine List (Reference) */}
+                    <section className="space-y-3">
+                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                            Active Routine Items
+                        </h3>
+                        <div className="grid grid-cols-1 gap-2">
+                            {activeHomework.length > 0 ? (
+                                activeHomework.map((hw: Homework) => (
+                                    <div key={hw.id} className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{hw.title}</p>
+                                            <div className="flex gap-2 text-[10px] text-zinc-500 uppercase tracking-wide">
+                                                <span>{hw.frequency}</span>
+                                                {hw.daysOfWeek && hw.daysOfWeek.length < 7 && (
+                                                    <span>• {hw.daysOfWeek.map(d => ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'][d]).join(', ')}</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={(e) => handleEditClick(hw, e)}
+                                                className="text-zinc-400 hover:text-emerald-500 p-2"
+                                                title="Edit"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
+                                                className="text-zinc-400 hover:text-red-500 p-2"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-zinc-400 italic">No active routines.</p>
+                            )}
+                        </div>
+                    </section>
+                </div>
 
             </div>
 

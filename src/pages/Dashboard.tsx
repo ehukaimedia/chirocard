@@ -130,13 +130,19 @@ export default function Dashboard() {
 
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-2 gap-4 relative z-10">
-                        <div className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50">
+                        <div
+                            onClick={() => navigate("/calendar")}
+                            className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                        >
                             <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Next Session</p>
                             <p className="text-zinc-900 dark:text-zinc-200 font-semibold truncate">
                                 {nextAppointment ? new Date(nextAppointment.date).toLocaleDateString() : "None scheduled"}
                             </p>
                         </div>
-                        <div className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50">
+                        <div
+                            onClick={() => navigate("/calendar")}
+                            className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                        >
                             <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Wellness Routine</p>
                             <p className="text-zinc-900 dark:text-zinc-200 font-semibold">
                                 {activeHomeworkCount > 0 ? `${activeHomeworkCount} remaining` : "All done!"}
