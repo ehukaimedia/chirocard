@@ -184,7 +184,7 @@ export default function SessionReport() {
 
             {/* Print Controls - Hidden when printing */}
             <div className="mb-8 flex justify-between items-center print:hidden mt-16">
-                <h1 className="text-2xl font-bold">Session Report Preview</h1>
+                <h1 className="text-2xl font-bold">Session Report</h1>
                 <div className="flex gap-3">
                     <button
                         onClick={() => {

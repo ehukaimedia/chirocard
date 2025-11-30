@@ -713,7 +713,7 @@ export default function GuestSession() {
                                     }
                                 }}
                             >
-                                <FileText className="w-4 h-4" /> Download PDF
+                                <FileText className="w-4 h-4" /> View/ Print Session Report
                             </Button>
 
                             <Button

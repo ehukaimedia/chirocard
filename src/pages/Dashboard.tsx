@@ -183,7 +183,7 @@ export default function Dashboard() {
                 <p className="text-center text-[10px] text-zinc-600 max-w-xs mx-auto leading-relaxed">
                     Local-First Architecture designed for <strong>HIPAA, GDPR, & CCPA</strong> compliance.
                     <br />
-                    Your health data never leaves this device.
+                    We do not collect any user data. Your data is safely kept on your device or the cloud provider of your choosing.
                 </p>
             </footer>
 
