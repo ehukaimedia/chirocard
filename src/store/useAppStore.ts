@@ -30,11 +30,13 @@ interface AppState {
         notes: string;
         userSignature?: string; // User's signature from intake
     } | null;
+    resumedSessionData: any | null; // Data for resuming a session
 
     // Actions
     setMode: (mode: AppMode) => void;
     setTheme: (theme: 'dark' | 'light') => void;
     startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }) => void;
+    resumeSession: (session: any) => void;
     updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string }) => void;
     endSession: () => void;
     toggleTheme: () => void;
@@ -50,6 +52,7 @@ export const useAppStore = create<AppState>()(
             activeSessionId: null,
             activePractitioner: null,
             intakeData: null,
+            resumedSessionData: null,
 
             setMode: (mode) => set({ mode }),
             setTheme: (theme) => set({ theme }),
@@ -58,14 +61,36 @@ export const useAppStore = create<AppState>()(
                 activeSessionId: sessionId,
                 mode: 'guest',
                 activePractitioner: practitioner || null,
-                intakeData: intakeData || null
+                intakeData: intakeData || null,
+                resumedSessionData: null
+            }),
+
+            resumeSession: (session) => set({
+                activeSessionId: session.id,
+                mode: 'guest',
+                activePractitioner: {
+                    id: session.practitionerId,
+                    name: session.practitionerName,
+                    role: session.practitionerClass
+                },
+                // Populate intake data from session snapshot
+                intakeData: {
+                    bodyMap: session.bodyMap || {},
+                    bodyNotes: session.bodyNotes || {},
+                    bodyLevels: session.bodyLevels || {},
+                    bodyBadges: session.bodyBadges || {},
+                    notes: "", // Intake notes might not be in session snapshot, or we could assume session.notes? No, session.notes are practitioner notes.
+                    userSignature: session.userSignature
+                },
+                // Store the full session to populate practitioner fields
+                resumedSessionData: session
             }),
 
             updateIntakeData: (data) => set((state) => ({
                 intakeData: { ...state.intakeData, ...data }
             })),
 
-            endSession: () => set({ activeSessionId: null, mode: 'user', activePractitioner: null, intakeData: null }),
+            endSession: () => set({ activeSessionId: null, mode: 'user', activePractitioner: null, intakeData: null, resumedSessionData: null }),
 
             toggleTheme: () => set((state) => ({
                 theme: state.theme === 'dark' ? 'light' : 'dark'
@@ -78,7 +103,8 @@ export const useAppStore = create<AppState>()(
                 activeSessionId: state.activeSessionId,
                 activePractitioner: state.activePractitioner,
                 mode: state.mode,
-                intakeData: state.intakeData
+                intakeData: state.intakeData,
+                resumedSessionData: state.resumedSessionData
             }),
         }
     )

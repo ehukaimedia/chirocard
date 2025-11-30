@@ -17,7 +17,7 @@ import { useToast } from "../components/ui/Toast";
 
 export default function GuestSession() {
     const navigate = useNavigate();
-    const { endSession, activePractitioner, intakeData, updateIntakeData } = useAppStore();
+    const { endSession, activePractitioner, intakeData, updateIntakeData, resumedSessionData } = useAppStore();
     const user = useLiveQuery(() => db.users.get("me"));
     const sigPadRef = useRef<SignaturePadRef>(null);
 
@@ -27,10 +27,10 @@ export default function GuestSession() {
     const [bodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
     const [bodyLevels] = useState<Record<string, number>>(intakeData?.bodyLevels || {});
     const [bodyBadges] = useState<Record<string, string[]>>(intakeData?.bodyBadges || {});
-    const [treatmentNotes, setTreatmentNotes] = useState<Record<string, string>>({});
-    const [practitionerLevels, setPractitionerLevels] = useState<Record<string, number>>({});
-    const [practitionerBadges, setPractitionerBadges] = useState<Record<string, string[]>>({});
-    const [notes, setNotes] = useState("");
+    const [treatmentNotes, setTreatmentNotes] = useState<Record<string, string>>(resumedSessionData?.treatmentNotes || {});
+    const [practitionerLevels, setPractitionerLevels] = useState<Record<string, number>>(resumedSessionData?.practitionerLevels || {});
+    const [practitionerBadges, setPractitionerBadges] = useState<Record<string, string[]>>(resumedSessionData?.practitionerBadges || {});
+    const [notes, setNotes] = useState(resumedSessionData?.notes || "");
     const [practitionerName, setPractitionerName] = useState(activePractitioner?.name || "");
 
     const [showExitModal, setShowExitModal] = useState(false);
@@ -52,7 +52,7 @@ export default function GuestSession() {
     };
 
     // Recommendations State
-    const [recommendations, setRecommendations] = useState<Homework[]>([]);
+    const [recommendations, setRecommendations] = useState<Homework[]>(resumedSessionData?.recommendations || []);
     const [newRecTitle, setNewRecTitle] = useState("");
     const [newRecDesc, setNewRecDesc] = useState("");
     const [newRecFreq, setNewRecFreq] = useState<string>("Daily");
@@ -100,9 +100,27 @@ export default function GuestSession() {
                 setCompletedSessionId(sessionId);
 
                 // Save to DB (use put to create or update)
+                // Save to DB (use put to create or update)
+                // If resuming, preserve existing fields like postSessionLog
+                const existingSession = resumedSessionData || {};
+
+                // Add system log entry if editing
+                let updatedLog = existingSession.postSessionLog || [];
+                if (resumedSessionData) {
+                    const editEntry = {
+                        id: crypto.randomUUID(),
+                        timestamp: Date.now(),
+                        author: 'practitioner',
+                        type: 'update_log',
+                        content: "Session updated."
+                    };
+                    updatedLog = [...updatedLog, editEntry];
+                }
+
                 await db.sessions.put({
+                    ...existingSession, // Keep existing fields (id, createdAt, etc)
                     id: sessionId,
-                    date: Date.now(),
+                    date: existingSession.date || Date.now(), // Keep original date if editing
                     practitionerId: activePractitioner?.id || "guest",
                     practitionerName,
                     practitionerClass: activePractitioner?.role || "Other",
@@ -118,12 +136,14 @@ export default function GuestSession() {
                     signatureBase64: signature,
                     userSignature: intakeData?.userSignature, // Save patient signature
                     isLocked: true,
-                    createdAt: Date.now()
+                    createdAt: existingSession.createdAt || Date.now(),
+                    postSessionLog: updatedLog
                 });
 
                 // Add recommendations to user's active homework list
                 if (recommendations.length > 0) {
-                    await db.homework.bulkAdd(recommendations);
+                    // Use bulkPut to avoid errors if recommendations already exist (e.g. editing a session)
+                    await db.homework.bulkPut(recommendations);
                 }
 
                 // Open Report Page - REMOVED

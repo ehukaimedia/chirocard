@@ -64,6 +64,16 @@ export type Session = {
     practitionerBadges?: Record<string, string[]>; // Practitioner findings (e.g. "Hypertonic", "Subluxation")
     isLocked: boolean;
     createdAt: number;
+    // Post-Session Data
+    postSessionLog?: PostSessionEntry[];
+};
+
+export type PostSessionEntry = {
+    id: string;
+    timestamp: number;
+    author: 'user' | 'practitioner';
+    type: 'journal' | 'correction' | 'addendum' | 'update_log';
+    content: string;
 };
 
 export type BodyLog = {
