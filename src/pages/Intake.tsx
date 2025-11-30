@@ -309,7 +309,7 @@ export default function Intake() {
                         <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
                             <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-200 mb-4">Sign to Start Session</h3>
                             <div>
-                                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Patient Initials</label>
+                                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Client Initials</label>
                                 <SignaturePad ref={sigPadRef} />
                                 <p className="text-xs text-zinc-500 mt-2">
                                     By signing, you confirm that the information provided is accurate.

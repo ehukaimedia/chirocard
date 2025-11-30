@@ -200,7 +200,7 @@ export default function GuestSession() {
                     practitionerLevels: practitionerLevels, // Save practitioner levels
                     practitionerBadges: practitionerBadges, // Save practitioner badges
                     signatureBase64: signature,
-                    userSignature: intakeData?.userSignature, // Save patient signature
+                    userSignature: intakeData?.userSignature, // Save client signature
                     isLocked: true,
                     createdAt: existingSession.createdAt || Date.now(),
                     postSessionLog: updatedLog
@@ -250,7 +250,7 @@ export default function GuestSession() {
                         size="sm"
                         className="text-zinc-500 hover:text-zinc-300 h-8 px-2"
                         onClick={handleExitClick}
-                        title="Return to intake to update patient info"
+                        title="Return to intake to update client info"
                     >
                         Back to Session Intake
                     </Button>
@@ -271,11 +271,11 @@ export default function GuestSession() {
             <div className="space-y-6">
                 {step === "work" && (
                     <>
-                        {/* Patient Context Card */}
+                        {/* Client Context Card */}
                         {(user?.primaryComplaints?.length || user?.contraindications?.length) && (
                             <Card className="bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 p-4 space-y-3 shadow-sm">
                                 <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                    <Info className="w-4 h-4" /> Patient Context
+                                    <Info className="w-4 h-4" /> Client Context
                                 </h3>
 
                                 {user.primaryComplaints && user.primaryComplaints.length > 0 && (
@@ -310,7 +310,7 @@ export default function GuestSession() {
                         {intakeData?.notes && (
                             <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
                                 <h3 className="text-sm font-medium text-amber-500 uppercase tracking-wider flex items-center gap-2">
-                                    <Info className="w-4 h-4" /> Patient Intake Notes
+                                    <Info className="w-4 h-4" /> Client Intake Notes
                                 </h3>
                                 <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap italic">
                                     "{intakeData.notes}"
@@ -559,10 +559,10 @@ export default function GuestSession() {
                             </div>
 
                             <div className="space-y-8">
-                                {/* 1. Patient Context (if any) */}
+                                {/* 1. Client Context (if any) */}
                                 {intakeData?.notes && (
                                     <div className="space-y-2">
-                                        <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Patient Intake</h3>
+                                        <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Client Intake</h3>
                                         <p className="text-zinc-700 dark:text-zinc-300 text-sm italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-3 py-1">
                                             "{intakeData.notes}"
                                         </p>
@@ -606,7 +606,7 @@ export default function GuestSession() {
                                                                 {note && <p className="text-sm text-zinc-400 mt-1">{note}</p>}
                                                                 {(practitionerLevels[partId] !== undefined || (practitionerBadges[partId] && practitionerBadges[partId].length > 0)) && (
                                                                     <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                                                                        <p className="text-[10px] uppercase text-emerald-500 font-bold mb-1">Clinical Assessment</p>
+                                                                        <p className="text-[10px] uppercase text-emerald-500 font-bold mb-1">Practitioner Assessment</p>
                                                                         <div className="flex flex-wrap gap-2">
                                                                             {practitionerLevels[partId] !== undefined && (
                                                                                 <span className="text-xs font-bold text-zinc-500">Level: {practitionerLevels[partId]}/10</span>
@@ -669,7 +669,7 @@ export default function GuestSession() {
                                 {/* Footer Disclaimer */}
                                 <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 mt-8">
                                     <p className="text-[10px] text-zinc-500 dark:text-zinc-600 text-center">
-                                        Disclaimer: This is a user-owned personal record and does not replace the official legal medical record maintained by the provider.
+                                        Disclaimer: This is a user-owned personal record and does not replace the official legal health record maintained by the provider.
                                     </p>
                                 </div>
                             </div>

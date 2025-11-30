@@ -55,7 +55,7 @@ export function BodyAreaCard({
                         {patientStatus === 'issue' && (
                             <div className="mt-1 space-y-1">
                                 <span className="text-xs font-medium text-red-400 flex items-center gap-1">
-                                    <User className="w-3 h-3" /> Patient Flagged
+                                    <User className="w-3 h-3" /> Client Flagged
                                 </span>
                                 {(patientLevel !== undefined || (patientBadges && patientBadges.length > 0)) && (
                                     <div className="flex flex-wrap gap-2 items-center">
@@ -119,7 +119,7 @@ export function BodyAreaCard({
                 {/* Patient Note (if exists) */}
                 {patientNote && (
                     <div className="bg-red-500/5 border border-red-500/10 rounded-lg p-3 text-sm">
-                        <span className="text-red-500 dark:text-red-400 font-medium text-xs uppercase tracking-wider mb-1 block">Patient Note</span>
+                        <span className="text-red-500 dark:text-red-400 font-medium text-xs uppercase tracking-wider mb-1 block">Client Note</span>
                         <p className="text-zinc-700 dark:text-zinc-300 italic">"{patientNote}"</p>
                     </div>
                 )}
@@ -127,7 +127,7 @@ export function BodyAreaCard({
                 {/* Practitioner Note Input */}
                 <div className="space-y-3">
                     <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                        <MessageSquare className="w-3 h-3" /> Clinical Assessment
+                        <MessageSquare className="w-3 h-3" /> Practitioner Assessment
                     </label>
 
                     {/* Practitioner Assessment Controls (Visible when Treated or Watch) */}

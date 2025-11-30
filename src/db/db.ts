@@ -27,8 +27,8 @@ export type UserProfile = {
     diet?: string[]; // e.g. "Vegan", "Gluten-Free"
     hydration?: string; // e.g. "2L/day"
     supplements?: string[]; // e.g. "Vitamin D", "Magnesium"
-    // Clinical & Safety
-    medicalHistory?: string[]; // Surgeries, accidents
+    // Body History & Safety
+    bodyHistory?: string[]; // Surgeries, accidents
     medications?: string[]; // Blood thinners, etc.
     allergies?: string[]; // Oils, latex
     mobilityStatus?: string[]; // ROM limitations
@@ -54,14 +54,14 @@ export type Session = {
     practitionerClass: string;
     notes: string;
     signatureBase64: string | null;
-    userSignature?: string; // Patient signature
+    userSignature?: string; // Client signature
     recommendations?: Homework[]; // Snapshot of assigned homework
     bodyMap?: Record<string, 'normal' | 'issue' | 'addressed' | 'watch'>; // Snapshot of body status
     bodyNotes?: Record<string, string>; // User notes per body part
     bodyLevels?: Record<string, number>; // User pain/discomfort level (0-10)
     bodyBadges?: Record<string, string[]>; // User selected badges (e.g. "Pain", "Stiffness")
     treatmentNotes?: Record<string, string>; // Practitioner notes per body part
-    practitionerLevels?: Record<string, number>; // Practitioner assessment level (0-10)
+    practitionerLevels?: Record<string, number>; // Practitioner findings level (0-10)
     practitionerBadges?: Record<string, string[]>; // Practitioner findings (e.g. "Hypertonic", "Subluxation")
     isLocked: boolean;
     createdAt: number;

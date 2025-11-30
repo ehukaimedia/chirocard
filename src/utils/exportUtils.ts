@@ -50,7 +50,7 @@ export function generateDigestibleExport(session: any, user: any) {
                     symptoms: session.bodyBadges?.[partId] || [],
                     note: session.bodyNotes?.[partId] || null
                 },
-                clinicalAssessment: {
+                practitionerAssessment: {
                     findings: session.practitionerBadges?.[partId] || [], // These are already natural names now
                     severityLevel: session.practitionerLevels?.[partId] || null,
                     treatmentNote: session.treatmentNotes?.[partId] || null

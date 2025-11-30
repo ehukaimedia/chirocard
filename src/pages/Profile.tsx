@@ -30,7 +30,7 @@ export default function Profile() {
         dateOfBirth: "",
         occupation: "",
         activityLevel: "Moderate",
-        medicalHistory: [] as string[],
+        bodyHistory: [] as string[],
         medications: [] as string[],
         allergies: [] as string[],
         mobilityStatus: [] as string[],
@@ -57,7 +57,7 @@ export default function Profile() {
                 dateOfBirth: user.dateOfBirth || "",
                 occupation: user.occupation || "",
                 activityLevel: user.activityLevel || "Moderate",
-                medicalHistory: user.medicalHistory || [],
+                bodyHistory: user.bodyHistory || [],
                 medications: user.medications || [],
                 allergies: user.allergies || [],
                 mobilityStatus: user.mobilityStatus || [],
@@ -86,7 +86,7 @@ export default function Profile() {
                 dateOfBirth: formData.dateOfBirth,
                 occupation: formData.occupation,
                 activityLevel: formData.activityLevel as 'Sedentary' | 'Light' | 'Moderate' | 'Active' | 'Athlete',
-                medicalHistory: formData.medicalHistory,
+                bodyHistory: formData.bodyHistory,
                 medications: formData.medications,
                 allergies: formData.allergies,
                 mobilityStatus: formData.mobilityStatus,
@@ -193,7 +193,7 @@ interface FormData {
     dateOfBirth: string;
     occupation: string;
     activityLevel: string;
-    medicalHistory: string[];
+    bodyHistory: string[];
     medications: string[];
     allergies: string[];
     mobilityStatus: string[];
@@ -405,7 +405,7 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                         <div className="p-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-lg">
                             <Activity className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-200">Clinical History</h3>
+                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-200">My Body Journal</h3>
                     </div>
 
                     <div className="space-y-4">
@@ -425,10 +425,10 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                         </div>
 
                         <div>
-                            <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Medical History</p>
+                            <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mb-2">Body History</p>
                             <div className="flex flex-wrap gap-2">
-                                {user?.medicalHistory && user.medicalHistory.length > 0 ? (
-                                    user.medicalHistory.map((item: string, i: number) => (
+                                {user?.bodyHistory && user.bodyHistory.length > 0 ? (
+                                    user.bodyHistory.map((item: string, i: number) => (
                                         <span key={i} className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-300 font-medium text-sm">
                                             {item}
                                         </span>
@@ -674,9 +674,9 @@ const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, s
         />
 
         <TagInput
-            label="Medical History (Surgeries, Accidents)"
-            value={formData.medicalHistory}
-            onChange={(tags) => setFormData(prev => ({ ...prev, medicalHistory: tags }))}
+            label="Body History (Surgeries, Accidents)"
+            value={formData.bodyHistory}
+            onChange={(tags) => setFormData(prev => ({ ...prev, bodyHistory: tags }))}
             placeholder="e.g. ACL Reconstruction 2018"
         />
 
