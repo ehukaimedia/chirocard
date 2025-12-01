@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { db } from "../../db/db";
-import { exportDB, importDB } from "dexie-export-import";
+import { importDB } from "dexie-export-import";
 import { Button } from "../ui/Button";
 import { Download, Upload, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
+
+import { generateAIExport } from "../../utils/aiExportUtils";
 
 export const DataManagement = () => {
     const [isExporting, setIsExporting] = useState(false);
@@ -12,13 +14,14 @@ export const DataManagement = () => {
     const handleExport = async () => {
         try {
             setIsExporting(true);
-            const blob = await exportDB(db);
+            const aiData = await generateAIExport();
+            const blob = new Blob([JSON.stringify(aiData, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `chirocard_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `chirocard_brain_export_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            setMessage({ type: 'success', text: 'Backup downloaded successfully.' });
+            setMessage({ type: 'success', text: 'ChiroCard Brain export downloaded successfully.' });
         } catch (error) {
             console.error("Export failed:", error);
             setMessage({ type: 'error', text: 'Export failed. Please try again.' });
@@ -62,9 +65,16 @@ export const DataManagement = () => {
                     <RefreshCw className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div>
-                    <h3 className="text-lg font-semibold text-zinc-900">Data Management</h3>
-                    <p className="text-sm text-zinc-500">Backup your passport or switch devices.</p>
+                    <h3 className="text-lg font-semibold text-zinc-900">ChiroCard Brain</h3>
+                    <p className="text-sm text-zinc-500">Manage your data and AI insights.</p>
                 </div>
+            </div>
+
+            <div className="mb-6 bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                <h4 className="text-sm font-semibold text-indigo-900 mb-1">Dual-Purpose Data</h4>
+                <p className="text-xs text-indigo-700 leading-relaxed">
+                    Your data backup primarily secures your personal records. Additionally, it provides a structured format that you can optionally use with AI models to gain intelligent insights, spot patterns, and better understand your health journey.
+                </p>
             </div>
 
             {message && (
