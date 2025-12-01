@@ -5,7 +5,7 @@ import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer, Camera, Trash2, User } from "lucide-react";
+import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer, Camera, Trash2, User, Shield } from "lucide-react";
 
 import { TagInput } from "../components/ui/TagInput";
 import { PlacesAutocomplete } from "../components/ui/PlacesAutocomplete";
@@ -179,7 +179,7 @@ export default function Profile() {
 
 import { type UserProfile } from "../db/db";
 
-interface FormData {
+export interface FormData {
     name: string;
     photo: string;
     email: string;
@@ -491,8 +491,22 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
     );
 }
 
-const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, setFormData: React.Dispatch<React.SetStateAction<FormData>>, handleSave: () => void }) => (
+export const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, setFormData: React.Dispatch<React.SetStateAction<FormData>>, handleSave: () => void }) => (
     <Card className="p-6 space-y-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
+
+        {/* Advisory Alert */}
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 flex items-start gap-3">
+            <Shield className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div className="text-sm text-emerald-700 dark:text-emerald-300">
+                <p className="font-medium mb-1">Complete Profile Recommended</p>
+                <p className="mb-2">Please fill out as much information as possible for a more productive session.</p>
+                <p className="text-xs opacity-80 flex items-center gap-1">
+                    <Shield className="w-3 h-3" />
+                    Your data is stored locally and securely on your device.
+                </p>
+            </div>
+        </div>
+
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
             <div className="text-sm text-blue-700 dark:text-blue-300">

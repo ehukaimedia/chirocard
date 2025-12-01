@@ -13,14 +13,18 @@ export function WelcomeModal() {
     const [hasChecked, setHasChecked] = useState(false);
 
     useEffect(() => {
+        // Check if already dismissed
+        const dismissed = localStorage.getItem("welcome_dismissed");
+        if (dismissed) {
+            setHasChecked(true);
+            return;
+        }
+
         // Only check once user data is loaded (or confirmed missing)
-        // We use a small timeout to ensure Dexie has had a chance to return undefined if empty
         const timer = setTimeout(() => {
             if (user === undefined) {
-                // User doesn't exist yet, show modal
                 setIsOpen(true);
             } else if (user && !user.name) {
-                // User exists but hasn't set a name (incomplete profile)
                 setIsOpen(true);
             }
             setHasChecked(true);
@@ -34,7 +38,8 @@ export function WelcomeModal() {
         navigate("/profile");
     };
 
-    const handleContinueGuest = () => {
+    const handleDismiss = () => {
+        localStorage.setItem("welcome_dismissed", "true");
         setIsOpen(false);
     };
 
@@ -43,7 +48,7 @@ export function WelcomeModal() {
     return (
         <Modal
             isOpen={isOpen}
-            onClose={() => { }} // Force choice
+            onClose={handleDismiss}
             title="Welcome to ChiroCard"
             description="Your personal digital health passport for holistic bodywork."
             variant="default"
@@ -105,7 +110,7 @@ export function WelcomeModal() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleContinueGuest}
+                            onClick={handleDismiss}
                             className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
                         >
                             I'll explore first

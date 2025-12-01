@@ -34,6 +34,8 @@ export default function GuestSession() {
     const [practitionerName, setPractitionerName] = useState(activePractitioner?.name || "");
 
     const [showExitModal, setShowExitModal] = useState(false);
+    const [showNoSelectionAlert, setShowNoSelectionAlert] = useState(false);
+    const [showMissingDetailsAlert, setShowMissingDetailsAlert] = useState(false);
 
     const handleExitClick = () => {
         setShowExitModal(true);
@@ -83,6 +85,39 @@ export default function GuestSession() {
 
     const handleFinish = async () => {
         if (step === "work") {
+            // Validation: Require at least one body area
+            const activeRegions = Object.entries(bodyStatus).filter(([_, status]) => status !== 'normal');
+            if (activeRegions.length === 0) {
+                setShowNoSelectionAlert(true);
+                return;
+            }
+
+            // Validation: Require details for selected areas
+            // Check if any active region is missing details (practitioner notes, badges, or levels)
+            // AND also check if the PATIENT provided details (intake data) - if patient provided details, that counts as "details present" for that region?
+            // Actually, the requirement is likely that the PRACTITIONER must address it or there must be SOME detail.
+            // Let's stick to the Intake logic: if it's active, it needs a badge or note.
+            // In Practitioner mode, we check practitioner inputs (treatmentNotes, practitionerBadges, practitionerLevels).
+            // But wait, if the patient selected it and provided details, maybe the practitioner doesn't HAVE to add more?
+            // The user said "Ensure the practioner meets all requirements".
+            // Let's enforce that if a region is active, the PRACTITIONER must have added something (note, badge, or level) OR the patient already did?
+            // "If a body area is selected, users must provide at least one detail (badge or custom note)."
+            // In this context, the "user" is the practitioner.
+            // So for every active region, we check if there are practitioner details.
+
+            const missingDetails = activeRegions.some(([partId, _]) => {
+                const hasNote = treatmentNotes[partId] && treatmentNotes[partId].trim().length > 0;
+                const hasBadges = practitionerBadges[partId] && practitionerBadges[partId].length > 0;
+                // We don't strictly require levels if badges or notes are present, matching Intake logic.
+                // Intake logic: hasBadge || hasNote.
+                return !hasNote && !hasBadges;
+            });
+
+            if (missingDetails) {
+                setShowMissingDetailsAlert(true);
+                return;
+            }
+
             setStep("sign");
             return;
         }
@@ -274,17 +309,35 @@ export default function GuestSession() {
                 variant="danger"
             />
 
+            <Modal
+                isOpen={showNoSelectionAlert}
+                onClose={() => setShowNoSelectionAlert(false)}
+                title="No Body Area Selected"
+                description="Please select at least one area of concern on the body map before proceeding."
+                confirmLabel="OK"
+                onConfirm={() => setShowNoSelectionAlert(false)}
+            />
+
+            <Modal
+                isOpen={showMissingDetailsAlert}
+                onClose={() => setShowMissingDetailsAlert(false)}
+                title="Missing Details"
+                description="Please provide at least one detail (badge or note) for each selected body area."
+                confirmLabel="OK"
+                onConfirm={() => setShowMissingDetailsAlert(false)}
+            />
+
             <div className="space-y-6">
                 {step === "work" && (
                     <>
                         {/* Client Context Card */}
-                        {(user?.primaryComplaints?.length || user?.contraindications?.length) && (
+                        {((user?.primaryComplaints?.length || 0) > 0 || (user?.contraindications?.length || 0) > 0) && (
                             <Card className="bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 p-4 space-y-3 shadow-sm">
                                 <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
                                     <Info className="w-4 h-4" /> Client Context
                                 </h3>
 
-                                {user.primaryComplaints && user.primaryComplaints.length > 0 && (
+                                {user?.primaryComplaints && user.primaryComplaints.length > 0 && (
                                     <div>
                                         <span className="text-xs text-zinc-500 block mb-1">Primary Complaints:</span>
                                         <div className="flex flex-wrap gap-2">
@@ -297,7 +350,7 @@ export default function GuestSession() {
                                     </div>
                                 )}
 
-                                {user.contraindications && user.contraindications.length > 0 && (
+                                {user?.contraindications && user.contraindications.length > 0 && (
                                     <div>
                                         <span className="text-xs text-zinc-500 block mb-1">Contraindications:</span>
                                         <div className="flex flex-wrap gap-2">
@@ -331,49 +384,50 @@ export default function GuestSession() {
                                 value={bodyStatus}
                                 onChange={(part, status) => setBodyStatus(prev => ({ ...prev, [part]: status }))}
                             />
+                        </section>
 
-                            {/* Active Body Areas Cards */}
-                            <div className="mt-6 space-y-4">
-                                {Object.entries(bodyStatus)
-                                    .filter(([_, status]) => status !== 'normal')
-                                    .map(([partId, status]) => {
-                                        const region = REGIONS.find(r => r.id === partId);
-                                        if (!region) return null;
+                        <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                            <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
+                                2. Details for Selected Areas
+                            </h2>
+                            <div className="grid gap-4">
+                                {Object.entries(bodyStatus).some(([_, status]) => status !== 'normal') ? (
+                                    Object.entries(bodyStatus)
+                                        .filter(([_, status]) => status !== 'normal')
+                                        .map(([partId, status]) => {
+                                            const region = REGIONS.find(r => r.id === partId);
+                                            if (!region) return null;
 
-                                        return (
-                                            <BodyAreaCard
-                                                key={partId}
-                                                regionId={partId}
-                                                regionLabel={region.label}
-                                                patientStatus={intakeData?.bodyMap?.[partId]}
-                                                patientNote={intakeData?.bodyNotes?.[partId]}
-                                                practitionerStatus={status}
-                                                practitionerNote={treatmentNotes[partId] || ""}
-                                                practitionerLevel={practitionerLevels[partId]}
-                                                practitionerBadges={practitionerBadges[partId]}
-                                                patientLevel={bodyLevels[partId]}
-                                                patientBadges={bodyBadges[partId]}
-                                                onStatusChange={(newStatus) => setBodyStatus(prev => ({ ...prev, [partId]: newStatus }))}
-                                                onNoteChange={(note) => setTreatmentNotes(prev => ({ ...prev, [partId]: note }))}
-                                                onLevelChange={(level) => setPractitionerLevels(prev => ({ ...prev, [partId]: level }))}
-                                                onBadgesChange={(badges) => setPractitionerBadges(prev => ({ ...prev, [partId]: badges }))}
-                                            />
-                                        );
-                                    })}
-
-                                {/* Hint if nothing selected */}
-                                {Object.values(bodyStatus).every(s => s === 'normal') && (
-                                    <div className="text-center py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                                        <p className="text-zinc-500">Tap areas on the body map above to add them to the session.</p>
+                                            return (
+                                                <BodyAreaCard
+                                                    key={partId}
+                                                    regionId={partId}
+                                                    regionLabel={region.label}
+                                                    patientStatus={intakeData?.bodyMap?.[partId]}
+                                                    patientNote={intakeData?.bodyNotes?.[partId]}
+                                                    practitionerStatus={status}
+                                                    practitionerNote={treatmentNotes[partId] || ""}
+                                                    practitionerLevel={practitionerLevels[partId]}
+                                                    practitionerBadges={practitionerBadges[partId]}
+                                                    patientLevel={bodyLevels[partId]}
+                                                    patientBadges={bodyBadges[partId]}
+                                                    onStatusChange={(newStatus) => setBodyStatus(prev => ({ ...prev, [partId]: newStatus }))}
+                                                    onNoteChange={(note) => setTreatmentNotes(prev => ({ ...prev, [partId]: note }))}
+                                                    onLevelChange={(level) => setPractitionerLevels(prev => ({ ...prev, [partId]: level }))}
+                                                    onBadgesChange={(badges) => setPractitionerBadges(prev => ({ ...prev, [partId]: badges }))}
+                                                />
+                                            );
+                                        })
+                                ) : (
+                                    <div className="text-center py-8 bg-zinc-50 dark:bg-zinc-900/30 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                        <p className="text-sm text-zinc-500">Select an area above to add details.</p>
                                     </div>
                                 )}
                             </div>
-
-
                         </section>
 
                         <section>
-                            <h2 className="text-lg font-medium mb-3 text-zinc-300">2. Session Notes</h2>
+                            <h2 className="text-lg font-medium mb-3 text-zinc-300">3. Session Notes</h2>
                             <div className="relative">
                                 <textarea
                                     value={notes}
@@ -385,7 +439,7 @@ export default function GuestSession() {
                         </section>
 
                         <section>
-                            <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">3. Holistic Recommendations</h2>
+                            <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">4. Holistic Recommendations</h2>
                             <Card className="bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 p-4 space-y-4 shadow-sm">
                                 {/* Quick Add Options */}
                                 <div className="space-y-3 mb-4">
@@ -551,149 +605,171 @@ export default function GuestSession() {
                         </div>
 
                         {/* Digital Document Preview */}
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
-                            {/* Watermark/Background decoration - REMOVED */}
-
-
+                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 shadow-2xl relative overflow-hidden space-y-8">
                             {/* Header */}
-                            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-6 mb-6">
+                            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-6">
                                 <h1 className="text-2xl font-serif text-emerald-600 dark:text-emerald-500 mb-2">ChiroCard Session Record</h1>
                                 <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400">
                                     <span>Date: {new Date().toLocaleDateString()}</span>
-                                    <span>Practitioner: {practitionerName || "Guest Practitioner"}</span>
                                 </div>
                             </div>
 
-                            <div className="space-y-8">
-                                {/* 1. Client Context (if any) */}
-                                {intakeData?.notes && (
-                                    <div className="space-y-2">
-                                        <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Client Intake</h3>
-                                        <p className="text-zinc-700 dark:text-zinc-300 text-sm italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-3 py-1">
-                                            "{intakeData.notes}"
-                                        </p>
-                                    </div>
-                                )}
+                            {/* 1. Client Context (if any) */}
+                            {intakeData?.notes && (
+                                <div className="space-y-2">
+                                    <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Client Intake</h3>
+                                    <p className="text-zinc-700 dark:text-zinc-300 text-sm italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-3 py-1">
+                                        "{intakeData.notes}"
+                                    </p>
+                                </div>
+                            )}
 
-                                {/* 2. Bodywork Log */}
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Bodywork Log</h3>
-                                    {Object.entries(bodyStatus).filter(([_, s]) => s !== 'normal').length > 0 ? (
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {Object.entries(bodyStatus)
-                                                .filter(([_, status]) => status !== 'normal')
-                                                .map(([partId, status]) => {
-                                                    const region = REGIONS.find(r => r.id === partId);
-                                                    const note = treatmentNotes[partId];
-                                                    return (
-                                                        <div key={partId} className="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50 flex justify-between items-start">
-                                                            <div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="font-medium text-zinc-900 dark:text-zinc-200">{region?.label}</span>
-                                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${status === 'issue' ? 'bg-red-500/10 text-red-400' :
-                                                                        status === 'addressed' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                                            'bg-amber-500/10 text-amber-400'
-                                                                        }`}>
-                                                                        {status}
-                                                                    </span>
+                            {/* 2. Bodywork Log */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Bodywork Log</h3>
+                                {Object.entries(bodyStatus).filter(([_, s]) => s !== 'normal').length > 0 ? (
+                                    <div className="space-y-4">
+                                        {Object.entries(bodyStatus)
+                                            .filter(([_, status]) => status !== 'normal')
+                                            .map(([partId, status]) => {
+                                                const region = REGIONS.find(r => r.id === partId);
+                                                const note = treatmentNotes[partId];
+                                                return (
+                                                    <div key={partId} className="flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 pb-4 last:border-0 last:pb-0">
+                                                        <div className="w-full">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="font-medium text-zinc-900 dark:text-zinc-200">{region?.label}</span>
+                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${status === 'issue' ? 'bg-red-500/10 text-red-400' :
+                                                                    status === 'addressed' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                                        'bg-amber-500/10 text-amber-400'
+                                                                    }`}>
+                                                                    {status}
+                                                                </span>
+                                                            </div>
+                                                            {(bodyLevels[partId] !== undefined || (bodyBadges[partId] && bodyBadges[partId].length > 0)) && (
+                                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                                    {bodyLevels[partId] !== undefined && (
+                                                                        <span className="text-xs font-bold text-zinc-500">Pain Level: {bodyLevels[partId]}/10</span>
+                                                                    )}
+                                                                    {bodyBadges[partId]?.map(badge => (
+                                                                        <span key={badge} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                                            {badge}
+                                                                        </span>
+                                                                    ))}
                                                                 </div>
-                                                                {(bodyLevels[partId] !== undefined || (bodyBadges[partId] && bodyBadges[partId].length > 0)) && (
-                                                                    <div className="flex flex-wrap gap-2 mt-1 mb-1">
-                                                                        {bodyLevels[partId] !== undefined && (
-                                                                            <span className="text-xs font-bold text-zinc-500">Pain Level: {bodyLevels[partId]}/10</span>
+                                                            )}
+                                                            {note && <p className="text-sm text-zinc-600 dark:text-zinc-400 italic">"{note}"</p>}
+                                                            {(practitionerLevels[partId] !== undefined || (practitionerBadges[partId] && practitionerBadges[partId].length > 0)) && (
+                                                                <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                                                    <p className="text-[10px] uppercase text-emerald-500 font-bold mb-1">Practitioner Assessment</p>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {practitionerLevels[partId] !== undefined && (
+                                                                            <span className="text-xs font-bold text-zinc-500">Level: {practitionerLevels[partId]}/10</span>
                                                                         )}
-                                                                        {bodyBadges[partId]?.map(badge => (
-                                                                            <span key={badge} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+                                                                        {practitionerBadges[partId]?.map(badge => (
+                                                                            <span key={badge} className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20">
                                                                                 {badge}
                                                                             </span>
                                                                         ))}
                                                                     </div>
-                                                                )}
-                                                                {note && <p className="text-sm text-zinc-400 mt-1">{note}</p>}
-                                                                {(practitionerLevels[partId] !== undefined || (practitionerBadges[partId] && practitionerBadges[partId].length > 0)) && (
-                                                                    <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                                                                        <p className="text-[10px] uppercase text-emerald-500 font-bold mb-1">Practitioner Assessment</p>
-                                                                        <div className="flex flex-wrap gap-2">
-                                                                            {practitionerLevels[partId] !== undefined && (
-                                                                                <span className="text-xs font-bold text-zinc-500">Level: {practitionerLevels[partId]}/10</span>
-                                                                            )}
-                                                                            {practitionerBadges[partId]?.map(badge => (
-                                                                                <span key={badge} className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                                                                    {badge}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    );
-                                                })}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-zinc-500 italic">No specific body areas logged.</p>
-                                    )}
-                                </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-zinc-500 italic">No specific body areas logged.</p>
+                                )}
+                            </div>
 
-                                {/* 3. Session Notes */}
+                            <hr className="border-zinc-200 dark:border-zinc-800" />
+
+                            {/* 3. Session Notes */}
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Session Notes</h3>
+                                <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
+                                    {notes || "No general notes added."}
+                                </p>
+                            </div>
+
+                            <hr className="border-zinc-200 dark:border-zinc-800" />
+
+                            {/* 4. Holistic Recommendations */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Holistic Recommendations</h3>
+                                {recommendations.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {recommendations.map((rec) => (
+                                            <div key={rec.id} className="flex items-start gap-3 bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50">
+                                                <div className={`mt-1 w-2 h-2 rounded-full ${rec.category === 'relief' ? 'bg-blue-500' :
+                                                    rec.category === 'movement' ? 'bg-emerald-500' :
+                                                        rec.category === 'lifestyle' ? 'bg-purple-500' : 'bg-zinc-500'
+                                                    }`} />
+                                                <div>
+                                                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-200">{rec.title}</p>
+                                                    <p className="text-xs text-zinc-500">
+                                                        {rec.frequency} • {rec.category}
+                                                        {rec.reminderTimes && rec.reminderTimes.length > 0 && ` • ⏰ ${rec.reminderTimes[0]}`}
+                                                    </p>
+                                                    {rec.description && <p className="text-xs text-zinc-400 mt-1">{rec.description}</p>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-zinc-500 italic">No recommendations added.</p>
+                                )}
+                            </div>
+
+                            <hr className="border-zinc-200 dark:border-zinc-800" />
+
+                            {/* Client Authorization */}
+                            {intakeData?.userSignature && (
                                 <div className="space-y-2">
-                                    <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Session Notes</h3>
-                                    <div className="bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800/50 min-h-[60px]">
-                                        <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap">
-                                            {notes || "No general notes added."}
+                                    <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Client Authorization</h3>
+                                    <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 bg-zinc-50 dark:bg-zinc-950/50 w-fit min-w-[200px]">
+                                        <div className="h-16 flex items-end mb-2">
+                                            <img src={intakeData.userSignature} alt="Client Signature" className="max-h-full max-w-full object-contain" />
+                                        </div>
+                                        <p className="text-xs text-zinc-500 border-t border-zinc-200 dark:border-zinc-700 pt-1">
+                                            Signed by: <span className="font-medium text-zinc-900 dark:text-zinc-300">{user?.name || "Client"}</span>
                                         </p>
                                     </div>
                                 </div>
+                            )}
 
-                                {/* 4. Holistic Recommendations */}
-                                <div className="space-y-3">
-                                    <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Holistic Recommendations</h3>
-                                    {recommendations.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {recommendations.map((rec) => (
-                                                <div key={rec.id} className="flex items-start gap-3 bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50">
-                                                    <div className={`mt-1 w-2 h-2 rounded-full ${rec.category === 'relief' ? 'bg-blue-500' :
-                                                        rec.category === 'movement' ? 'bg-emerald-500' :
-                                                            rec.category === 'lifestyle' ? 'bg-purple-500' : 'bg-zinc-500'
-                                                        }`} />
-                                                    <div>
-                                                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-200">{rec.title}</p>
-                                                        <p className="text-xs text-zinc-500">
-                                                            {rec.frequency} • {rec.category}
-                                                            {rec.reminderTimes && rec.reminderTimes.length > 0 && ` • ⏰ ${rec.reminderTimes[0]}`}
-                                                        </p>
-                                                        {rec.description && <p className="text-xs text-zinc-400 mt-1">{rec.description}</p>}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-zinc-500 italic">No recommendations added.</p>
-                                    )}
-                                </div>
+                            <hr className="border-zinc-200 dark:border-zinc-800" />
 
-                                {/* Footer Disclaimer */}
-                                <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 mt-8">
-                                    <p className="text-[10px] text-zinc-500 dark:text-zinc-600 text-center">
-                                        Disclaimer: This is a user-owned personal record and does not replace the official legal health record maintained by the provider.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Signature Section */}
-                        <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-sm">
-                            <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-200 mb-4">Sign to Complete</h3>
-                            <Input
-                                label="Practitioner Name"
-                                value={practitionerName}
-                                onChange={(e) => setPractitionerName(e.target.value)}
-                                placeholder="Dr. Name or Therapist Name"
-                                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white mb-4"
-                            />
+                            {/* Footer Disclaimer */}
                             <div>
-                                <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Initials</label>
-                                <SignaturePad ref={sigPadRef} />
+                                <p className="text-[10px] text-zinc-500 dark:text-zinc-600 text-center mb-6">
+                                    Disclaimer: This is a user-owned personal record and does not replace the official legal health record maintained by the provider.
+                                </p>
+                            </div>
+
+                            {/* Signature Section */}
+                            <div className="space-y-4 pt-2">
+                                <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-200">Sign to Complete</h3>
+                                <Input
+                                    label="Practitioner Name"
+                                    value={practitionerName}
+                                    onChange={(e) => setPractitionerName(e.target.value)}
+                                    placeholder="Dr. Name or Therapist Name"
+                                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white mb-4"
+                                />
+                                <div>
+                                    <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Initials</label>
+                                    <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-900/50">
+                                        <SignaturePad ref={sigPadRef} />
+                                    </div>
+                                    <div className="mt-2">
+                                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                                            Signed by: <span className="font-medium text-zinc-900 dark:text-zinc-100">{practitionerName || "Guest Practitioner"}</span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </section>
