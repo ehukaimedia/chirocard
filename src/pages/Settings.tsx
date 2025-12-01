@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Users, User, Calendar, History } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
 
@@ -25,18 +25,57 @@ export default function Settings() {
             </div>
 
             <div className="max-w-2xl mx-auto space-y-8">
-                {/* Team Management Link */}
-                <section
-                    onClick={() => navigate("/team")}
-                    className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-emerald-50 rounded-xl">
-                            <Users className="w-5 h-5 text-emerald-600" />
+                {/* Navigation Grid */}
+                <section className="grid grid-cols-2 gap-4">
+                    <div
+                        onClick={() => navigate("/profile")}
+                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
+                    >
+                        <div className="p-3 bg-emerald-50 rounded-full">
+                            <User className="w-6 h-6 text-emerald-600" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-zinc-900">My Care Team</h2>
-                            <p className="text-sm text-zinc-500">Manage your trusted practitioners</p>
+                            <h2 className="font-semibold text-zinc-900">Profile</h2>
+                            <p className="text-xs text-zinc-500">Personal details</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => navigate("/team")}
+                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
+                    >
+                        <div className="p-3 bg-blue-50 rounded-full">
+                            <Users className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <h2 className="font-semibold text-zinc-900">Care Team</h2>
+                            <p className="text-xs text-zinc-500">Practitioners</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => navigate("/calendar")}
+                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
+                    >
+                        <div className="p-3 bg-purple-50 rounded-full">
+                            <Calendar className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <div>
+                            <h2 className="font-semibold text-zinc-900">Calendar</h2>
+                            <p className="text-xs text-zinc-500">Schedule</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => navigate("/history")}
+                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
+                    >
+                        <div className="p-3 bg-amber-50 rounded-full">
+                            <History className="w-6 h-6 text-amber-600" />
+                        </div>
+                        <div>
+                            <h2 className="font-semibold text-zinc-900">History</h2>
+                            <p className="text-xs text-zinc-500">Past Sessions</p>
                         </div>
                     </div>
                 </section>
