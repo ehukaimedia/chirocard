@@ -5,7 +5,7 @@ import { db, type Homework, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
-import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 
@@ -62,8 +62,13 @@ export default function Dashboard() {
                         </Button>
                     </Link>
                     <Link to="/calendar">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100">
+                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Calendar">
                             <CalendarIcon className="w-5 h-5" />
+                        </Button>
+                    </Link>
+                    <Link to="/history">
+                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="History">
+                            <History className="w-5 h-5" />
                         </Button>
                     </Link>
                     <Link to="/profile">

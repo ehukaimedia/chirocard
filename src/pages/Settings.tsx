@@ -1,12 +1,36 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, Users, User, Calendar, History } from "lucide-react";
+import { ArrowLeft, Users, User, Calendar, History, Trash2, AlertTriangle } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
+import { db } from "../db/db";
+import { Modal } from "../components/ui/Modal";
 
 export default function Settings() {
     const navigate = useNavigate();
-    const { calendarViewSpan, setCalendarViewSpan } = useAppStore();
+    const { calendarViewSpan, setCalendarViewSpan, reset } = useAppStore();
+    const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
+
+    const handleFreshStart = async () => {
+        try {
+            // 1. Wipe Database
+            await db.delete();
+            await db.open(); // Re-open to ensure it's clean and ready if needed, though reload will handle it.
+
+            // 2. Reset Store
+            reset();
+
+            // 3. Clear Local Storage (Persisted Store)
+            localStorage.removeItem('chirocard-storage');
+
+            // 4. Reload
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to reset app:", error);
+            alert("Failed to reset application data. Please try again.");
+        }
+    };
 
     return (
         <div className="min-h-screen bg-zinc-50 p-6 pb-24">
@@ -123,7 +147,45 @@ export default function Settings() {
                 </section>
 
                 <DataManagement />
+
+                {/* Danger Zone */}
+                <section className="bg-rose-50 p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-rose-100">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2.5 bg-rose-100 rounded-xl">
+                            <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-rose-900">Danger Zone</h2>
+                            <p className="text-sm text-rose-700">Irreversible actions</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <p className="text-sm text-rose-800 leading-relaxed">
+                            Need a clean slate? You can erase all data and settings to start fresh. This action cannot be undone.
+                        </p>
+                        <Button
+                            variant="danger"
+                            className="w-full justify-start h-12"
+                            onClick={() => setIsFreshStartModalOpen(true)}
+                        >
+                            <Trash2 className="w-4 h-4 mr-3" />
+                            Erase All Data
+                        </Button>
+                    </div>
+                </section>
             </div>
+
+            <Modal
+                isOpen={isFreshStartModalOpen}
+                onClose={() => setIsFreshStartModalOpen(false)}
+                title="Reset Application?"
+                description="Are you sure you want to erase all data and reset the application? This includes your profile, all sessions, practitioners, and settings. This action is permanent and cannot be undone."
+                confirmLabel="Yes, Erase Everything"
+                cancelLabel="Cancel"
+                variant="danger"
+                onConfirm={handleFreshStart}
+            />
         </div>
     );
 }
