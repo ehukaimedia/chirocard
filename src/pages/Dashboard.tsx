@@ -5,11 +5,13 @@ import { db, type Homework, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
-import { Plus, History, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
+import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const user = useLiveQuery(() => db.users.get("me"));
     const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
     const homework = useLiveQuery(() => db.homework.toArray());
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
@@ -31,8 +33,6 @@ export default function Dashboard() {
             setDeleteSessionId(null);
         }
     };
-
-    const user = useLiveQuery(() => db.users.get("me"));
 
     const activeFocus = user?.primaryComplaints && user.primaryComplaints.length > 0
         ? user.primaryComplaints.join(", ")
@@ -164,28 +164,32 @@ export default function Dashboard() {
                     </div>
                 </Card>
             </section>
+            {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 gap-4">
                 <Button
-                    variant="primary"
-                    className="h-32 flex flex-col items-center justify-center gap-3 text-lg shadow-lg shadow-emerald-500/20"
+                    variant="outline"
+                    className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
                     onClick={() => navigate("/intake")}
                 >
-                    <div className="p-3 bg-white/20 rounded-full">
-                        <Plus className="w-6 h-6" />
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
+                        <Plus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    Start Session
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">Start Session</span>
                 </Button>
+
                 <Button
                     variant="outline"
-                    className="h-32 flex flex-col items-center justify-center gap-3 text-lg bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 shadow-sm"
-                    onClick={() => navigate("/history")}
+                    className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                    onClick={() => navigate("/profile")}
                 >
-                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-full">
-                        <History className="w-6 h-6 text-zinc-700 dark:text-zinc-300" />
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full group-hover:scale-110 transition-transform">
+                        <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                     </div>
-                    <span className="text-zinc-900 dark:text-zinc-100">History</span>
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile</span>
                 </Button>
             </div>
+
+            <WelcomeModal />
 
             {/* Recent Activity */}
             <section>

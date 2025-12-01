@@ -15,6 +15,7 @@ interface ModalProps {
     onCancel?: () => void;
     confirmDisabled?: boolean;
     variant?: "default" | "danger";
+    className?: string;
 }
 
 export function Modal({
@@ -28,7 +29,8 @@ export function Modal({
     onConfirm,
     onCancel,
     confirmDisabled = false,
-    variant = "default"
+    variant = "default",
+    className
 }: ModalProps) {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -51,7 +53,7 @@ export function Modal({
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 duration-200"
+                className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 duration-200 ${className || ''}`}
                 role="dialog"
                 aria-modal="true"
             >

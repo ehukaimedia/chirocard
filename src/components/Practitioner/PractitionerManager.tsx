@@ -6,7 +6,7 @@ import { Card } from "../ui/Card";
 import { Input } from "../ui/Input";
 import { PlacesAutocomplete } from "../ui/PlacesAutocomplete";
 import { Modal } from "../ui/Modal";
-import { Plus, User, Trash2, GripVertical, Pencil, X } from "lucide-react";
+import { Plus, Trash2, GripVertical, Pencil, X } from "lucide-react";
 import { Reorder } from "framer-motion";
 
 export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner) => void }) {
@@ -223,23 +223,23 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                             <div
                                 onClick={() => onSelect?.(p)}
                                 className={`
-                                    p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 
-                                    flex items-center justify-between transition-colors select-none
+                                    p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 
+                                    flex items-center justify-between transition-colors select-none min-h-[4.5rem]
                                     ${onSelect ? 'cursor-pointer hover:border-primary hover:bg-primary/5' : ''}
                                 `}
                             >
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-4">
                                     {!onSelect && (
-                                        <div className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600">
-                                            <GripVertical className="w-5 h-5" />
+                                        <div className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 p-2 -ml-2">
+                                            <GripVertical className="w-6 h-6" />
                                         </div>
                                     )}
-                                    <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                                        <User className="w-5 h-5 text-zinc-500" />
+                                    <div className="h-12 w-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                                        <span className="text-lg font-bold text-zinc-500">{p.name.charAt(0)}</span>
                                     </div>
                                     <div>
-                                        <p className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</p>
-                                        <p className="text-xs text-zinc-500">{p.role}</p>
+                                        <p className="font-bold text-zinc-900 dark:text-zinc-100 text-base">{p.name}</p>
+                                        <p className="text-sm text-zinc-500">{p.role}</p>
                                     </div>
                                 </div>
 
@@ -247,15 +247,15 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={(e) => handleEdit(p, e)}
-                                            className="p-2 text-zinc-400 hover:text-emerald-500 transition-colors"
+                                            className="p-3 text-zinc-400 hover:text-emerald-500 transition-colors"
                                         >
-                                            <Pencil className="w-4 h-4" />
+                                            <Pencil className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={(e) => handleDeleteClick(p.id, e)}
-                                            className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                                            className="p-3 text-zinc-400 hover:text-red-500 transition-colors"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-5 h-5" />
                                         </button>
                                     </div>
                                 )}

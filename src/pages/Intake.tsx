@@ -142,32 +142,51 @@ export default function Intake() {
             <div className="flex-1 space-y-8">
                 {step === "intake" ? (
                     <>
-                        {/* Practitioner Selection - Dropdown */}
+                        {/* Practitioner Selection - Cards */}
                         <section>
                             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Select Practitioner</h2>
                             {practitioners && practitioners.length > 0 ? (
-                                <div className="space-y-2">
-                                    <select
-                                        className="w-full h-14 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 text-lg font-medium text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none appearance-none"
-                                        value={selectedPractitioner?.id || ""}
-                                        onChange={(e) => {
-                                            const p = practitioners.find(p => p.id === e.target.value);
-                                            if (p) setSelectedPractitioner(p);
-                                        }}
-                                    >
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {practitioners.map(p => (
-                                            <option key={p.id} value={p.id}>
-                                                {p.name} - {p.role}
-                                            </option>
+                                            <div
+                                                key={p.id}
+                                                onClick={() => setSelectedPractitioner(p)}
+                                                className={`
+                                                    relative p-4 rounded-2xl border-2 cursor-pointer transition-all active:scale-[0.98]
+                                                    ${selectedPractitioner?.id === p.id
+                                                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/50'}
+                                                `}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`
+                                                        w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
+                                                        ${selectedPractitioner?.id === p.id
+                                                            ? 'bg-emerald-500 text-white'
+                                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}
+                                                    `}>
+                                                        {p.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">{p.name}</h3>
+                                                        <p className="text-xs text-zinc-500">{p.role}</p>
+                                                    </div>
+                                                </div>
+                                                {selectedPractitioner?.id === p.id && (
+                                                    <div className="absolute top-4 right-4 w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                                                )}
+                                            </div>
                                         ))}
-                                    </select>
-                                    <div className="flex justify-between items-center px-2 mt-2">
+                                    </div>
+
+                                    <div className="flex justify-between items-center px-2">
                                         <p className="text-xs text-zinc-500">
-                                            Manage your team order in the <span className="font-bold cursor-pointer hover:text-emerald-500" onClick={() => navigate('/team')}>Team</span> page.
+                                            Manage your team in <span className="font-bold cursor-pointer hover:text-emerald-500" onClick={() => navigate('/team')}>Team Settings</span>.
                                         </p>
                                         <button
                                             onClick={() => setShowAddPractitionerModal(true)}
-                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full"
                                         >
                                             + Add New
                                         </button>
@@ -191,7 +210,7 @@ export default function Intake() {
                         </section>
 
                         {/* Question 3 */}
-                        <section className="space-y-4">
+                        <section className="space-y-4 pb-4">
                             <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
                                 3. Tap areas of concern
                             </h2>
@@ -391,7 +410,7 @@ export default function Intake() {
             </div>
 
             {/* Footer Action */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-light-bg via-light-bg to-transparent dark:from-dark-bg dark:via-dark-bg">
+            <div className="fixed bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-light-bg via-light-bg to-transparent dark:from-dark-bg dark:via-dark-bg z-10">
                 {step === "intake" ? (
                     <>
                         <Button
