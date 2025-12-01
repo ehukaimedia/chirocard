@@ -52,7 +52,7 @@ export default function Dashboard() {
                         <h1 className="text-2xl md:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter mb-0 leading-none">
                             <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card<span className="text-emerald-600 dark:text-emerald-500">.</span>
                         </h1>
-                        <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-wide uppercase text-[10px] md:text-xs hidden md:block">The Digital Body Work Passport</p>
+                        <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-wide uppercase text-[9px] md:text-xs leading-tight">Your Digital Body Work Passport</p>
                     </div>
                 </div>
                 <div className="flex gap-3">
