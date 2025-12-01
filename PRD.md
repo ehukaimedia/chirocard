@@ -77,8 +77,12 @@
 *   **Persistent Storage Request:** Automatically requests browser persistence to prevent data eviction.
 
 ## 7. Mobile Deployment Strategy
-**Framework:** [Capacitor](https://capacitorjs.com/)
+**Framework:** [Capacitor](https://capacitorjs.com/) (Installed & Configured)
 **Goal:** Wrap the existing React web application into native iOS and Android apps.
+**Current Status:**
+*   Capacitor Core, CLI, iOS, and Android platforms installed.
+*   Essential plugins (App, Haptics, Keyboard, Status Bar) installed.
+*   App icons and splash screens generated for both platforms.
 
 ### 7.1. Platform Targets
 *   **iOS (Apple App Store):**
