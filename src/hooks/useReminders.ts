@@ -7,9 +7,15 @@ export function useReminders() {
     const lastCheckRef = useRef<number>(Date.now());
 
     useEffect(() => {
+        // Check if Notification API is supported
+        if (!('Notification' in window)) {
+            console.log('This browser does not support desktop notification');
+            return;
+        }
+
         // Request permission on mount
         if (Notification.permission === 'default') {
-            Notification.requestPermission();
+            Notification.requestPermission().catch(err => console.error("Error requesting notification permission:", err));
         }
 
         const checkReminders = () => {
@@ -22,10 +28,16 @@ export function useReminders() {
 
             homework?.forEach(hw => {
                 if (hw.reminderTimes?.includes(currentTime) && !hw.isCompletedToday) {
-                    new Notification(`Time for ${hw.title}`, {
-                        body: hw.description || `It's time for your ${hw.category} routine.`,
-                        icon: '/icon-192x192.png' // Assuming PWA icon exists
-                    });
+                    if (Notification.permission === 'granted') {
+                        try {
+                            new Notification(`Time for ${hw.title}`, {
+                                body: hw.description || `It's time for your ${hw.category} routine.`,
+                                icon: '/icon-192x192.png'
+                            });
+                        } catch (e) {
+                            console.error("Error creating notification:", e);
+                        }
+                    }
                 }
             });
         };
