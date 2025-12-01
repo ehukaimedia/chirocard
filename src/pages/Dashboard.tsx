@@ -46,13 +46,13 @@ export default function Dashboard() {
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 space-y-8 pb-24">
             {/* Header */}
             <header className="flex justify-between items-center mb-10">
-                <div className="flex items-center gap-4">
-                    <img src="/chirocard-icon.png" alt="ChiroCard" className="w-14 h-14 rounded-2xl shadow-lg shadow-emerald-500/20" />
+                <div className="flex items-center gap-3 md:gap-4">
+                    <img src="/chirocard-icon.png" alt="ChiroCard" className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl shadow-lg shadow-emerald-500/20" />
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter mb-0 leading-none">
+                        <h1 className="text-2xl md:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter mb-0 leading-none">
                             <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card<span className="text-emerald-600 dark:text-emerald-500">.</span>
                         </h1>
-                        <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-wide uppercase text-[10px] md:text-xs">The Digital Body Work Passport</p>
+                        <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-wide uppercase text-[10px] md:text-xs hidden md:block">The Digital Body Work Passport</p>
                     </div>
                 </div>
                 <div className="flex gap-3">
