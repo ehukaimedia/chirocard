@@ -64,6 +64,7 @@ export type Session = {
     practitionerLevels?: Record<string, number>; // Practitioner findings level (0-10)
     practitionerBadges?: Record<string, string[]>; // Practitioner findings (e.g. "Hypertonic", "Subluxation")
     isLocked: boolean;
+    appointmentId?: string; // Link to source appointment
     createdAt: number;
     // Post-Session Data
     postSessionLog?: PostSessionEntry[];
@@ -91,6 +92,7 @@ export type Appointment = {
     practitionerName: string;
     date: number; // Timestamp
     notes?: string;
+    status?: 'scheduled' | 'completed' | 'cancelled';
 };
 
 export type Homework = {
@@ -119,12 +121,12 @@ export class ChiroCardDB extends Dexie {
 
     constructor() {
         super('ChiroCardDB');
-        this.version(13).stores({
+        this.version(14).stores({
             users: 'id', // Simple key-value for user settings
             practitioners: 'id, name, role, order', // UUIDs, not auto-increment
             sessions: 'id, date, practitionerId', // UUIDs, not auto-increment
             bodyLogs: '++id, timestamp, status', // Keep auto-increment for logs if they don’t use UUIDs (check usage)
-            appointments: '++id, date, practitionerId',
+            appointments: '++id, date, practitionerId, status',
             homework: '++id, isCompletedToday, status'
         });
     }

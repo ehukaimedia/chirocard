@@ -20,6 +20,7 @@ interface StoredPractitioner {
 interface AppState {
     mode: AppMode;
     activeSessionId: string | null;
+    activeAppointmentId?: string | null; // Track source appointment
     activePractitioner: StoredPractitioner | null;
     intakeData: {
         bodyMap: Record<string, BodyStatus>;
@@ -33,7 +34,7 @@ interface AppState {
 
     // Actions
     setMode: (mode: AppMode) => void;
-    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }) => void;
+    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }, appointmentId?: string) => void;
     resumeSession: (session: any) => void;
     updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string }) => void;
     clearIntakeData: () => void;
@@ -51,14 +52,16 @@ export const useAppStore = create<AppState>()(
         (set) => ({
             mode: 'user',
             activeSessionId: null,
+            activeAppointmentId: null,
             activePractitioner: null,
             intakeData: null,
             resumedSessionData: null,
 
             setMode: (mode) => set({ mode }),
 
-            startSession: (sessionId, practitioner, intakeData) => set({
+            startSession: (sessionId, practitioner, intakeData, appointmentId) => set({
                 activeSessionId: sessionId,
+                activeAppointmentId: appointmentId || null,
                 mode: 'guest',
                 activePractitioner: practitioner || null,
                 intakeData: intakeData || null,
@@ -92,7 +95,7 @@ export const useAppStore = create<AppState>()(
 
             clearIntakeData: () => set({ intakeData: null }),
 
-            endSession: () => set({ activeSessionId: null, mode: 'user', activePractitioner: null, intakeData: null, resumedSessionData: null }),
+            endSession: () => set({ activeSessionId: null, activeAppointmentId: null, mode: 'user', activePractitioner: null, intakeData: null, resumedSessionData: null }),
 
             calendarViewSpan: 30, // Default to 30 days
             setCalendarViewSpan: (days) => set({ calendarViewSpan: days }),
@@ -101,6 +104,7 @@ export const useAppStore = create<AppState>()(
             name: 'chirocard-storage',
             partialize: (state) => ({
                 activeSessionId: state.activeSessionId,
+                activeAppointmentId: state.activeAppointmentId,
                 activePractitioner: state.activePractitioner,
                 mode: state.mode,
                 intakeData: state.intakeData,

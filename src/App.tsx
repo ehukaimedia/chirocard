@@ -11,6 +11,7 @@ import SessionDetails from "./pages/SessionDetails";
 import SessionReport from "./pages/SessionReport";
 import Settings from "./pages/Settings";
 import { useAppStore } from "./store/useAppStore";
+import { MainLayout } from "./components/Layout/MainLayout";
 
 function ProtectedGuestRoute({ children }: { children: React.ReactElement }) {
   const { mode } = useAppStore();
@@ -29,15 +30,18 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/team" element={<Team />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/session/:id" element={<SessionDetails />} />
+          <Route path="/session/:id/report" element={<SessionReport />} />
+        </Route>
+
         <Route path="/intake" element={<Intake />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/session/:id" element={<SessionDetails />} />
-        <Route path="/session/:id/report" element={<SessionReport />} />
         <Route
           path="/guest-session"
           element={

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
 
@@ -11,7 +11,7 @@ export default function Settings() {
     return (
         <div className="min-h-screen bg-zinc-50 p-6 pb-24">
             {/* Top Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200 flex items-center px-6 z-50">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200 hidden md:flex items-center px-6 z-50">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
                     Return to Dashboard
@@ -19,12 +19,28 @@ export default function Settings() {
             </nav>
 
             {/* Header Content */}
-            <div className="mt-16 mb-8 pt-6 max-w-2xl mx-auto">
+            <div className="md:mt-16 mb-8 pt-6 max-w-2xl mx-auto">
                 <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">Settings</h1>
                 <p className="text-zinc-500 mt-2">Manage your app preferences and data.</p>
             </div>
 
             <div className="max-w-2xl mx-auto space-y-8">
+                {/* Team Management Link */}
+                <section
+                    onClick={() => navigate("/team")}
+                    className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-emerald-50 rounded-xl">
+                            <Users className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-zinc-900">My Care Team</h2>
+                            <p className="text-sm text-zinc-500">Manage your trusted practitioners</p>
+                        </div>
+                    </div>
+                </section>
+
                 {/* Calendar Settings */}
                 <section className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100">
                     <div className="flex items-center gap-3 mb-6">

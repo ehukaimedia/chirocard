@@ -115,7 +115,7 @@ export default function Profile() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
             {/* Top Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50 print:hidden">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50 print:hidden">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
                     Return to Dashboard
@@ -123,7 +123,7 @@ export default function Profile() {
             </nav>
 
             {/* Header Content */}
-            <div className="mt-16 mb-8 pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+            <div className="md:mt-16 mb-8 pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
                 <div>
                     <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Bodywork Profile</h1>
                     <p className="text-sm text-zinc-500 mt-1">Manage your personal health data and preferences.</p>

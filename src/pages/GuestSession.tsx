@@ -17,7 +17,7 @@ import { useToast } from "../components/ui/Toast";
 
 export default function GuestSession() {
     const navigate = useNavigate();
-    const { endSession, activePractitioner, intakeData, updateIntakeData, resumedSessionData } = useAppStore();
+    const { endSession, activePractitioner, intakeData, updateIntakeData, resumedSessionData, activeAppointmentId } = useAppStore();
     const user = useLiveQuery(() => db.users.get("me"));
     const sigPadRef = useRef<SignaturePadRef>(null);
 
@@ -203,8 +203,14 @@ export default function GuestSession() {
                     userSignature: intakeData?.userSignature, // Save client signature
                     isLocked: true,
                     createdAt: existingSession.createdAt || Date.now(),
-                    postSessionLog: updatedLog
+                    postSessionLog: updatedLog,
+                    appointmentId: activeAppointmentId || undefined
                 });
+
+                // If this session was started from an appointment, mark it as completed
+                if (activeAppointmentId) {
+                    await db.appointments.update(activeAppointmentId, { status: 'completed' });
+                }
 
                 // Add recommendations to user's active homework list
                 if (recommendations.length > 0) {

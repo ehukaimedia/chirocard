@@ -82,7 +82,7 @@ export default function Calendar() {
 
     const upcomingAppointments = appointments?.filter(appt => {
         const apptDate = new Date(appt.date);
-        return apptDate >= tomorrow && apptDate <= endDate;
+        return apptDate >= tomorrow && apptDate <= endDate && appt.status !== 'completed';
     }) || [];
 
     // For upcoming routine, we just show the active list that *would* appear in the future.
@@ -276,7 +276,7 @@ export default function Calendar() {
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
             {/* ... Navigation ... */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50">
                 <button
                     onClick={() => navigate("/")}
                     className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium text-sm flex items-center gap-2 transition-colors"
@@ -286,7 +286,7 @@ export default function Calendar() {
                 </button>
             </nav>
 
-            <div className="mt-16 mb-6 pt-6 flex items-center gap-4">
+            <div className="md:mt-16 mb-6 pt-6 flex items-center gap-4">
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Calendar</h1>
             </div>
 
@@ -342,9 +342,22 @@ export default function Calendar() {
                                             <p className="font-medium text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
                                             <p className="text-sm text-zinc-500">
                                                 {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {appt.status === 'completed' && <span className="ml-2 text-emerald-500 font-medium text-xs flex items-center inline-flex gap-1"><CheckCircle className="w-3 h-3" /> Completed</span>}
                                             </p>
                                         </div>
                                         <div className="flex gap-2">
+                                            {new Date(appt.date).toDateString() === new Date().toDateString() && appt.status !== 'completed' && (
+                                                <Button
+                                                    size="sm"
+                                                    className="h-8 text-xs bg-emerald-500 hover:bg-emerald-600 text-white"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate("/intake", { state: { appointmentId: appt.id } });
+                                                    }}
+                                                >
+                                                    Start Session
+                                                </Button>
+                                            )}
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); deleteItem('appointment', appt.id); }}
                                                 className="text-zinc-400 hover:text-red-500 p-2"

@@ -36,7 +36,7 @@ export default function History() {
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
             {/* Top Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50">
                 <button
                     onClick={() => navigate("/")}
                     className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium text-sm flex items-center gap-2 transition-colors"
@@ -47,7 +47,7 @@ export default function History() {
             </nav>
 
             {/* Header Content */}
-            <div className="mt-16 mb-8 pt-6">
+            <div className="md:mt-16 mb-8 pt-6">
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                     <HistoryIcon className="w-6 h-6" />
                     Session History

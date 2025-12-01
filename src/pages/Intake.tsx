@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Practitioner } from "../db/db";
 import { Button } from "../components/ui/Button";
@@ -13,6 +13,8 @@ import { AddPractitionerModal } from "../components/Practitioner/AddPractitioner
 
 export default function Intake() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const appointmentId = location.state?.appointmentId;
     const { startSession, intakeData, activePractitioner, clearIntakeData } = useAppStore();
 
     // Initialize with existing data if returning from session
@@ -38,8 +40,20 @@ export default function Intake() {
         // Check if there is existing intake data when the component mounts
         if (intakeData && (Object.keys(intakeData.bodyMap).length > 0 || intakeData.notes)) {
             setShowResumeModal(true);
+        } else if (appointmentId) {
+            // If starting from an appointment, try to find it and pre-fill
+            db.appointments.get(appointmentId).then(appt => {
+                if (appt) {
+                    db.practitioners.get(appt.practitionerId).then(p => {
+                        if (p) {
+                            setSelectedPractitioner(p);
+                            toast(`Starting session with ${p.name}`, "info");
+                        }
+                    });
+                }
+            });
         }
-    }, []);
+    }, [appointmentId, intakeData]);
 
     const handleResume = () => {
         setShowResumeModal(false);
@@ -94,7 +108,7 @@ export default function Intake() {
             bodyBadges: bodyBadges,
             notes: notes,
             userSignature: signature || undefined
-        });
+        }, appointmentId);
 
         navigate("/guest-session");
     };
