@@ -14,6 +14,24 @@ export const DataManagement = () => {
     const handleExport = async () => {
         try {
             setIsExporting(true);
+            // Use dexie-export-import for a full database backup
+            const blob = await import("dexie-export-import").then(module => module.exportDB(db));
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chirocard_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            setMessage({ type: 'success', text: 'Full system backup downloaded successfully.' });
+        } catch (error) {
+            console.error("Export failed:", error);
+            setMessage({ type: 'error', text: 'Export failed. Please try again.' });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleAIExport = async () => {
+        try {
             const aiData = await generateAIExport();
             const blob = new Blob([JSON.stringify(aiData, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -21,12 +39,10 @@ export const DataManagement = () => {
             a.href = url;
             a.download = `chirocard_brain_export_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            setMessage({ type: 'success', text: 'ChiroCard Brain export downloaded successfully.' });
+            setMessage({ type: 'success', text: 'AI Context export downloaded successfully.' });
         } catch (error) {
-            console.error("Export failed:", error);
-            setMessage({ type: 'error', text: 'Export failed. Please try again.' });
-        } finally {
-            setIsExporting(false);
+            console.error("AI Export failed:", error);
+            setMessage({ type: 'error', text: 'AI Export failed.' });
         }
     };
 
@@ -99,6 +115,14 @@ export const DataManagement = () => {
                     <p className="text-xs text-zinc-400 leading-relaxed">
                         Includes: Profile, Medical History, All Sessions, Practitioners, & Homework.
                     </p>
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start h-10 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                        onClick={handleAIExport}
+                    >
+                        <Download className="w-4 h-4 mr-3" />
+                        Download AI Context (JSON)
+                    </Button>
                 </div>
 
                 <div className="space-y-3">
