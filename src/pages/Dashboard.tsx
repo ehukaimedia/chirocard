@@ -5,7 +5,8 @@ import { db, type BodyworkRoutine, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
-import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight } from "lucide-react";
+import { StatusUpdateModal } from "../components/Dashboard/StatusUpdateModal";
+import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight, Pencil } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 
@@ -41,6 +42,7 @@ export default function Dashboard() {
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
     const { currentSession, endSession, viewMode } = useAppStore();
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
 
     const nextAppointment = appointments?.[0];
 
@@ -153,7 +155,16 @@ export default function Dashboard() {
                     {/* Status Indicator */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
                         <div>
-                            <span className="text-emerald-600 dark:text-emerald-500 text-xs font-bold tracking-wider uppercase mb-1 block">{statusLabel}</span>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-emerald-600 dark:text-emerald-500 text-xs font-bold tracking-wider uppercase">{statusLabel}</span>
+                                <button
+                                    onClick={() => setShowStatusModal(true)}
+                                    className="text-zinc-400 hover:text-emerald-500 transition-colors p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    title="Update Status"
+                                >
+                                    <Pencil className="w-3 h-3" />
+                                </button>
+                            </div>
                             <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight" title={activeFocus}>{activeFocus}</h3>
                         </div>
                         <div className="h-3 w-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
@@ -366,6 +377,10 @@ export default function Dashboard() {
                     setShowClearConfirm(false);
                 }}
                 variant="danger"
+            />
+            <StatusUpdateModal
+                isOpen={showStatusModal}
+                onClose={() => setShowStatusModal(false)}
             />
         </div>
     );
