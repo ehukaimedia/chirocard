@@ -18,6 +18,7 @@ export default function Profile() {
     const location = useLocation();
     const user = useLiveQuery(() => db.users.get("me"));
     const [isEditing, setIsEditing] = useState(false);
+    const [missingFields, setMissingFields] = useState<string[]>([]);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -94,12 +95,15 @@ export default function Profile() {
             { key: 'phone', label: 'Phone' }
         ];
 
-        const missingFields = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
+        const missingFieldsList = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
 
-        if (missingFields.length > 0) {
-            toast(`Please fill in required fields: ${missingFields.map(f => f.label).join(', ')}`, "error");
+        if (missingFieldsList.length > 0) {
+            setMissingFields(missingFieldsList.map(f => f.key));
+            toast(`Please fill in required fields: ${missingFieldsList.map(f => f.label).join(', ')}`, "error");
             return;
         }
+
+        setMissingFields([]);
 
         try {
             await db.users.put({
@@ -211,6 +215,7 @@ export default function Profile() {
                         formData={formData}
                         setFormData={setFormData}
                         handleSave={handleSave}
+                        missingFields={missingFields}
                     />
                 ) : (
                     <PassportView user={user} />
@@ -560,76 +565,9 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
     const toggleUnitSystem = () => {
         const newSystem = unitSystem === 'imperial' ? 'metric' : 'imperial';
         setUnitSystem(newSystem);
-
-        // Convert Height
-        if (formData.height) {
-            let newHeight = formData.height;
-            if (newSystem === 'metric') {
-                // Imperial -> Metric (5'10" -> 178 cm)
-                const match = formData.height.match(/(\d+)'(\d+)"/);
-                if (match) {
-                    const feet = parseInt(match[1]);
-                    const inches = parseInt(match[2]);
-                    const totalInches = (feet * 12) + inches;
-                    newHeight = `${Math.round(totalInches * 2.54)} cm`;
-                } else {
-                    // If it's just a number (e.g., "70"), assume inches and convert
-                    const inches = parseFloat(formData.height.replace(/[^\d.]/g, ''));
-                    if (!isNaN(inches)) {
-                        newHeight = `${Math.round(inches * 2.54)} cm`;
-                    }
-                }
-            } else {
-                // Metric -> Imperial (178 cm -> 5'10")
-                const cm = parseFloat(formData.height.replace(/[^\d.]/g, ''));
-                if (!isNaN(cm)) {
-                    const totalInches = cm / 2.54;
-                    const feet = Math.floor(totalInches / 12);
-                    const inches = Math.round(totalInches % 12);
-                    newHeight = `${feet}'${inches}"`;
-                }
-            }
-            setFormData(prev => ({ ...prev, height: newHeight }));
-        }
-
-        // Convert Weight
-        if (formData.weight) {
-            let newWeight = formData.weight;
-            const val = parseFloat(formData.weight.replace(/[^\d.]/g, ''));
-            if (!isNaN(val)) {
-                if (newSystem === 'metric') {
-                    // lbs -> kg
-                    newWeight = `${Math.round(val * 0.453592)} kg`;
-                } else {
-                    // kg -> lbs
-                    newWeight = `${Math.round(val * 2.20462)} lbs`;
-                }
-            }
-            setFormData(prev => ({ ...prev, weight: newWeight }));
-        }
     };
 
-    const formatHeight = (value: string) => {
-        if (unitSystem === 'metric') {
-            const digits = value.replace(/[^\d]/g, '');
-            if (!digits) return "";
-            return `${digits} cm`;
-        }
-        // Imperial
-        const digits = value.replace(/[^\d]/g, '');
-        if (!digits) return value;
-        if (digits.length === 1) return digits;
-        if (digits.length >= 2) {
-            return `${digits[0]}'${digits.slice(1, 3)}"`;
-        }
-        return value;
-    };
 
-    const formatWeight = (value: string) => {
-        const digits = value.replace(/[^\d.]/g, '');
-        if (!digits) return "";
-        return `${digits} ${unitSystem === 'imperial' ? 'lbs' : 'kg'}`;
-    };
 
     const commonDiets = ["Vegan", "Vegetarian", "Keto", "Paleo", "Gluten-Free", "Dairy-Free", "Pescatarian", "Whole30", "Mediterranean"];
     const commonSupplements = ["Vitamin D", "Magnesium", "Omega-3", "Multivitamin", "Probiotics", "Zinc", "Iron", "B12", "Creatine", "Protein Powder"];
@@ -797,10 +735,6 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                     label={`Height (${unitSystem === 'imperial' ? 'ft/in' : 'cm'})`}
                     value={formData.height}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
-                    onBlur={e => {
-                        const formatted = formatHeight(e.target.value);
-                        setFormData((prev: FormData) => ({ ...prev, height: formatted }));
-                    }}
                     placeholder={unitSystem === 'imperial' ? "5'10" : "178"}
                     required
                     error={missingFields.includes('height')}
@@ -810,10 +744,6 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                     label={`Weight (${unitSystem === 'imperial' ? 'lbs' : 'kg'})`}
                     value={formData.weight}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
-                    onBlur={e => {
-                        const formatted = formatWeight(e.target.value);
-                        setFormData((prev: FormData) => ({ ...prev, weight: formatted }));
-                    }}
                     placeholder={unitSystem === 'imperial' ? "165" : "75"}
                     required
                     error={missingFields.includes('weight')}
