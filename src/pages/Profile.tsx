@@ -159,14 +159,14 @@ export default function Profile() {
                     <p className="text-sm text-zinc-500 mt-1">Manage your personal health data and preferences.</p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-3 items-center flex-wrap sm:flex-nowrap">
                     {!isEditing && (
                         <>
                             <Button
-                                variant="outline"
+                                variant="primary"
                                 size="sm"
                                 onClick={() => setIsQRModalOpen(true)}
-                                className="border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                                className="whitespace-nowrap bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20 border-0 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] px-4"
                             >
                                 <QrCode className="w-4 h-4 mr-2" />
                                 Show My Card
@@ -175,10 +175,10 @@ export default function Profile() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => window.print()}
-                                className="border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
+                                className="whitespace-nowrap border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors px-4"
                             >
                                 <Printer className="w-4 h-4 mr-2" />
-                                Print / Save PDF
+                                Print / PDF
                             </Button>
                         </>
                     )}
@@ -186,7 +186,9 @@ export default function Profile() {
                         variant={isEditing ? "ghost" : "outline"}
                         size="sm"
                         onClick={() => setIsEditing(!isEditing)}
-                        className={isEditing ? "text-zinc-500 dark:text-zinc-400" : "border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"}
+                        className={isEditing
+                            ? "whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            : "whitespace-nowrap border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors px-4"}
                     >
                         {isEditing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4 mr-2" />}
                         {isEditing ? "Cancel" : "Edit"}
@@ -542,266 +544,409 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
     setFormData: React.Dispatch<React.SetStateAction<FormData>>,
     handleSave: () => void,
     missingFields?: string[]
-}) => (
-    <Card className="p-6 space-y-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
+}) => {
+    const formatPhoneNumber = (value: string) => {
+        const phoneNumber = value.replace(/[^\d]/g, '');
+        const phoneNumberLength = phoneNumber.length;
+        if (phoneNumberLength < 4) return phoneNumber;
+        if (phoneNumberLength < 7) {
+            return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+        }
+        return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    };
 
-        {/* Advisory Alert */}
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 flex items-start gap-3">
-            <Shield className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-            <div className="text-sm text-emerald-700 dark:text-emerald-300">
-                <p className="font-medium mb-1">Complete Profile Recommended</p>
-                <p className="mb-2">Please fill out as much information as possible for a more productive session.</p>
-                <p className="text-xs opacity-80 flex items-center gap-1">
-                    <Shield className="w-3 h-3" />
-                    Your data is stored locally and securely on your device.
-                </p>
-            </div>
-        </div>
+    const [unitSystem, setUnitSystem] = useState<'imperial' | 'metric'>('imperial');
 
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-700 dark:text-blue-300">
-                <p className="font-medium mb-1">How to add items</p>
-                <p>Type and press <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Comma</kbd> to add items.</p>
-            </div>
-        </div>
-        <div className="flex justify-end">
-            <p className="text-xs text-zinc-500 dark:text-zinc-400"><span className="text-red-500">*</span> Required</p>
-        </div>
-        <Input
-            label="Your Name"
-            value={formData.name}
-            onChange={e => setFormData((prev: FormData) => ({ ...prev, name: e.target.value }))}
-            placeholder="Jane Doe"
-            required
-            error={missingFields.includes('name')}
-            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-        />
+    const toggleUnitSystem = () => {
+        const newSystem = unitSystem === 'imperial' ? 'metric' : 'imperial';
+        setUnitSystem(newSystem);
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Profile Photo</label>
-            <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
-                    {formData.photo ? (
-                        <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                        <User className="w-8 h-8 text-zinc-400" />
-                    )}
+        // Convert Height
+        if (formData.height) {
+            let newHeight = formData.height;
+            if (newSystem === 'metric') {
+                // Imperial -> Metric (5'10" -> 178 cm)
+                const match = formData.height.match(/(\d+)'(\d+)"/);
+                if (match) {
+                    const feet = parseInt(match[1]);
+                    const inches = parseInt(match[2]);
+                    const totalInches = (feet * 12) + inches;
+                    newHeight = `${Math.round(totalInches * 2.54)} cm`;
+                } else {
+                    // If it's just a number (e.g., "70"), assume inches and convert
+                    const inches = parseFloat(formData.height.replace(/[^\d.]/g, ''));
+                    if (!isNaN(inches)) {
+                        newHeight = `${Math.round(inches * 2.54)} cm`;
+                    }
+                }
+            } else {
+                // Metric -> Imperial (178 cm -> 5'10")
+                const cm = parseFloat(formData.height.replace(/[^\d.]/g, ''));
+                if (!isNaN(cm)) {
+                    const totalInches = cm / 2.54;
+                    const feet = Math.floor(totalInches / 12);
+                    const inches = Math.round(totalInches % 12);
+                    newHeight = `${feet}'${inches}"`;
+                }
+            }
+            setFormData(prev => ({ ...prev, height: newHeight }));
+        }
+
+        // Convert Weight
+        if (formData.weight) {
+            let newWeight = formData.weight;
+            const val = parseFloat(formData.weight.replace(/[^\d.]/g, ''));
+            if (!isNaN(val)) {
+                if (newSystem === 'metric') {
+                    // lbs -> kg
+                    newWeight = `${Math.round(val * 0.453592)} kg`;
+                } else {
+                    // kg -> lbs
+                    newWeight = `${Math.round(val * 2.20462)} lbs`;
+                }
+            }
+            setFormData(prev => ({ ...prev, weight: newWeight }));
+        }
+    };
+
+    const formatHeight = (value: string) => {
+        if (unitSystem === 'metric') {
+            const digits = value.replace(/[^\d]/g, '');
+            if (!digits) return "";
+            return `${digits} cm`;
+        }
+        // Imperial
+        const digits = value.replace(/[^\d]/g, '');
+        if (!digits) return value;
+        if (digits.length === 1) return digits;
+        if (digits.length >= 2) {
+            return `${digits[0]}'${digits.slice(1, 3)}"`;
+        }
+        return value;
+    };
+
+    const formatWeight = (value: string) => {
+        const digits = value.replace(/[^\d.]/g, '');
+        if (!digits) return "";
+        return `${digits} ${unitSystem === 'imperial' ? 'lbs' : 'kg'}`;
+    };
+
+    const commonDiets = ["Vegan", "Vegetarian", "Keto", "Paleo", "Gluten-Free", "Dairy-Free", "Pescatarian", "Whole30", "Mediterranean"];
+    const commonSupplements = ["Vitamin D", "Magnesium", "Omega-3", "Multivitamin", "Probiotics", "Zinc", "Iron", "B12", "Creatine", "Protein Powder"];
+    const commonActivities = ["Yoga", "Running", "Weightlifting", "CrossFit", "Swimming", "Cycling", "Pilates", "Hiking", "Martial Arts", "Dance", "Surfing"];
+    const commonMobility = ["Limited ROM", "Hyper-mobile", "Stiffness", "Joint Pain", "Good Flexibility", "Tight Hamstrings", "Tight Hips", "Shoulder Impingement"];
+    const commonComplaints = ["Lower Back Pain", "Neck Pain", "Sciatica", "Headaches", "Shoulder Tension", "Hip Pain", "Knee Pain", "Plantar Fasciitis", "Carpal Tunnel"];
+    const commonContraindications = ["Recent Surgery", "Inflammation", "Varicose Veins", "Pregnancy", "Skin Infection", "Fever", "Blood Clots", "Fracture", "Open Wounds"];
+    const commonPreferences = ["Deep Tissue", "Light Pressure", "Medium Pressure", "No Talking", "Focus on Neck", "Focus on Back", "Scalp Massage", "Foot Massage", "Aromatherapy", "Heat Therapy"];
+    const commonBodyHistory = ["Surgery", "Fracture", "Sprain", "Dislocation", "Car Accident", "Sports Injury", "Chronic Pain", "Arthritis", "Scoliosis"];
+    const commonMedications = ["Blood Thinners", "Pain Killers", "Anti-inflammatory", "Muscle Relaxers", "Blood Pressure", "Thyroid", "Insulin", "Antibiotics"];
+    const commonAllergies = ["Latex", "Nuts", "Oils", "Scents", "Lotion", "Dust", "Pollen", "Shellfish", "Dairy", "Gluten"];
+
+    return (
+        <Card className="p-6 space-y-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
+
+            {/* Advisory Alert */}
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 flex items-start gap-3">
+                <Shield className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <div className="text-sm text-emerald-700 dark:text-emerald-300">
+                    <p className="font-medium mb-1">Complete Profile Recommended</p>
+                    <p className="mb-2">Please fill out as much information as possible for a more productive session.</p>
+                    <p className="text-xs opacity-80 flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        Your data is stored locally and securely on your device.
+                    </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => document.getElementById('photo-upload')?.click()}
-                        className="border-zinc-200 dark:border-zinc-700"
-                    >
-                        <Camera className="w-4 h-4 mr-2" />
-                        Upload Photo
-                    </Button>
-                    {formData.photo && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFormData(prev => ({ ...prev, photo: "" }))}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                        >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Remove
-                        </Button>
-                    )}
-                    <input
-                        id="photo-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                    setFormData(prev => ({ ...prev, photo: reader.result as string }));
-                                };
-                                reader.readAsDataURL(file);
-                            }
-                        }}
-                    />
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">How to add items</p>
+                    <p>Type and press <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Comma</kbd> to add items.</p>
                 </div>
             </div>
-        </div>
+            <div className="flex justify-end">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400"><span className="text-red-500">*</span> Required</p>
+            </div>
+            <Input
+                label="Your Name"
+                value={formData.name}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, name: e.target.value }))}
+                placeholder="Jane Doe"
+                required
+                error={missingFields.includes('name')}
+                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                autoComplete="name"
+            />
 
-        <div className="grid grid-cols-2 gap-4">
-            <Input
-                label="Email"
-                value={formData.email}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, email: e.target.value }))}
-                placeholder="jane@example.com"
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-            <Input
-                label="Phone"
-                value={formData.phone}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, phone: e.target.value }))}
-                placeholder="(555) 123-4567"
-                required
-                error={missingFields.includes('phone')}
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-        </div>
-        <PlacesAutocomplete
-            label="Address"
-            defaultValue={formData.address}
-            onSelect={(place) => {
-                setFormData((prev: FormData) => ({
-                    ...prev,
-                    address: place.formatted_address || ""
-                }));
-            }}
-            onChange={e => setFormData((prev: FormData) => ({ ...prev, address: e.target.value }))}
-            placeholder="123 Wellness Way, Healing City, HC 90210"
-            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-        />
-        <TagInput
-            label="Insurance Provider & Policy #"
-            value={formData.insurance}
-            onChange={(tags) => setFormData(prev => ({ ...prev, insurance: tags }))}
-            placeholder="e.g. Blue Cross #123456789"
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-            <Input
-                label="Height"
-                value={formData.height}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
-                placeholder="5'10"
-                required
-                error={missingFields.includes('height')}
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-            <Input
-                label="Weight"
-                value={formData.weight}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
-                placeholder="165 lbs"
-                required
-                error={missingFields.includes('weight')}
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-            <Input
-                type="date"
-                label="Date of Birth"
-                value={formData.dateOfBirth}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
-                required
-                error={missingFields.includes('dateOfBirth')}
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
             <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activity Level</label>
-                <select
-                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    value={formData.activityLevel}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, activityLevel: e.target.value }))}
-                >
-                    {['Sedentary', 'Light', 'Moderate', 'Active', 'Athlete'].map(level => (
-                        <option key={level} value={level}>{level}</option>
-                    ))}
-                </select>
+                <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Profile Photo</label>
+                <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                        {formData.photo ? (
+                            <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                            <User className="w-8 h-8 text-zinc-400" />
+                        )}
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('photo-upload')?.click()}
+                            className="border-zinc-200 dark:border-zinc-700"
+                        >
+                            <Camera className="w-4 h-4 mr-2" />
+                            Upload Photo
+                        </Button>
+                        {formData.photo && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFormData(prev => ({ ...prev, photo: "" }))}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Remove
+                            </Button>
+                        )}
+                        <input
+                            id="photo-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                        setFormData(prev => ({ ...prev, photo: reader.result as string }));
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
+                        />
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <Input
-            label="Occupation (Affects posture/stress)"
-            value={formData.occupation}
-            onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
-            placeholder="e.g. Desk Worker, Nurse, Construction"
-            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-        />
-
-        <TagInput
-            label="Physical Activities"
-            value={formData.physicalActivities}
-            onChange={(tags) => setFormData(prev => ({ ...prev, physicalActivities: tags }))}
-            placeholder="e.g. Yoga, Running"
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-            <TagInput
-                label="Diet"
-                value={formData.diet}
-                onChange={(tags) => setFormData(prev => ({ ...prev, diet: tags }))}
-                placeholder="e.g. Vegan"
+            <div className="grid grid-cols-2 gap-4">
+                <Input
+                    label="Email"
+                    value={formData.email}
+                    onChange={e => setFormData((prev: FormData) => ({ ...prev, email: e.target.value }))}
+                    placeholder="jane@example.com"
+                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                    autoComplete="email"
+                />
+                <Input
+                    label="Phone"
+                    value={formData.phone}
+                    onChange={e => {
+                        const formatted = formatPhoneNumber(e.target.value);
+                        setFormData((prev: FormData) => ({ ...prev, phone: formatted }));
+                    }}
+                    placeholder="(555) 123-4567"
+                    required
+                    error={missingFields.includes('phone')}
+                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                    autoComplete="tel"
+                />
+            </div>
+            <PlacesAutocomplete
+                label="Address"
+                defaultValue={formData.address}
+                onSelect={(place) => {
+                    setFormData((prev: FormData) => ({
+                        ...prev,
+                        address: place.formatted_address || ""
+                    }));
+                }}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, address: e.target.value }))}
+                placeholder="123 Wellness Way, Healing City, HC 90210"
+                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />
             <TagInput
-                label="Supplements"
-                value={formData.supplements}
-                onChange={(tags) => setFormData(prev => ({ ...prev, supplements: tags }))}
-                placeholder="e.g. Vitamin D"
+                label="Insurance Provider & Policy #"
+                value={formData.insurance}
+                onChange={(tags) => setFormData(prev => ({ ...prev, insurance: tags }))}
+                placeholder="e.g. Blue Cross #123456789"
             />
-        </div>
-        <Input
-            label="Hydration"
-            value={formData.hydration}
-            onChange={e => setFormData((prev: FormData) => ({ ...prev, hydration: e.target.value }))}
-            placeholder="e.g. 2L/day"
-            className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-        />
 
-        <TagInput
-            label="Body History (Surgeries, Accidents)"
-            value={formData.bodyHistory}
-            onChange={(tags) => setFormData(prev => ({ ...prev, bodyHistory: tags }))}
-            placeholder="e.g. ACL Reconstruction 2018"
-        />
+            <div className="flex justify-end mb-1">
+                <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 p-1 bg-zinc-50 dark:bg-zinc-900/50">
+                    <button
+                        type="button"
+                        onClick={() => unitSystem !== 'imperial' && toggleUnitSystem()}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${unitSystem === 'imperial' ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                    >
+                        Imperial (ft/lbs)
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => unitSystem !== 'metric' && toggleUnitSystem()}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${unitSystem === 'metric' ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                    >
+                        Metric (cm/kg)
+                    </button>
+                </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
+                <Input
+                    label={`Height (${unitSystem === 'imperial' ? 'ft/in' : 'cm'})`}
+                    value={formData.height}
+                    onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
+                    onBlur={e => {
+                        const formatted = formatHeight(e.target.value);
+                        setFormData((prev: FormData) => ({ ...prev, height: formatted }));
+                    }}
+                    placeholder={unitSystem === 'imperial' ? "5'10" : "178"}
+                    required
+                    error={missingFields.includes('height')}
+                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                />
+                <Input
+                    label={`Weight (${unitSystem === 'imperial' ? 'lbs' : 'kg'})`}
+                    value={formData.weight}
+                    onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
+                    onBlur={e => {
+                        const formatted = formatWeight(e.target.value);
+                        setFormData((prev: FormData) => ({ ...prev, weight: formatted }));
+                    }}
+                    placeholder={unitSystem === 'imperial' ? "165" : "75"}
+                    required
+                    error={missingFields.includes('weight')}
+                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <Input
+                    type="date"
+                    label="Date of Birth"
+                    value={formData.dateOfBirth}
+                    onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
+                    required
+                    error={missingFields.includes('dateOfBirth')}
+                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                    autoComplete="bday"
+                />
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activity Level</label>
+                    <select
+                        className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        value={formData.activityLevel}
+                        onChange={e => setFormData((prev: FormData) => ({ ...prev, activityLevel: e.target.value }))}
+                    >
+                        {['Sedentary', 'Light', 'Moderate', 'Active', 'Athlete'].map(level => (
+                            <option key={level} value={level}>{level}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            <Input
+                label="Occupation (Affects posture/stress)"
+                value={formData.occupation}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
+                placeholder="e.g. Desk Worker, Nurse, Construction"
+                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                autoComplete="organization-title"
+            />
+
             <TagInput
-                label="Medications"
-                value={formData.medications}
-                onChange={(tags) => setFormData(prev => ({ ...prev, medications: tags }))}
-                placeholder="e.g. Blood Thinners"
+                label="Physical Activities"
+                value={formData.physicalActivities}
+                onChange={(tags) => setFormData(prev => ({ ...prev, physicalActivities: tags }))}
+                placeholder="e.g. Yoga, Running"
+                suggestions={commonActivities}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+                <TagInput
+                    label="Diet"
+                    value={formData.diet}
+                    onChange={(tags) => setFormData(prev => ({ ...prev, diet: tags }))}
+                    placeholder="e.g. Vegan"
+                    suggestions={commonDiets}
+                />
+                <TagInput
+                    label="Supplements"
+                    value={formData.supplements}
+                    onChange={(tags) => setFormData(prev => ({ ...prev, supplements: tags }))}
+                    placeholder="e.g. Vitamin D"
+                    suggestions={commonSupplements}
+                />
+            </div>
+            <Input
+                label="Hydration"
+                value={formData.hydration}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, hydration: e.target.value }))}
+                placeholder="e.g. 2L/day"
+                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+            />
+
             <TagInput
-                label="Allergies"
-                value={formData.allergies}
-                onChange={(tags) => setFormData(prev => ({ ...prev, allergies: tags }))}
-                placeholder="e.g. Latex, Nut Oils"
+                label="Body History (Surgeries, Accidents)"
+                value={formData.bodyHistory}
+                onChange={(tags) => setFormData(prev => ({ ...prev, bodyHistory: tags }))}
+                placeholder="e.g. ACL Reconstruction 2018"
+                suggestions={commonBodyHistory}
             />
-        </div>
 
-        <TagInput
-            label="Mobility & ROM Status"
-            value={formData.mobilityStatus}
-            onChange={(tags) => setFormData(prev => ({ ...prev, mobilityStatus: tags }))}
-            placeholder="e.g. Limited Right Shoulder Flexion"
-        />
+            <div className="grid grid-cols-2 gap-4">
+                <TagInput
+                    label="Medications"
+                    value={formData.medications}
+                    onChange={(tags) => setFormData(prev => ({ ...prev, medications: tags }))}
+                    placeholder="e.g. Blood Thinners"
+                    suggestions={commonMedications}
+                />
+                <TagInput
+                    label="Allergies"
+                    value={formData.allergies}
+                    onChange={(tags) => setFormData(prev => ({ ...prev, allergies: tags }))}
+                    placeholder="e.g. Latex, Nut Oils"
+                    suggestions={commonAllergies}
+                />
+            </div>
 
-        <TagInput
-            label="Primary Complaints"
-            value={formData.primaryComplaints}
-            onChange={(tags) => setFormData(prev => ({ ...prev, primaryComplaints: tags }))}
-            placeholder="e.g. Lower Back Pain, Sciatica"
-        />
+            <TagInput
+                label="Mobility & ROM Status"
+                value={formData.mobilityStatus}
+                onChange={(tags) => setFormData(prev => ({ ...prev, mobilityStatus: tags }))}
+                placeholder="e.g. Limited Right Shoulder Flexion"
+                suggestions={commonMobility}
+            />
 
-        <TagInput
-            label="Areas to Avoid (Contraindications)"
-            value={formData.contraindications}
-            onChange={(tags) => setFormData(prev => ({ ...prev, contraindications: tags }))}
-            placeholder="e.g. No deep tissue on calves"
-        />
+            <TagInput
+                label="Primary Complaints"
+                value={formData.primaryComplaints}
+                onChange={(tags) => setFormData(prev => ({ ...prev, primaryComplaints: tags }))}
+                placeholder="e.g. Lower Back Pain, Sciatica"
+                suggestions={commonComplaints}
+            />
 
-        <TagInput
-            label="Preferences"
-            value={formData.preferences}
-            onChange={(tags) => setFormData(prev => ({ ...prev, preferences: tags }))}
-            placeholder="e.g. Lighter pressure, Scalp massage"
-        />
+            <TagInput
+                label="Areas to Avoid (Contraindications)"
+                value={formData.contraindications}
+                onChange={(tags) => setFormData(prev => ({ ...prev, contraindications: tags }))}
+                placeholder="e.g. No deep tissue on calves"
+                suggestions={commonContraindications}
+            />
 
-        <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white" onClick={handleSave}>
-            <Save className="w-4 h-4 mr-2" /> Save Profile
-        </Button>
-    </Card>
+            <TagInput
+                label="Preferences"
+                value={formData.preferences}
+                onChange={(tags) => setFormData(prev => ({ ...prev, preferences: tags }))}
+                placeholder="e.g. Lighter pressure, Scalp massage"
+                suggestions={commonPreferences}
+            />
 
-);
+            <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white" onClick={handleSave}>
+                <Save className="w-4 h-4 mr-2" /> Save Profile
+            </Button>
+        </Card>
+    );
+};

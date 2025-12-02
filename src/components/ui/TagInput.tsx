@@ -7,6 +7,7 @@ interface TagInputProps {
     onChange: (tags: string[]) => void;
     placeholder?: string;
     className?: string;
+    suggestions?: string[];
 }
 
 export const TagInput: React.FC<TagInputProps> = ({
@@ -14,9 +15,11 @@ export const TagInput: React.FC<TagInputProps> = ({
     value = [],
     onChange,
     placeholder = "Type and press Enter...",
-    className = ""
+    className = "",
+    suggestions = []
 }) => {
     const [inputValue, setInputValue] = useState("");
+    const listId = `datalist-${label.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substr(2, 9)}`;
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' || e.key === ',') {
@@ -71,7 +74,15 @@ export const TagInput: React.FC<TagInputProps> = ({
                     onBlur={addTag} // Add tag on blur as well
                     placeholder={value.length === 0 ? placeholder : ""}
                     className="flex-1 bg-transparent border-none outline-none text-sm text-zinc-900 dark:text-white min-w-[120px] placeholder:text-zinc-400"
+                    list={suggestions.length > 0 ? listId : undefined}
                 />
+                {suggestions.length > 0 && (
+                    <datalist id={listId}>
+                        {suggestions.map((suggestion, index) => (
+                            <option key={index} value={suggestion} />
+                        ))}
+                    </datalist>
+                )}
             </div>
         </div>
     );
