@@ -9,7 +9,7 @@ export function useGoogleMapsScript() {
     const [loadError, setLoadError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if ((window as any).google?.maps?.places) {
+        if ((window as unknown as { google?: { maps?: { places?: unknown } } }).google?.maps?.places) {
             setIsLoaded(true);
             return;
         }

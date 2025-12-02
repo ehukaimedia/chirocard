@@ -1,10 +1,11 @@
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
+import type { Session, UserProfile } from "../db/db";
 
 /**
  * Generates a digestible JSON object for AI analysis from a session object.
  * Resolves IDs to natural labels and formats dates.
  */
-export function generateDigestibleExport(session: any, user: any) {
+export function generateDigestibleExport(session: Session, user: UserProfile | undefined) {
     if (!session) return null;
 
     // Helper to get natural body part name
@@ -37,7 +38,7 @@ export function generateDigestibleExport(session: any, user: any) {
 
     // 2. Bodywork Log (The Core Data)
     const bodyworkLog = Object.entries(session.bodyMap || {})
-        .filter(([_, status]) => status !== 'normal')
+        .filter(([, status]) => status !== 'normal')
         .map(([partId, status]) => {
             const partName = getBodyPartName(partId);
             const statusLabel = getStatusLabel(status as string);
@@ -59,7 +60,7 @@ export function generateDigestibleExport(session: any, user: any) {
         });
 
     // 3. Recommendations
-    const recommendations = session.recommendations?.map((rec: any) => ({
+    const recommendations = session.recommendations?.map((rec) => ({
         title: rec.title,
         category: rec.category,
         frequency: rec.frequency,
@@ -71,7 +72,7 @@ export function generateDigestibleExport(session: any, user: any) {
     const sessionNotes = session.notes || null;
 
     // 5. Post-Session Journal
-    const journal = session.postSessionLog?.map((entry: any) => ({
+    const journal = session.postSessionLog?.map((entry) => ({
         type: entry.type,
         content: entry.content,
         timestamp: new Date(entry.timestamp).toLocaleString()

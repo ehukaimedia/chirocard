@@ -46,7 +46,7 @@ export function AddJournalModal({ isOpen, onClose }: AddJournalModalProps) {
                         {['Great', 'Good', 'Okay', 'Bad', 'Awful'].map((m) => (
                             <button
                                 key={m}
-                                onClick={() => setMood(m as any)}
+                                onClick={() => setMood(m as 'Great' | 'Good' | 'Okay' | 'Bad' | 'Awful')}
                                 className={`
                                     px-3 py-1.5 rounded-full text-sm font-medium border transition-colors
                                     ${mood === m

@@ -40,6 +40,13 @@ export default function SessionActive() {
     const [newRecFreq, setNewRecFreq] = useState<string>("Daily");
     const [newRecCategory, setNewRecCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
 
+    const activeBodyParts = useMemo(() => {
+        if (!currentSession?.bodyMap) return [];
+        return Object.entries(currentSession.bodyMap)
+            .filter(([, status]) => status === 'issue' || status === 'addressed' || status === 'watch')
+            .map(([part]) => part);
+    }, [currentSession]);
+
     const handleAddRec = () => {
         if (!newRecTitle || !currentSession) return;
         updateSession({
@@ -157,7 +164,7 @@ export default function SessionActive() {
                 notes: currentSession.practitionerNotes, // Main notes
                 signatureBase64: practitionerSignature, // Save practitioner signature
                 userSignature: currentSession.userSignature || undefined,
-                bodyMap: currentSession.bodyMap as any,
+                bodyMap: currentSession.bodyMap,
                 bodyNotes: currentSession.bodyNotes,
                 bodyLevels: currentSession.bodyLevels,
                 bodyBadges: currentSession.bodyBadges,
@@ -182,9 +189,7 @@ export default function SessionActive() {
         }
     };
 
-    const activeBodyParts = useMemo(() => Object.entries(currentSession.bodyMap)
-        .filter(([_, status]) => status === 'issue' || status === 'addressed' || status === 'watch')
-        .map(([part]) => part), [currentSession.bodyMap]);
+
 
     // --- Review Screen ---
     if (showReview) {
@@ -693,7 +698,7 @@ export default function SessionActive() {
                                 <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
                                 <select
                                     value={newRecCategory}
-                                    onChange={(e) => setNewRecCategory(e.target.value as any)}
+                                    onChange={(e) => setNewRecCategory(e.target.value as 'relief' | 'movement' | 'lifestyle' | 'custom')}
                                     className="w-full h-10 bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
                                     <option value="relief">Relief & Recovery</option>

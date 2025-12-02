@@ -40,7 +40,7 @@ export default function Intake() {
     useEffect(() => {
         if (user) {
             const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
-            // @ts-ignore
+            // @ts-expect-error
             const isComplete = requiredFields.every(field => user[field]);
             if (!isComplete) {
                 setShowProfileWarning(true);
@@ -69,7 +69,6 @@ export default function Intake() {
         }
 
         updateSession({
-            // @ts-ignore - we will add this field to store type
             userSignature: signature
         });
 
@@ -85,7 +84,7 @@ export default function Intake() {
     if (!currentSession) return null; // Loading...
 
     const issueAreas = Object.entries(currentSession.bodyMap)
-        .filter(([_, status]) => status === 'issue');
+        .filter(([, status]) => status === 'issue');
     if (showReview) {
         return (
             <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24 flex flex-col">

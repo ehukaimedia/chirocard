@@ -8,6 +8,7 @@ import { Modal } from "../components/ui/Modal";
 import { useAppStore } from "../store/useAppStore";
 import { useNavigate } from "react-router-dom";
 import { BodyworkRoutineModal, type BodyworkRoutineData } from "../components/Shared/BodyworkRoutineModal";
+import type { PostSessionEntry, BodyworkRoutine } from "../db/db";
 
 export default function SessionReport() {
     const { id } = useParams();
@@ -36,7 +37,7 @@ export default function SessionReport() {
 
             if (editingEntryId) {
                 // Update existing entry
-                updatedLog = session.postSessionLog?.map((entry: any) =>
+                updatedLog = session.postSessionLog?.map((entry: PostSessionEntry) =>
                     entry.id === editingEntryId
                         ? { ...entry, content: journalEntry }
                         : entry
@@ -64,7 +65,7 @@ export default function SessionReport() {
         }
     };
 
-    const handleEditEntry = (entry: any) => {
+    const handleEditEntry = (entry: PostSessionEntry) => {
         setJournalEntry(entry.content);
         setEditingEntryId(entry.id);
         setIsAddingEntry(true);
@@ -78,7 +79,7 @@ export default function SessionReport() {
     const handleConfirmDelete = async () => {
         if (!session || !session.postSessionLog || !deletingEntryId) return;
         try {
-            const updatedLog = session.postSessionLog.filter((e: any) => e.id !== deletingEntryId);
+            const updatedLog = session.postSessionLog.filter((e: PostSessionEntry) => e.id !== deletingEntryId);
             await db.sessions.update(session.id, {
                 postSessionLog: updatedLog
             });
@@ -89,7 +90,7 @@ export default function SessionReport() {
         }
     };
 
-    const handleAddToCalendar = (rec: any, index: number) => {
+    const handleAddToCalendar = (rec: BodyworkRoutine, index: number) => {
         setEditingRecIndex(index);
         setModalInitialValues({
             title: rec.title,
@@ -141,7 +142,7 @@ export default function SessionReport() {
     // Process body map data
     const treatedAreas = session.bodyMap
         ? Object.entries(session.bodyMap)
-            .filter(([_, status]) => status !== 'normal')
+            .filter(([, status]) => status !== 'normal')
             .map(([id, status]) => ({
                 label: REGIONS.find(r => r.id === id)?.label || id,
                 status,
@@ -418,7 +419,7 @@ export default function SessionReport() {
                             <div className="h-px bg-zinc-200 flex-1"></div>
                         </div>
                         <div className="grid grid-cols-1 gap-3">
-                            {session.recommendations.map((rec: any, i: number) => (
+                            {session.recommendations.map((rec: BodyworkRoutine, i: number) => (
                                 <div key={i} className="bg-white border border-zinc-200 rounded-lg p-3 flex items-start gap-3">
                                     <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${rec.category === 'relief' ? 'bg-blue-500' :
                                         rec.category === 'movement' ? 'bg-emerald-500' :
@@ -557,11 +558,11 @@ export default function SessionReport() {
 
                         {/* Log Stream */}
                         <div className="space-y-4">
-                            {session.postSessionLog && session.postSessionLog.filter((e: any) => e.type === 'journal' || e.type === 'correction' || e.type === 'addendum').length > 0 ? (
+                            {session.postSessionLog && session.postSessionLog.filter((e: PostSessionEntry) => e.type === 'journal' || e.type === 'correction' || e.type === 'addendum').length > 0 ? (
                                 session.postSessionLog
-                                    .filter((e: any) => e.type === 'journal' || e.type === 'correction' || e.type === 'addendum')
-                                    .sort((a: any, b: any) => b.timestamp - a.timestamp)
-                                    .map((entry: any) => (
+                                    .filter((e: PostSessionEntry) => e.type === 'journal' || e.type === 'correction' || e.type === 'addendum')
+                                    .sort((a: PostSessionEntry, b: PostSessionEntry) => b.timestamp - a.timestamp)
+                                    .map((entry: PostSessionEntry) => (
                                         <div key={entry.id} className="relative pl-4 border-l-2 border-blue-200 group">
                                             <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-blue-400"></div>
                                             <div className="flex justify-between items-start mb-1">
@@ -604,14 +605,14 @@ export default function SessionReport() {
                 </section>
 
                 {/* Session History (Update Logs) */}
-                {session.postSessionLog && session.postSessionLog.some((e: any) => e.type !== 'journal' && e.type !== 'correction' && e.type !== 'addendum') && (
+                {session.postSessionLog && session.postSessionLog.some((e: PostSessionEntry) => e.type !== 'journal' && e.type !== 'correction' && e.type !== 'addendum') && (
                     <section className="break-inside-avoid pt-4 border-t border-zinc-100">
                         <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Session History</h3>
                         <div className="space-y-2">
                             {session.postSessionLog
-                                .filter((e: any) => e.type !== 'journal' && e.type !== 'correction' && e.type !== 'addendum')
-                                .sort((a: any, b: any) => b.timestamp - a.timestamp)
-                                .map((entry: any) => (
+                                .filter((e: PostSessionEntry) => e.type !== 'journal' && e.type !== 'correction' && e.type !== 'addendum')
+                                .sort((a: PostSessionEntry, b: PostSessionEntry) => b.timestamp - a.timestamp)
+                                .map((entry: PostSessionEntry) => (
                                     <div key={entry.id} className="flex items-center gap-2 text-xs text-zinc-500">
                                         <Clock className="w-3 h-3" />
                                         <span>{entry.content}</span>

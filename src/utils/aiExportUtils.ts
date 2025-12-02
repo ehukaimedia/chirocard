@@ -1,4 +1,4 @@
-import { db } from "../db/db";
+import { db, type Practitioner, type Session, type BodyworkRoutine, type PostSessionEntry } from "../db/db";
 
 /**
  * Generates a "Smart Export" JSON object optimized for AI analysis.
@@ -61,15 +61,15 @@ export const generateAIExport = async () => {
     } : "No profile data found.";
 
     // Practitioners (Lookup Map)
-    const practitionerMap = new Map(practitioners.map((p: any) => [p.id, p]));
-    const cleanPractitioners = practitioners.map((p: any) => ({
+    const practitionerMap = new Map(practitioners.map((p: Practitioner) => [p.id, p]));
+    const cleanPractitioners = practitioners.map((p: Practitioner) => ({
         name: p.name,
         role: p.role,
         clinic: p.clinicName
     }));
 
     // Sessions (The Core Data)
-    const cleanSessions = sessions.map((s: any) => {
+    const cleanSessions = sessions.map((s: Session) => {
         const practitioner = practitionerMap.get(s.practitionerId);
         return {
             date: formatDate(s.date),
@@ -77,14 +77,14 @@ export const generateAIExport = async () => {
             notes: s.notes,
             // Summarize body status
             bodyStatus: s.bodyMap ? Object.entries(s.bodyMap)
-                .filter(([_, status]) => status !== 'normal')
+                .filter(([, status]) => status !== 'normal')
                 .map(([part, status]) => `${part}: ${status}`) : [],
             // Pain Levels
             painLevels: s.bodyLevels,
             // Treatment Notes
             treatment: s.treatmentNotes,
             // Post-session logs
-            journal: s.postSessionLog?.map((log: any) => ({
+            journal: s.postSessionLog?.map((log: PostSessionEntry) => ({
                 date: formatDate(log.timestamp),
                 type: log.type,
                 content: log.content
@@ -93,7 +93,7 @@ export const generateAIExport = async () => {
     });
 
     // Homework / Habits
-    const cleanHomework = homework.map((h: any) => ({
+    const cleanHomework = homework.map((h: BodyworkRoutine) => ({
         title: h.title,
         description: h.description,
         frequency: h.frequency,

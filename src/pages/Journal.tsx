@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db/db";
+import { db, type Session, type RoutineCompletion, type JournalEntry } from "../db/db";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { AddJournalModal } from "../components/Journal/AddJournalModal";
+
+type JournalItem =
+    | (Session & { type: 'session', sortDate: number })
+    | (RoutineCompletion & { type: 'routine', sortDate: number })
+    | (JournalEntry & { type: 'note', sortDate: number });
 
 export default function Journal() {
     const navigate = useNavigate();
@@ -20,7 +25,7 @@ export default function Journal() {
     const journalEntries = useLiveQuery(() => db.journal.orderBy('date').reverse().toArray());
 
     // Combine and sort all items for the "All" view
-    const allItems = [
+    const allItems: JournalItem[] = [
         ...(sessions || []).map(s => ({ ...s, type: 'session' as const, sortDate: s.date })),
         ...(routineCompletions || []).map(r => ({ ...r, type: 'routine' as const, sortDate: r.completedAt })),
         ...(journalEntries || []).map(j => ({ ...j, type: 'note' as const, sortDate: j.date }))
@@ -34,12 +39,12 @@ export default function Journal() {
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
             if (item.type === 'session') {
-                return (item as any).practitionerName.toLowerCase().includes(query) ||
-                    (item as any).notes.toLowerCase().includes(query);
+                return (item.practitionerName || "").toLowerCase().includes(query) ||
+                    (item.notes || "").toLowerCase().includes(query);
             } else if (item.type === 'routine') {
-                return (item as any).routineTitle.toLowerCase().includes(query);
+                return (item.routineTitle || "").toLowerCase().includes(query);
             } else if (item.type === 'note') {
-                return (item as any).content.toLowerCase().includes(query);
+                return (item.content || "").toLowerCase().includes(query);
             }
         }
         return true;
@@ -81,7 +86,7 @@ export default function Journal() {
                         {['all', 'sessions', 'routines', 'notes'].map(tab => (
                             <button
                                 key={tab}
-                                onClick={() => setActiveTab(tab as any)}
+                                onClick={() => setActiveTab(tab as 'all' | 'sessions' | 'routines' | 'notes')}
                                 className={`
                                     px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors
                                     ${activeTab === tab
@@ -98,7 +103,7 @@ export default function Journal() {
                 {/* Timeline */}
                 <div className="space-y-6">
                     {filteredItems.length > 0 ? (
-                        filteredItems.map((item: any) => (
+                        filteredItems.map((item: JournalItem) => (
                             <div key={`${item.type}-${item.id}`} className="relative pl-8 before:absolute before:left-3 before:top-8 before:bottom-0 before:w-px before:bg-zinc-200 dark:before:bg-zinc-800 last:before:hidden">
                                 <div className={`absolute left-0 top-1 w-6 h-6 rounded-full border-2 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 z-10
                                     ${item.type === 'session' ? 'border-blue-500 text-blue-500' :

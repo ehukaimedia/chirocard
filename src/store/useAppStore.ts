@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
-import { type Session } from "../db/db";
+import { type Session, type BodyworkRoutine, type PostSessionEntry } from "../db/db";
 
 export type ViewMode = 'personal' | 'session' | 'guest';
 
@@ -23,8 +23,8 @@ interface SessionData {
     serviceTags: string[];
     modalityTags: string[];
     findingTags: string[];
-    recommendations: any[];
-    postSessionLog: any[];
+    recommendations: BodyworkRoutine[];
+    postSessionLog: PostSessionEntry[];
     date?: number;
     practitionerName?: string;
     practitionerClass?: string;

@@ -22,7 +22,7 @@ export default function SessionDetails() {
     // Process body map data
     const treatedAreas = session.bodyMap
         ? Object.entries(session.bodyMap)
-            .filter(([_, status]) => status === 'addressed' || status === 'issue')
+            .filter(([, status]) => status === 'addressed' || status === 'issue')
             .map(([id, status]) => ({
                 label: REGIONS.find(r => r.id === id)?.label || id,
                 status,

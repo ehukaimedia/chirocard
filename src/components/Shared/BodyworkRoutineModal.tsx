@@ -107,7 +107,7 @@ export function BodyworkRoutineModal({
                     <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
                     <select
                         value={routineCategory}
-                        onChange={(e) => setRoutineCategory(e.target.value as any)}
+                        onChange={(e) => setRoutineCategory(e.target.value as 'relief' | 'movement' | 'lifestyle' | 'custom')}
                         className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
                         <option value="relief">Relief & Recovery</option>

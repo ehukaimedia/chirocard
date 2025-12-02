@@ -90,7 +90,7 @@ export function PlacesAutocomplete({
                     website: place.websiteURI,
                     geometry: { location: place.location },
                     types: place.types
-                } as any; // Cast to any to match expected PlaceResult shape roughly
+                } as google.maps.places.PlaceResult; // Cast to PlaceResult
 
                 console.log("Places API (New) result:", result);
                 setIsLoadingDetails(false);
@@ -124,10 +124,10 @@ export function PlacesAutocomplete({
                     }
                 }
             );
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error fetching place details:", error);
             setIsLoadingDetails(false);
-            toast(`Error: ${error.message || "Unknown error"}`, "error");
+            toast(`Error: ${(error as Error).message || "Unknown error"}`, "error");
         }
     };
 

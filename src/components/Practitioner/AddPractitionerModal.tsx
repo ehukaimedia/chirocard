@@ -99,7 +99,7 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                     <select
                         className="w-full h-11 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 text-sm text-zinc-900 dark:text-zinc-100"
                         value={formData.role}
-                        onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as any }))}
+                        onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other" }))}
                     >
                         <option value="Chiropractor">Chiropractor</option>
                         <option value="Massage Therapist">Massage Therapist</option>

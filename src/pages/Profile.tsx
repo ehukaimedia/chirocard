@@ -45,7 +45,7 @@ export default function Profile() {
     });
 
     useEffect(() => {
-        if (user) {
+        if (user && !isEditing) {
             setFormData({
                 name: user.name || "",
                 photo: user.photo || "",
@@ -80,7 +80,7 @@ export default function Profile() {
                 }
             }
         }
-    }, [user, location.state]);
+    }, [user, location.state, isEditing]);
 
     const { toast } = useToast();
 

@@ -3,7 +3,7 @@ import pako from "pako";
 /**
  * Compresses a JSON object into a base64 encoded string.
  */
-export function compressData(data: any): string {
+export function compressData(data: unknown): string {
     try {
         const jsonString = JSON.stringify(data);
         const compressed = pako.deflate(jsonString);
@@ -24,7 +24,7 @@ export function compressData(data: any): string {
 /**
  * Decompresses a base64 encoded string back into a JSON object.
  */
-export function decompressData(base64: string): any {
+export function decompressData(base64: string): unknown {
     try {
         // Decode base64
         const binary = atob(base64);

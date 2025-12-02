@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db/db';
+import { db, type BodyworkRoutine } from '../db/db';
 
 export function useReminders() {
     const homework = useLiveQuery(() => db.homework.where('status').equals('active').toArray());
@@ -26,7 +26,7 @@ export function useReminders() {
             if (Date.now() - lastCheckRef.current < 50000) return;
             lastCheckRef.current = Date.now();
 
-            homework?.forEach((hw: any) => {
+            homework?.forEach((hw: BodyworkRoutine) => {
                 if (hw.reminderTimes?.includes(currentTime) && !hw.isCompletedToday) {
                     if (Notification.permission === 'granted') {
                         try {
