@@ -63,6 +63,7 @@ export const useAppStore = create<AppState>()(
             activePractitioner: null,
             intakeData: null,
             resumedSessionData: null,
+            scannedPatientData: null,
 
             setMode: (mode) => set({ mode }),
             setScannedPatientData: (data) => set({ scannedPatientData: data }),
