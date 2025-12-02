@@ -9,7 +9,7 @@ import { useAppStore } from "../store/useAppStore";
 import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { useToast } from "../components/ui/Toast";
 import { Modal } from "../components/ui/Modal";
-import { AddPractitionerModal } from "../components/Practitioner/AddPractitionerModal";
+// import { AddPractitionerModal } from "../components/Practitioner/AddPractitionerModal";
 import { PatientQRModal } from "../components/Profile/PatientQRModal";
 import { QrCode } from "lucide-react";
 
@@ -35,7 +35,7 @@ export default function Intake() {
 
     const [step, setStep] = useState<"intake" | "review">("intake");
     const [showResumeModal, setShowResumeModal] = useState(false);
-    const [showAddPractitionerModal, setShowAddPractitionerModal] = useState(false);
+    // const [showAddPractitionerModal, setShowAddPractitionerModal] = useState(false);
     const [showPractitionerAlert, setShowPractitionerAlert] = useState(false);
     const [showProfileEditModal, setShowProfileEditModal] = useState(false);
     const [showMissingDetailsAlert, setShowMissingDetailsAlert] = useState(false);
@@ -141,10 +141,11 @@ export default function Intake() {
     const handleStartClick = () => {
         console.log("Checking requirements. User:", user);
 
-        if (!selectedPractitioner) {
-            setShowPractitionerAlert(true);
-            return;
-        }
+        // Practitioner check removed for Lite workflow
+        // if (!selectedPractitioner) {
+        //    setShowPractitionerAlert(true);
+        //    return;
+        // }
 
         // Validate Profile
         if (!user || !user.name || !user.dateOfBirth) {
@@ -219,7 +220,7 @@ export default function Intake() {
     };
 
     const handleConfirmStart = async () => {
-        if (!selectedPractitioner) return;
+        // if (!selectedPractitioner) return;
 
         // Get signature (currently unused in QR flow, but good to have ready)
         // const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || null;
@@ -340,72 +341,8 @@ export default function Intake() {
                             </div>
                         </section>
 
-                        {/* Practitioner Selection - Cards */}
-                        <section>
-                            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">2. Select Practitioner</h2>
-                            {practitioners && practitioners.length > 0 ? (
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {practitioners.map(p => (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => setSelectedPractitioner(p)}
-                                                className={`
-                                                    relative p-4 rounded-2xl border-2 cursor-pointer transition-all active:scale-[0.98]
-                                                    ${selectedPractitioner?.id === p.id
-                                                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                                                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/50'}
-                                                `}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`
-                                                        w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
-                                                        ${selectedPractitioner?.id === p.id
-                                                            ? 'bg-emerald-500 text-white'
-                                                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}
-                                                    `}>
-                                                        {p.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">{p.name}</h3>
-                                                        <p className="text-xs text-zinc-500">{p.role}</p>
-                                                    </div>
-                                                </div>
-                                                {selectedPractitioner?.id === p.id && (
-                                                    <div className="absolute top-4 right-4 w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex justify-between items-center px-2">
-                                        <p className="text-xs text-zinc-500">
-                                            Manage your team in <span className="font-bold cursor-pointer hover:text-emerald-500" onClick={() => navigate('/team')}>Team Settings</span>.
-                                        </p>
-                                        <button
-                                            onClick={() => setShowAddPractitionerModal(true)}
-                                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full"
-                                        >
-                                            + Add New
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 bg-white dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
-                                    <p className="text-zinc-500 mb-4">No practitioners found.</p>
-                                    <Button onClick={() => setShowAddPractitionerModal(true)}>Add Practitioner</Button>
-                                </div>
-                            )}
-
-                            <AddPractitionerModal
-                                isOpen={showAddPractitionerModal}
-                                onClose={() => setShowAddPractitionerModal(false)}
-                                onAdded={(newPractitioner) => {
-                                    setSelectedPractitioner(newPractitioner);
-                                    toast(`Added ${newPractitioner.name} to your team.`, "success");
-                                }}
-                            />
-                        </section>
+                        {/* Practitioner Selection Removed for Lite Workflow */}
+                        {/* The practitioner is identified when THEY scan the patient's QR code. */}
 
                         {/* Question 3 */}
                         <section className="space-y-4 pb-4">
@@ -537,7 +474,7 @@ export default function Intake() {
                                 <h1 className="text-2xl font-serif text-emerald-600 dark:text-emerald-500 mb-2">Intake Summary</h1>
                                 <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400">
                                     <span>Date: {new Date().toLocaleDateString()}</span>
-                                    <span>Practitioner: {selectedPractitioner?.name}</span>
+                                    {/* <span>Practitioner: {selectedPractitioner?.name}</span> */}
                                 </div>
                             </div>
 
