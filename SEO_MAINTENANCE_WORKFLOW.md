@@ -14,6 +14,19 @@ The most effective workflow combines the three pillars of the tool: **Google Sea
 | **Google Tag Manager** | `GTM-5RGKKRRX` | Container Name: `chirocard.com` |
 | **Google Analytics 4** | Property ID: `514713972` | Measurement ID: `G-332SVBSS86` |
 
+## Maintenance Scripts
+
+Automated maintenance scripts are located in the `Google-Webmaster-MCP` repository:
+*   `src/audit_chirocard.ts`: Audits GSC, GTM, and GA4 connections.
+*   `src/setup_seo.ts`: Configures GTM tags and triggers.
+
+To run them:
+```bash
+cd ../Google-Webmaster-MCP
+npm run build
+node dist/audit_chirocard.js
+```
+
 ---
 
 ### Phase 1: Audit (Google Search Console)
