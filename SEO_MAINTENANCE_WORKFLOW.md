@@ -6,6 +6,14 @@ This document outlines the recommended Standard Operating Procedure (SOP) for us
 
 The most effective workflow combines the three pillars of the tool: **Google Search Console (Audit)**, **Google Analytics 4 (Analyze)**, and **Google Tag Manager (Action)**.
 
+## Configuration & IDs
+
+| Service | ID / URL | Notes |
+| :--- | :--- | :--- |
+| **Google Search Console** | `sc-domain:chirocard.com` | Domain Property. Inspect `https://chirocard.com/` |
+| **Google Tag Manager** | `GTM-5RGKKRRX` | Container Name: `chirocard.com` |
+| **Google Analytics 4** | Property ID: `514713972` | Measurement ID: `G-332SVBSS86` |
+
 ---
 
 ### Phase 1: Audit (Google Search Console)
