@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
 import { type Session } from "../db/db";
 
-export type ViewMode = 'personal' | 'session';
+export type ViewMode = 'personal' | 'session' | 'guest';
 
 interface SessionData {
     id: string;
@@ -20,14 +20,34 @@ interface SessionData {
     practitionerLevels?: Record<string, number>;
     practitionerBadges?: Record<string, string[]>;
     treatmentNotes?: Record<string, string>;
+    recommendations?: any[]; // Added for compatibility
+    postSessionLog?: any[]; // Added for compatibility
+    date?: number; // Added for compatibility
+    notes?: string; // Added for compatibility
+    practitionerName?: string; // Added for compatibility
+    practitionerClass?: string; // Added for compatibility
+    signatureBase64?: string | null; // Added for compatibility
+    isLocked?: boolean; // Added for compatibility
+    createdAt?: number; // Added for compatibility
+    appointmentId?: string; // Added for compatibility
 }
 
 interface AppState {
     viewMode: ViewMode;
     currentSession: SessionData | null;
 
+    // Kiosk/Guest Mode State
+    scannedPatientData: any | null;
+    activePractitioner: any | null;
+    intakeData: any | null;
+    resumedSessionData: any | null;
+    activeAppointmentId: string | null;
+    activeSessionId: string | null;
+
     // Actions
     setViewMode: (mode: ViewMode) => void;
+    setMode: (mode: ViewMode) => void; // Alias
+    setScannedPatientData: (data: any) => void;
     startSession: () => void;
     resumeSession: (session: Session) => void;
     updateSession: (data: Partial<SessionData>) => void;
@@ -48,11 +68,20 @@ export const useAppStore = create<AppState>()(
         (set) => ({
             viewMode: 'personal',
             currentSession: null,
+            scannedPatientData: null,
+            activePractitioner: null,
+            intakeData: null,
+            resumedSessionData: null,
+            activeAppointmentId: null,
+            activeSessionId: null,
+
             calendarViewSpan: 30,
             defaultRoutineTime: "07:00",
             routineTimeInterval: 15,
 
             setViewMode: (mode) => set({ viewMode: mode }),
+            setMode: (mode) => set({ viewMode: mode }), // Alias
+            setScannedPatientData: (data) => set({ scannedPatientData: data }),
 
             startSession: () => set({
                 viewMode: 'session',
@@ -111,7 +140,13 @@ export const useAppStore = create<AppState>()(
                 currentSession: null,
                 calendarViewSpan: 30,
                 defaultRoutineTime: "07:00",
-                routineTimeInterval: 15
+                routineTimeInterval: 15,
+                scannedPatientData: null,
+                activePractitioner: null,
+                intakeData: null,
+                resumedSessionData: null,
+                activeAppointmentId: null,
+                activeSessionId: null
             })
         }),
         {

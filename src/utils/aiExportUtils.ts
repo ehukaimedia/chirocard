@@ -61,15 +61,15 @@ export const generateAIExport = async () => {
     } : "No profile data found.";
 
     // Practitioners (Lookup Map)
-    const practitionerMap = new Map(practitioners.map(p => [p.id, p]));
-    const cleanPractitioners = practitioners.map(p => ({
+    const practitionerMap = new Map(practitioners.map((p: any) => [p.id, p]));
+    const cleanPractitioners = practitioners.map((p: any) => ({
         name: p.name,
         role: p.role,
         clinic: p.clinicName
     }));
 
     // Sessions (The Core Data)
-    const cleanSessions = sessions.map(s => {
+    const cleanSessions = sessions.map((s: any) => {
         const practitioner = practitionerMap.get(s.practitionerId);
         return {
             date: formatDate(s.date),
@@ -84,7 +84,7 @@ export const generateAIExport = async () => {
             // Treatment Notes
             treatment: s.treatmentNotes,
             // Post-session logs
-            journal: s.postSessionLog?.map(log => ({
+            journal: s.postSessionLog?.map((log: any) => ({
                 date: formatDate(log.timestamp),
                 type: log.type,
                 content: log.content
@@ -93,7 +93,7 @@ export const generateAIExport = async () => {
     });
 
     // Homework / Habits
-    const cleanHomework = homework.map(h => ({
+    const cleanHomework = homework.map((h: any) => ({
         title: h.title,
         description: h.description,
         frequency: h.frequency,

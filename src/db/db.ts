@@ -128,6 +128,8 @@ export type JournalEntry = {
     createdAt: number;
 };
 
+export type Homework = BodyworkRoutine; // Alias for backward compatibility
+
 // Database Class
 export class ChiroCardDB extends Dexie {
     users!: Table<UserProfile>;
@@ -138,6 +140,7 @@ export class ChiroCardDB extends Dexie {
     routines!: Table<BodyworkRoutine>;
     routineCompletions!: Table<RoutineCompletion>;
     journal!: Table<JournalEntry>;
+    homework!: Table<BodyworkRoutine>; // Alias for backward compatibility
 
     constructor() {
         super('ChiroCardDB');
@@ -151,6 +154,7 @@ export class ChiroCardDB extends Dexie {
             routineCompletions: 'id, routineId, date, completedAt',
             journal: 'id, date'
         });
+        this.homework = this.routines; // Alias
     }
 }
 

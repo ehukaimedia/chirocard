@@ -26,7 +26,7 @@ export function useReminders() {
             if (Date.now() - lastCheckRef.current < 50000) return;
             lastCheckRef.current = Date.now();
 
-            homework?.forEach(hw => {
+            homework?.forEach((hw: any) => {
                 if (hw.reminderTimes?.includes(currentTime) && !hw.isCompletedToday) {
                     if (Notification.permission === 'granted') {
                         try {

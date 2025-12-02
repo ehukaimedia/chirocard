@@ -22,7 +22,10 @@ export default function Intake() {
     const [signature, setSignature] = useState<string | null>(null);
 
     const practitioner = useLiveQuery(
-        () => currentSession?.practitionerId ? db.practitioners.get(currentSession.practitionerId) : Promise.resolve(null),
+        async () => {
+            if (!currentSession?.practitionerId) return null;
+            return await db.practitioners.get(currentSession.practitionerId);
+        },
         [currentSession?.practitionerId]
     );
 

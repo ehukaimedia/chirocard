@@ -1,8 +1,7 @@
-import React from 'react';
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db/db";
 import { Button } from "../ui/Button";
-import { User, UserCircle } from "lucide-react";
+import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function IntakeProfileSection() {

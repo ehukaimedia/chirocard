@@ -1,4 +1,3 @@
-import React from 'react';
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db/db";
 import { Button } from "../ui/Button";
@@ -11,7 +10,7 @@ export function IntakePractitionerSection() {
     const { currentSession, updateSession } = useAppStore();
     const navigate = useNavigate();
 
-    const handleSelect = (id: string, name: string, role: string) => {
+    const handleSelect = (id: string) => {
         updateSession({
             practitionerId: id,
             practitionerNotes: currentSession?.practitionerNotes || "" // Preserve notes
@@ -50,10 +49,10 @@ export function IntakePractitionerSection() {
                 {practitioners.map(p => (
                     <button
                         key={p.id}
-                        onClick={() => handleSelect(p.id, p.name, p.role)}
+                        onClick={() => handleSelect(p.id)}
                         className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${currentSession?.practitionerId === p.id
-                                ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 ring-1 ring-emerald-500'
-                                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 ring-1 ring-emerald-500'
+                            : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50'
                             }`}
                     >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${currentSession?.practitionerId === p.id ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-200' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'

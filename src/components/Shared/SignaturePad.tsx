@@ -3,10 +3,9 @@ import { Button } from "../ui/Button";
 
 interface SignaturePadProps {
     onChange: (base64: string | null) => void;
-    initialValue?: string | null;
 }
 
-export function SignaturePad({ onChange, initialValue }: SignaturePadProps) {
+export function SignaturePad({ onChange }: SignaturePadProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [isEmpty, setIsEmpty] = useState(true);
