@@ -10,6 +10,8 @@ import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info
 import { TagInput } from "../components/ui/TagInput";
 import { PlacesAutocomplete } from "../components/ui/PlacesAutocomplete";
 import { useToast } from "../components/ui/Toast";
+import { PatientQRModal } from "../components/Profile/PatientQRModal";
+import { QrCode } from "lucide-react";
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -112,6 +114,8 @@ export default function Profile() {
 
 
 
+    const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
             {/* Top Navigation Bar */}
@@ -131,15 +135,26 @@ export default function Profile() {
 
                 <div className="flex gap-2">
                     {!isEditing && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.print()}
-                            className="border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
-                        >
-                            <Printer className="w-4 h-4 mr-2" />
-                            Print / Save PDF
-                        </Button>
+                        <>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsQRModalOpen(true)}
+                                className="border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                            >
+                                <QrCode className="w-4 h-4 mr-2" />
+                                Show My Card
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.print()}
+                                className="border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-transparent"
+                            >
+                                <Printer className="w-4 h-4 mr-2" />
+                                Print / Save PDF
+                            </Button>
+                        </>
                     )}
                     <Button
                         variant={isEditing ? "ghost" : "outline"}
@@ -173,6 +188,12 @@ export default function Profile() {
                     <PassportView user={user} />
                 )}
             </div>
+
+            <PatientQRModal
+                isOpen={isQRModalOpen}
+                onClose={() => setIsQRModalOpen(false)}
+                user={user}
+            />
         </div>
     );
 }
@@ -226,7 +247,6 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                             </div>
                             <div>
                                 <h2 className="text-3xl font-black text-white tracking-tight mb-1">{user?.name || "Guest User"}</h2>
-                                <p className="text-zinc-500 text-sm font-mono">ID: {user?.id === "me" ? "8829-1920-4492" : "UNKNOWN"}</p>
                             </div>
                         </div>
 

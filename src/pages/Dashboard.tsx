@@ -8,6 +8,10 @@ import { Modal } from "../components/ui/Modal";
 import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
+import { SessionScannerModal } from "../components/Dashboard/SessionScannerModal";
+import { ScanLine, Timer } from "lucide-react";
+import { useAppStore } from "../store/useAppStore";
+
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -15,11 +19,13 @@ export default function Dashboard() {
     const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
     const homework = useLiveQuery(() => db.homework.toArray());
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
+    const { intakeData } = useAppStore();
 
     const activeHomeworkCount = homework?.filter((h: Homework) => !h.isCompletedToday).length || 0;
     const nextAppointment = appointments?.[0];
 
     const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
+    const [showScannerModal, setShowScannerModal] = useState(false);
 
     const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -170,29 +176,83 @@ export default function Dashboard() {
                 </Card>
             </section>
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-2 gap-4">
-                <Button
-                    variant="outline"
-                    className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
-                    onClick={() => navigate("/intake")}
-                >
-                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
-                        <Plus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <span className="font-medium text-zinc-700 dark:text-zinc-300">Start Session</span>
-                </Button>
+            <div className={`grid ${intakeData ? 'grid-cols-1' : 'grid-cols-3'} gap-4`}>
+                {intakeData ? (
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 rounded-full animate-pulse">
+                                <Timer className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Session in Progress</h3>
+                                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                    Started {intakeData.startTime ? new Date(intakeData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'just now'}
+                                </p>
+                            </div>
+                        </div>
 
-                <Button
-                    variant="outline"
-                    className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
-                    onClick={() => navigate("/profile")}
-                >
-                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full group-hover:scale-110 transition-transform">
-                        <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        <div className="flex gap-3 w-full md:w-auto">
+                            <Button
+                                variant="outline"
+                                className="flex-1 md:flex-none border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
+                                onClick={() => navigate("/intake")}
+                            >
+                                Resume
+                            </Button>
+                            <Button
+                                className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                                onClick={() => setShowScannerModal(true)}
+                            >
+                                <ScanLine className="w-4 h-4 mr-2" />
+                                Scan to Complete
+                            </Button>
+                        </div>
                     </div>
-                    <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile</span>
-                </Button>
+                ) : (
+                    <>
+                        <Button
+                            variant="outline"
+                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                            onClick={() => navigate("/intake")}
+                        >
+                            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                <Plus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Start Session</span>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                            onClick={() => navigate("/profile")}
+                        >
+                            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile</span>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                            onClick={() => setShowScannerModal(true)}
+                        >
+                            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                <ScanLine className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Scan Session</span>
+                        </Button>
+                    </>
+                )}
             </div>
+
+            <SessionScannerModal
+                isOpen={showScannerModal}
+                onClose={() => setShowScannerModal(false)}
+                onScanSuccess={() => {
+                    // Refresh data? Dexie useLiveQuery handles it automatically!
+                }}
+            />
 
             <WelcomeModal />
 

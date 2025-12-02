@@ -10,6 +10,8 @@ import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { useToast } from "../components/ui/Toast";
 import { Modal } from "../components/ui/Modal";
 import { AddPractitionerModal } from "../components/Practitioner/AddPractitionerModal";
+import { PatientQRModal } from "../components/Profile/PatientQRModal";
+import { QrCode } from "lucide-react";
 
 import { EditView, type FormData } from "./Profile";
 
@@ -17,7 +19,7 @@ export default function Intake() {
     const navigate = useNavigate();
     const location = useLocation();
     const appointmentId = location.state?.appointmentId;
-    const { startSession, intakeData, activePractitioner, clearIntakeData } = useAppStore();
+    const { intakeData, activePractitioner, clearIntakeData } = useAppStore();
 
     // Initialize with existing data if returning from session
     const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
@@ -38,6 +40,7 @@ export default function Intake() {
     const [showProfileEditModal, setShowProfileEditModal] = useState(false);
     const [showMissingDetailsAlert, setShowMissingDetailsAlert] = useState(false);
     const [showNoSelectionAlert, setShowNoSelectionAlert] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
     const [missingDetailsParts, setMissingDetailsParts] = useState<string[]>([]);
     const sigPadRef = useRef<SignaturePadRef>(null);
 
@@ -218,34 +221,24 @@ export default function Intake() {
     const handleConfirmStart = async () => {
         if (!selectedPractitioner) return;
 
-        // Get signature
-        const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || null;
+        // Get signature (currently unused in QR flow, but good to have ready)
+        // const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || null;
 
-        // Create new session
-        const sessionId = crypto.randomUUID();
-        // Session is now only saved to DB upon completion in GuestSession.tsx
-
-
-        // Pass full practitioner data including contact info for PDF
-        startSession(sessionId, {
-            id: selectedPractitioner.id,
-            name: selectedPractitioner.name,
-            role: selectedPractitioner.role,
-            clinicName: selectedPractitioner.clinicName,
-            phone: selectedPractitioner.phone,
-            email: selectedPractitioner.email,
-            address: selectedPractitioner.address,
-            website: selectedPractitioner.website
-        }, {
+        // Update global store with current intake data so it's included in the QR code
+        useAppStore.getState().updateIntakeData({
             bodyMap: bodyStatus,
             bodyNotes: bodyNotes,
             bodyLevels: bodyLevels,
             bodyBadges: bodyBadges,
-            notes: notes,
-            userSignature: signature || undefined
-        }, appointmentId);
+            notes: notes
+        });
 
-        navigate("/guest-session");
+        // Also update signature if possible, or just rely on the fact that we're showing the QR code now
+        // The PatientQRModal pulls from `intakeData` in the store.
+        // We might need to manually inject the signature into the payload in PatientQRModal if it's not in the store type yet.
+        // For now, let's just show the modal. The signature is less critical for the *start* than the intake data.
+
+        setShowQRModal(true);
     };
 
     // Auto-select first practitioner if available and none selected
@@ -650,13 +643,17 @@ export default function Intake() {
                             className="flex-[2] shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3 leading-tight"
                             onClick={handleConfirmStart}
                         >
-                            Start Practitioner Mode <Play className="ml-2 w-5 h-5 fill-current flex-shrink-0" />
+                            Check In (Show QR) <QrCode className="ml-2 w-5 h-5 flex-shrink-0" />
                         </Button>
                     </div>
                 )}
             </div>
 
-
+            <PatientQRModal
+                isOpen={showQRModal}
+                onClose={() => setShowQRModal(false)}
+                user={user}
+            />
         </div>
     );
 }

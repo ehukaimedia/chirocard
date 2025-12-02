@@ -10,6 +10,7 @@ import GuestSession from "./pages/GuestSession";
 import SessionDetails from "./pages/SessionDetails";
 import SessionReport from "./pages/SessionReport";
 import Settings from "./pages/Settings";
+import PractitionerKiosk from "./pages/PractitionerKiosk";
 import { useAppStore } from "./store/useAppStore";
 import { MainLayout } from "./components/Layout/MainLayout";
 
@@ -42,6 +43,7 @@ function App() {
         </Route>
 
         <Route path="/intake" element={<Intake />} />
+        <Route path="/practitioner" element={<PractitionerKiosk />} />
         <Route
           path="/guest-session"
           element={

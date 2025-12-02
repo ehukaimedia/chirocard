@@ -29,12 +29,13 @@ interface AppState {
         bodyBadges: Record<string, string[]>;
         notes: string;
         userSignature?: string; // User's signature from intake
+        startTime?: number; // Timestamp when intake started
     } | null;
     resumedSessionData: any | null; // Data for resuming a session
 
     // Actions
     setMode: (mode: AppMode) => void;
-    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string }, appointmentId?: string) => void;
+    startSession: (sessionId: string, practitioner?: StoredPractitioner, intakeData?: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string; userSignature?: string; startTime?: number }, appointmentId?: string) => void;
     resumeSession: (session: any) => void;
     updateIntakeData: (data: { bodyMap: Record<string, BodyStatus>; bodyNotes: Record<string, string>; bodyLevels: Record<string, number>; bodyBadges: Record<string, string[]>; notes: string }) => void;
     clearIntakeData: () => void;
@@ -93,7 +94,11 @@ export const useAppStore = create<AppState>()(
             }),
 
             updateIntakeData: (data) => set((state) => ({
-                intakeData: { ...state.intakeData, ...data }
+                intakeData: {
+                    ...state.intakeData,
+                    ...data,
+                    startTime: state.intakeData?.startTime || Date.now()
+                }
             })),
 
             clearIntakeData: () => set({ intakeData: null }),
