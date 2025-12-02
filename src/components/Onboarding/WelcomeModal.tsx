@@ -64,7 +64,7 @@ export function WelcomeModal() {
                         <div>
                             <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Digital Bodywork Passport</h4>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                                Carry your complete history, preferences, and contraindications with you. Share it seamlessly with any practitioner.
+                                Your complete history in your pocket. <strong>Scan to Check-In</strong> with any practitioner instantly.
                             </p>
                         </div>
                     </div>
@@ -74,9 +74,9 @@ export function WelcomeModal() {
                             <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div>
-                            <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Track & Visualize Progress</h4>
+                            <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Practitioner Kiosk</h4>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                                Log sessions, track pain levels, and visualize your healing journey over time with intuitive charts.
+                                Practitioners use the app to chart sessions. Scan their screen to <strong>Auto-Add</strong> them to your team.
                             </p>
                         </div>
                     </div>
@@ -88,7 +88,7 @@ export function WelcomeModal() {
                         <div>
                             <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Private & Local-First</h4>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                                Your data lives on your device. We don't collect, sell, or see your personal health information. You are in control.
+                                Your data lives on your device, not the cloud. You are the database.
                             </p>
                         </div>
                     </div>
