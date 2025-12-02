@@ -21,9 +21,25 @@ export function PatientQRModal({ isOpen, onClose, user }: PatientQRModalProps) {
     if (!user) return null;
 
     // Prepare the payload
-    // We include the profile and any active intake data (e.g. if they just filled out an intake form)
+    // We strictly exclude the photo and non-clinical settings to keep the QR code small
+    const liteProfile = {
+        name: user.name,
+        dateOfBirth: user.dateOfBirth,
+        primaryComplaints: user.primaryComplaints,
+        contraindications: user.contraindications,
+        preferences: user.preferences,
+        bodyHistory: user.bodyHistory,
+        medications: user.medications,
+        allergies: user.allergies,
+        mobilityStatus: user.mobilityStatus,
+        // Include biometrics if relevant
+        height: user.height,
+        weight: user.weight,
+        occupation: user.occupation
+    };
+
     const payload = {
-        profile: user,
+        profile: liteProfile,
         intake: intakeData || {}, // Include current intake state if available
         timestamp: Date.now()
     };
