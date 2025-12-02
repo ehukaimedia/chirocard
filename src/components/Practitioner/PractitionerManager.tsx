@@ -8,6 +8,7 @@ import { PlacesAutocomplete } from "../ui/PlacesAutocomplete";
 import { Modal } from "../ui/Modal";
 import { Plus, Trash2, GripVertical, Pencil, X } from "lucide-react";
 import { Reorder } from "framer-motion";
+import { useToast } from "../ui/Toast";
 
 export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner) => void }) {
     // Fetch and sort by order
@@ -18,6 +19,7 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
     const [formData, setFormData] = useState<Partial<Practitioner>>({
         role: "Chiropractor"
     });
+    const { toast } = useToast();
 
     // Sync local state with DB state when DB changes, but only if not currently dragging (simplified)
     useEffect(() => {
@@ -66,9 +68,10 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
             setIsEditing(false);
             setEditingId(null);
             setFormData({ role: "Chiropractor" });
+            toast("Practitioner saved successfully", "success");
         } catch (error) {
             console.error("Failed to save practitioner:", error);
-            alert("Failed to save practitioner. Please try again.");
+            toast("Failed to save practitioner. Please try again.", "error");
         }
     };
 

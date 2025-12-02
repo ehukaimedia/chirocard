@@ -2,14 +2,16 @@ import { useState } from "react";
 import { db } from "../../db/db";
 import { importDB, exportDB } from "dexie-export-import";
 import { Button } from "../ui/Button";
-import { Download, Upload, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
+import { Download, Upload, RefreshCw } from "lucide-react";
 
 import { generateAIExport } from "../../utils/aiExportUtils";
+
+import { useToast } from "../ui/Toast";
 
 export const DataManagement = () => {
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const { toast } = useToast();
 
     const handleExport = async () => {
         try {
@@ -21,10 +23,11 @@ export const DataManagement = () => {
             a.href = url;
             a.download = `chirocard_backup_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            setMessage({ type: 'success', text: 'Full system backup downloaded successfully.' });
+            a.click();
+            toast('Full system backup downloaded successfully.', 'success');
         } catch (error) {
             console.error("Export failed:", error);
-            setMessage({ type: 'error', text: 'Export failed. Please try again.' });
+            toast('Export failed. Please try again.', 'error');
         } finally {
             setIsExporting(false);
         }
@@ -39,10 +42,11 @@ export const DataManagement = () => {
             a.href = url;
             a.download = `chirocard_brain_export_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            setMessage({ type: 'success', text: 'AI Context export downloaded successfully.' });
+            a.click();
+            toast('AI Context export downloaded successfully.', 'success');
         } catch (error) {
             console.error("AI Export failed:", error);
-            setMessage({ type: 'error', text: 'AI Export failed.' });
+            toast('AI Export failed.', 'error');
         }
     };
 
@@ -64,11 +68,11 @@ export const DataManagement = () => {
                     return true;
                 }
             });
-            setMessage({ type: 'success', text: 'Data restored successfully! Reloading...' });
+            toast('Data restored successfully! Reloading...', 'success');
             setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
             console.error("Import failed:", error);
-            setMessage({ type: 'error', text: 'Import failed. File may be corrupt.' });
+            toast('Import failed. File may be corrupt.', 'error');
         } finally {
             setIsImporting(false);
         }
@@ -92,13 +96,6 @@ export const DataManagement = () => {
                     Your data backup primarily secures your personal records. Additionally, it provides a structured format that you can optionally use with AI models to gain intelligent insights, spot patterns, and better understand your health journey.
                 </p>
             </div>
-
-            {message && (
-                <div className={`mb-6 p-4 rounded-xl text-sm flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                    {message.type === 'success' ? <CheckCircle className="w-5 h-5 shrink-0" /> : <AlertTriangle className="w-5 h-5 shrink-0" />}
-                    {message.text}
-                </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Modal } from "../ui/Modal";
 import { UserPlus, Users, Check, ChevronLeft, Stethoscope } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";

@@ -7,6 +7,7 @@ import { useAppStore } from "../store/useAppStore";
 import { db } from "../db/db";
 import { Modal } from "../components/ui/Modal";
 import { HelpModal } from "../components/Help/HelpModal";
+import { useToast } from "../components/ui/Toast";
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function Settings() {
     } = useAppStore();
     const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const { toast } = useToast();
 
     const handleFreshStart = async () => {
         try {
@@ -38,7 +40,7 @@ export default function Settings() {
             window.location.reload();
         } catch (error) {
             console.error("Failed to reset app:", error);
-            alert("Failed to reset application data. Please try again.");
+            toast("Failed to reset application data. Please try again.", "error");
         }
     };
 

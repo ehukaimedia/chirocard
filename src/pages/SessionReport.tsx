@@ -276,17 +276,17 @@ export default function SessionReport() {
                 )}
 
                 {/* Services, Modalities & Findings Grid */}
-                {(session.serviceTags?.length > 0 || session.modalityTags?.length > 0 || session.findingTags?.length > 0) && (
+                {((session.serviceTags?.length ?? 0) > 0 || (session.modalityTags?.length ?? 0) > 0 || (session.findingTags?.length ?? 0) > 0) && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 break-inside-avoid">
                         {/* Services & Modalities */}
-                        {(session.serviceTags?.length > 0 || session.modalityTags?.length > 0) && (
+                        {((session.serviceTags?.length ?? 0) > 0 || (session.modalityTags?.length ?? 0) > 0) && (
                             <section>
                                 <div className="flex items-center gap-4 mb-4">
                                     <h2 className="text-lg font-bold text-zinc-900">Services & Modalities</h2>
                                     <div className="h-px bg-zinc-200 flex-1"></div>
                                 </div>
                                 <div className="bg-white border border-zinc-200 rounded-xl p-4 space-y-4">
-                                    {session.serviceTags?.length > 0 && (
+                                    {(session.serviceTags?.length ?? 0) > 0 && (
                                         <div>
                                             <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Services</p>
                                             <div className="flex flex-wrap gap-2">
@@ -298,7 +298,7 @@ export default function SessionReport() {
                                             </div>
                                         </div>
                                     )}
-                                    {session.modalityTags?.length > 0 && (
+                                    {(session.modalityTags?.length ?? 0) > 0 && (
                                         <div>
                                             <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Modalities</p>
                                             <div className="flex flex-wrap gap-2">
@@ -315,7 +315,7 @@ export default function SessionReport() {
                         )}
 
                         {/* Clinical Findings */}
-                        {session.findingTags?.length > 0 && (
+                        {(session.findingTags?.length ?? 0) > 0 && (
                             <section>
                                 <div className="flex items-center gap-4 mb-4">
                                     <h2 className="text-lg font-bold text-zinc-900">Clinical Findings</h2>

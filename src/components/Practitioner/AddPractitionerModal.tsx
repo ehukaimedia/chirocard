@@ -3,6 +3,7 @@ import { db, type Practitioner } from "../../db/db";
 import { Input } from "../ui/Input";
 import { PlacesAutocomplete } from "../ui/PlacesAutocomplete";
 import { Modal } from "../ui/Modal";
+import { useToast } from "../ui/Toast";
 
 interface AddPractitionerModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
     const [formData, setFormData] = useState<Partial<Practitioner>>({
         role: "Chiropractor"
     });
+    const { toast } = useToast();
 
     const handleSave = async () => {
         if (!formData.name) return;
@@ -37,9 +39,10 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
             onAdded(newPractitioner);
             onClose();
             setFormData({ role: "Chiropractor" }); // Reset form
+            toast("Practitioner added successfully", "success");
         } catch (error) {
             console.error("Failed to save practitioner:", error);
-            alert("Failed to save practitioner. Please try again.");
+            toast("Failed to save practitioner. Please try again.", "error");
         }
     };
 
