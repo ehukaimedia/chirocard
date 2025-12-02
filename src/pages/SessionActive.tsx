@@ -2,37 +2,52 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { Button } from "../components/ui/Button";
 import { BodyRegionSelector } from "../components/BodyMap/BodyRegionSelector";
-import { ArrowLeft, CheckCircle, Plus, Wand2, Copy, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle, Copy, ChevronDown, ChevronUp, FileText, Wand2, Plus, Trash2 } from "lucide-react";
+import { Input } from "../components/ui/Input";
+import { Card } from "../components/ui/Card";
 import { useState, useMemo } from "react";
 import { useToast } from "../components/ui/Toast";
 import { db } from "../db/db";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { SignaturePad } from "../components/Shared/SignaturePad";
+import { SERVICE_TAGS, FINDING_TAGS } from "../db/db";
 
-const INTERVENTION_CATEGORIES = {
-    "Adjustments": [
-        "Cervical Adj", "Thoracic Adj", "Lumbar Adj", "Sacral Adj", "Pelvic Adj", "Extremity Adj"
-    ],
-    "Soft Tissue": [
-        "Myofascial Release", "Trigger Point", "Deep Tissue", "Stretching", "IASTM", "Cupping"
-    ],
-    "Modalities": [
-        "E-Stim", "Ultrasound", "Heat", "Ice", "Laser", "Traction"
-    ],
-    "Rehab": [
-        "Exercise", "Posture", "Gait Training", "Ergonomics"
-    ]
-};
+
 
 export default function SessionActive() {
     const navigate = useNavigate();
     const { currentSession, updateSession, endSession } = useAppStore();
     const { toast } = useToast();
-    const [showInterventionInput, setShowInterventionInput] = useState(false);
-    const [customIntervention, setCustomIntervention] = useState("");
     const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
     const [showReview, setShowReview] = useState(false);
     const [practitionerSignature, setPractitionerSignature] = useState<string | null>(null);
+
+    // Recommendations State
+    const [newRecTitle, setNewRecTitle] = useState("");
+    const [newRecDesc, setNewRecDesc] = useState("");
+    const [newRecFreq, setNewRecFreq] = useState<string>("Daily");
+    const [newRecCategory, setNewRecCategory] = useState<'relief' | 'movement' | 'lifestyle' | 'custom'>('custom');
+
+    const handleAddRec = () => {
+        if (!newRecTitle || !currentSession) return;
+        updateSession({
+            recommendations: [...(currentSession.recommendations || []), {
+                id: crypto.randomUUID(),
+                title: newRecTitle,
+                description: newRecDesc,
+                frequency: newRecFreq,
+                category: newRecCategory,
+                reminderTimes: [],
+                isCompletedToday: false,
+                status: 'pending',
+                createdAt: Date.now()
+            }]
+        });
+        setNewRecTitle("");
+        setNewRecDesc("");
+        setNewRecFreq("Daily");
+        setNewRecCategory('custom');
+    };
 
     if (!currentSession) {
         return (
@@ -49,29 +64,7 @@ export default function SessionActive() {
         setExpandedCards(prev => ({ ...prev, [part]: !prev[part] }));
     };
 
-    const handleAddIntervention = (intervention: string) => {
-        if (!currentSession.interventions.includes(intervention)) {
-            updateSession({
-                interventions: [...currentSession.interventions, intervention]
-            });
-            setCustomIntervention("");
-            setShowInterventionInput(false);
-        }
-    };
 
-    const handleRemoveIntervention = (intervention: string) => {
-        updateSession({
-            interventions: currentSession.interventions.filter(i => i !== intervention)
-        });
-    };
-
-    const handleAddCustomIntervention = () => {
-        if (customIntervention.trim()) {
-            handleAddIntervention(customIntervention.trim());
-            setCustomIntervention("");
-            setShowInterventionInput(false);
-        }
-    };
 
     const handleSmartCopy = (part: string) => {
         const clientLevel = currentSession.bodyLevels[part] || 0;
@@ -480,65 +473,213 @@ export default function SessionActive() {
                     </div>
                 </section>
 
-                {/* 2. Categorized Interventions */}
+                {/* 2. Services & Modalities (New) */}
                 <section className="space-y-4">
-                    <h2 className="text-lg font-semibold text-zinc-400 uppercase tracking-wider text-xs">Interventions</h2>
-
-                    <div className="space-y-6">
-                        {Object.entries(INTERVENTION_CATEGORIES).map(([category, items]) => (
-                            <div key={category} className="space-y-2">
-                                <h3 className="text-sm font-medium text-zinc-500">{category}</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {items.map(item => {
-                                        const isSelected = currentSession.interventions.includes(item);
-                                        return (
-                                            <button
-                                                key={item}
-                                                onClick={() => isSelected ? handleRemoveIntervention(item) : handleAddIntervention(item)}
-                                                className={`px-3 py-1.5 rounded-full text-sm border transition-all ${isSelected
-                                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-sm shadow-emerald-500/10'
-                                                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700 hover:text-zinc-200'
-                                                    }`}
-                                            >
-                                                {item}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                    <h2 className="text-lg font-semibold text-zinc-400 uppercase tracking-wider text-xs">Services & Modalities</h2>
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-6">
+                        {/* Service Tags */}
+                        <div>
+                            <h3 className="text-sm font-medium text-zinc-500 mb-3 uppercase tracking-wider">Services Performed</h3>
+                            <div className="space-y-4">
+                                {Object.entries(SERVICE_TAGS).filter(([cat]) => cat !== 'Modalities').map(([category, tags]) => (
+                                    <div key={category}>
+                                        <p className="text-xs text-zinc-400 mb-2">{category}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {tags.map(tag => {
+                                                const isSelected = currentSession.serviceTags?.includes(tag);
+                                                return (
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => updateSession({
+                                                            serviceTags: isSelected
+                                                                ? currentSession.serviceTags?.filter(t => t !== tag)
+                                                                : [...(currentSession.serviceTags || []), tag]
+                                                        })}
+                                                        className={`text-xs px-3 py-1.5 rounded-full border transition-all ${isSelected
+                                                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                                                            : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-emerald-500/50'
+                                                            }`}
+                                                    >
+                                                        {tag}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        </div>
 
-                        {/* Custom Add */}
-                        <div className="pt-2">
-                            {!showInterventionInput ? (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setShowInterventionInput(true)}
-                                    className="text-zinc-400 border-zinc-800 hover:bg-zinc-900"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" /> Add Custom
-                                </Button>
-                            ) : (
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={customIntervention}
-                                        onChange={(e) => setCustomIntervention(e.target.value)}
-                                        placeholder="Type intervention..."
-                                        className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-3 py-1 text-sm focus:outline-none focus:border-emerald-500"
-                                        autoFocus
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAddCustomIntervention()}
-                                    />
-                                    <Button size="sm" onClick={handleAddCustomIntervention}>Add</Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setShowInterventionInput(false)}>Cancel</Button>
-                                </div>
-                            )}
+                        <hr className="border-zinc-800" />
+
+                        {/* Modalities */}
+                        <div>
+                            <h3 className="text-sm font-medium text-zinc-500 mb-3 uppercase tracking-wider">Modalities Used</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {SERVICE_TAGS['Modalities'].map(tag => {
+                                    const isSelected = currentSession.modalityTags?.includes(tag);
+                                    return (
+                                        <button
+                                            key={tag}
+                                            onClick={() => updateSession({
+                                                modalityTags: isSelected
+                                                    ? currentSession.modalityTags?.filter(t => t !== tag)
+                                                    : [...(currentSession.modalityTags || []), tag]
+                                            })}
+                                            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${isSelected
+                                                ? 'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                                                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-blue-500/50'
+                                                }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                {/* 3. Smart SOAP Notes */}
+                {/* 3. Findings (New) */}
+                <section className="space-y-4">
+                    <h2 className="text-lg font-semibold text-zinc-400 uppercase tracking-wider text-xs">Findings</h2>
+                    <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-6">
+                        <div className="space-y-4">
+                            {Object.entries(FINDING_TAGS).map(([category, tags]) => (
+                                <div key={category}>
+                                    <p className="text-xs text-zinc-400 mb-2">{category}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {tags.map(tag => {
+                                            const isSelected = currentSession.findingTags?.includes(tag);
+                                            return (
+                                                <button
+                                                    key={tag}
+                                                    onClick={() => updateSession({
+                                                        findingTags: isSelected
+                                                            ? currentSession.findingTags?.filter(t => t !== tag)
+                                                            : [...(currentSession.findingTags || []), tag]
+                                                    })}
+                                                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${isSelected
+                                                        ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20'
+                                                        : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:border-amber-500/50'
+                                                        }`}
+                                                >
+                                                    {tag}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* 4. Recommendations */}
+                <section className="space-y-4">
+                    <h2 className="text-lg font-semibold text-zinc-400 uppercase tracking-wider text-xs">Recommendations</h2>
+                    <Card className="bg-zinc-900 border-zinc-800 p-4 space-y-4 shadow-sm">
+                        {/* Quick Add Options */}
+                        <div className="space-y-3 mb-4">
+                            <div>
+                                <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Relief & Recovery</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { label: "Cold Therapy", desc: "Ice/Cold pack, 15-20 mins", freq: "Acute (3x/day)" },
+                                        { label: "Heat Therapy", desc: "Heating pad/Warm compress, 20 mins", freq: "As Needed" },
+                                        { label: "Contrast Therapy", desc: "3 min heat / 1 min ice", freq: "Daily" },
+                                        { label: "Rest & Elevation", desc: "Elevate and rest area", freq: "As Needed" },
+                                        { label: "Topical Relief", desc: "Apply biofreeze/cream", freq: "As Needed" }
+                                    ].map(opt => (
+                                        <button
+                                            key={opt.label}
+                                            onClick={() => {
+                                                setNewRecTitle(opt.label);
+                                                setNewRecDesc(opt.desc);
+                                                setNewRecFreq(opt.freq);
+                                                setNewRecCategory('relief');
+                                            }}
+                                            className="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-1.5 rounded-full border border-blue-500/20 transition-colors"
+                                        >
+                                            + {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2">
+                                <Input
+                                    placeholder="Recommendation (e.g. Ice Back)"
+                                    value={newRecTitle}
+                                    onChange={(e) => setNewRecTitle(e.target.value)}
+                                    className="bg-zinc-950 border-zinc-800 text-zinc-100"
+                                />
+                                <select
+                                    value={newRecFreq}
+                                    onChange={(e) => setNewRecFreq(e.target.value)}
+                                    className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="Daily">Daily</option>
+                                    <option value="2x Daily">2x Daily</option>
+                                    <option value="Morning/Night">Morning/Night</option>
+                                    <option value="As Needed">As Needed</option>
+                                    <option value="Acute (3x/day)">Acute (3x/day)</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Once">Once</option>
+                                </select>
+                            </div>
+                            <div>
+                                <textarea
+                                    placeholder="Details (e.g. 20 mins, specific instructions...)"
+                                    value={newRecDesc}
+                                    onChange={(e) => setNewRecDesc(e.target.value)}
+                                    className="w-full min-h-[80px] bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"
+                                />
+                            </div>
+                            <div className="flex justify-end">
+                                <Button size="sm" onClick={handleAddRec} disabled={!newRecTitle}>
+                                    <Plus className="w-4 h-4 mr-1" /> Add Recommendation
+                                </Button>
+                            </div>
+                        </div>
+
+                        {currentSession.recommendations && currentSession.recommendations.length > 0 && (
+                            <div className="space-y-2 pt-2 border-t border-zinc-800">
+                                {currentSession.recommendations.map((rec) => (
+                                    <div key={rec.id} className="flex justify-between items-center bg-zinc-950 p-2 rounded-lg border border-zinc-800">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded border ${rec.category === 'relief' ? 'bg-blue-500/10 text-blue-300 border-blue-500/20' :
+                                                    rec.category === 'movement' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' :
+                                                        rec.category === 'lifestyle' ? 'bg-purple-500/10 text-purple-300 border-purple-500/20' :
+                                                            'bg-zinc-500/10 text-zinc-300 border-zinc-500/20'
+                                                    }`}>
+                                                    {rec.category}
+                                                </span>
+                                                <p className="text-sm font-medium text-zinc-200">{rec.title}</p>
+                                            </div>
+                                            <p className="text-xs text-zinc-500 mt-1">
+                                                {rec.frequency} • {rec.description}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => updateSession({
+                                                recommendations: currentSession.recommendations?.filter(r => r.id !== rec.id)
+                                            })}
+                                            className="text-zinc-500 hover:text-red-400"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </Card>
+                </section>
+
+                {/* 5. Smart SOAP Notes */}
                 <section className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-zinc-400 uppercase tracking-wider text-xs">Session Notes</h2>

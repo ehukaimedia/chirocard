@@ -20,34 +20,35 @@ interface SessionData {
     practitionerLevels?: Record<string, number>;
     practitionerBadges?: Record<string, string[]>;
     treatmentNotes?: Record<string, string>;
-    recommendations?: any[]; // Added for compatibility
-    postSessionLog?: any[]; // Added for compatibility
-    date?: number; // Added for compatibility
-    notes?: string; // Added for compatibility
-    practitionerName?: string; // Added for compatibility
-    practitionerClass?: string; // Added for compatibility
-    signatureBase64?: string | null; // Added for compatibility
-    isLocked?: boolean; // Added for compatibility
-    createdAt?: number; // Added for compatibility
-    appointmentId?: string; // Added for compatibility
+    serviceTags: string[];
+    modalityTags: string[];
+    findingTags: string[];
+    recommendations: any[];
+    postSessionLog: any[];
+    date?: number;
+    practitionerName?: string;
+    practitionerClass?: string;
+    signatureBase64?: string | null;
+    isLocked?: boolean;
+    createdAt?: number;
+    appointmentId?: string;
 }
 
 interface AppState {
     viewMode: ViewMode;
     currentSession: SessionData | null;
 
-    // Kiosk/Guest Mode State
-    scannedPatientData: any | null;
-    activePractitioner: any | null;
-    intakeData: any | null;
-    resumedSessionData: any | null;
-    activeAppointmentId: string | null;
-    activeSessionId: string | null;
+    // Kiosk/Guest Mode State - REMOVED
+    // scannedPatientData: any | null;
+    // activePractitioner: any | null;
+    // intakeData: any | null;
+    // resumedSessionData: any | null;
+    // activeAppointmentId: string | null;
+    // activeSessionId: string | null;
 
     // Actions
     setViewMode: (mode: ViewMode) => void;
     setMode: (mode: ViewMode) => void; // Alias
-    setScannedPatientData: (data: any) => void;
     startSession: () => void;
     resumeSession: (session: Session) => void;
     updateSession: (data: Partial<SessionData>) => void;
@@ -81,7 +82,6 @@ export const useAppStore = create<AppState>()(
 
             setViewMode: (mode) => set({ viewMode: mode }),
             setMode: (mode) => set({ viewMode: mode }), // Alias
-            setScannedPatientData: (data) => set({ scannedPatientData: data }),
 
             startSession: () => set({
                 viewMode: 'session',
@@ -98,7 +98,12 @@ export const useAppStore = create<AppState>()(
                     userSignature: null,
                     practitionerLevels: {},
                     practitionerBadges: {},
-                    treatmentNotes: {}
+                    treatmentNotes: {},
+                    serviceTags: [],
+                    modalityTags: [],
+                    findingTags: [],
+                    recommendations: [],
+                    postSessionLog: []
                 }
             }),
 
@@ -111,14 +116,19 @@ export const useAppStore = create<AppState>()(
                     bodyNotes: session.bodyNotes || {},
                     bodyLevels: session.bodyLevels || {},
                     bodyBadges: session.bodyBadges || {},
-                    clientNotes: "", // Mapping strategy to be refined if needed
+                    clientNotes: "",
                     practitionerNotes: session.notes || "",
                     interventions: session.interventions || [],
                     practitionerId: session.practitionerId,
                     userSignature: session.userSignature,
                     practitionerLevels: session.practitionerLevels || {},
                     practitionerBadges: session.practitionerBadges || {},
-                    treatmentNotes: session.treatmentNotes || {}
+                    treatmentNotes: session.treatmentNotes || {},
+                    serviceTags: session.serviceTags || [],
+                    modalityTags: session.modalityTags || [],
+                    findingTags: session.findingTags || [],
+                    recommendations: session.recommendations || [],
+                    postSessionLog: session.postSessionLog || []
                 }
             }),
 
@@ -141,12 +151,6 @@ export const useAppStore = create<AppState>()(
                 calendarViewSpan: 30,
                 defaultRoutineTime: "07:00",
                 routineTimeInterval: 15,
-                scannedPatientData: null,
-                activePractitioner: null,
-                intakeData: null,
-                resumedSessionData: null,
-                activeAppointmentId: null,
-                activeSessionId: null
             })
         }),
         {

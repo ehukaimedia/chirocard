@@ -8,7 +8,7 @@ import { Modal } from "../components/ui/Modal";
 import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
-import { SessionScannerModal } from "../components/Dashboard/SessionScannerModal";
+
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { Trash2 } from "lucide-react";
@@ -45,7 +45,7 @@ export default function Dashboard() {
     const nextAppointment = appointments?.[0];
 
     const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
-    const [showScannerModal, setShowScannerModal] = useState(false);
+
 
     const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -309,13 +309,7 @@ export default function Dashboard() {
                 )}
             </div>
 
-            <SessionScannerModal
-                isOpen={showScannerModal}
-                onClose={() => setShowScannerModal(false)}
-                onScanSuccess={() => {
-                    // Refresh data? Dexie useLiveQuery handles it automatically!
-                }}
-            />
+
 
 
 

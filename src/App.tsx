@@ -10,7 +10,7 @@ import SessionReport from "./pages/SessionReport";
 import Settings from "./pages/Settings";
 import { MainLayout } from "./components/Layout/MainLayout";
 import SessionActive from "./pages/SessionActive";
-import GuestSession from "./pages/GuestSession";
+
 
 import { useReminders } from "./hooks/useReminders";
 import { usePersistence } from "./hooks/usePersistence";
@@ -34,7 +34,7 @@ function App() {
 
         <Route path="/intake" element={<Intake />} />
         <Route path="/session-active" element={<SessionActive />} />
-        <Route path="/guest-session" element={<GuestSession />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -68,7 +68,8 @@ export default function Intake() {
 
     const handleUnlock = () => {
         setShowGuard(false);
-        navigate("/guest-session");
+        // Navigate to the unified active session view
+        navigate("/session-active");
     };
 
     if (!currentSession) return null; // Loading...
