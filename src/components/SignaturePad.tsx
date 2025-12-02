@@ -5,6 +5,7 @@ import { Button } from "./ui/Button";
 export interface SignaturePadRef {
     clear: () => void;
     getTrimmedCanvas: () => HTMLCanvasElement;
+    getData: () => any[];
     isEmpty: () => boolean;
 }
 
@@ -24,6 +25,7 @@ const SignaturePad = forwardRef<SignaturePadRef, SignaturePadProps>(({ onEnd, on
             if (!canvas) throw new Error("Canvas not available");
             return canvas;
         },
+        getData: () => sigPad.current?.toData() || [],
         isEmpty: () => sigPad.current?.isEmpty() ?? true,
     }));
 

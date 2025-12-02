@@ -11,6 +11,8 @@ import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { SessionScannerModal } from "../components/Dashboard/SessionScannerModal";
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { PatientQRModal } from "../components/Profile/PatientQRModal";
+import { QrCode, Trash2 } from "lucide-react";
 
 
 export default function Dashboard() {
@@ -19,13 +21,15 @@ export default function Dashboard() {
     const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
     const homework = useLiveQuery(() => db.homework.toArray());
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
-    const { intakeData } = useAppStore();
+    const { intakeData, clearIntakeData, mode } = useAppStore();
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     const activeHomeworkCount = homework?.filter((h: Homework) => !h.isCompletedToday).length || 0;
     const nextAppointment = appointments?.[0];
 
     const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
     const [showScannerModal, setShowScannerModal] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -176,9 +180,9 @@ export default function Dashboard() {
                 </Card>
             </section>
             {/* Quick Actions Grid */}
-            <div className={`grid ${intakeData ? 'grid-cols-1' : 'grid-cols-3'} gap-4`}>
+            <div className={`grid ${intakeData ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'} gap-4`}>
                 {intakeData ? (
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-4 relative">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 rounded-full animate-pulse">
                                 <Timer className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
@@ -191,57 +195,122 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 w-full md:w-auto">
-                            <Button
-                                variant="outline"
-                                className="flex-1 md:flex-none border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
-                                onClick={() => navigate("/intake")}
-                            >
-                                Resume
-                            </Button>
-                            <Button
-                                className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                                onClick={() => setShowScannerModal(true)}
-                            >
-                                <ScanLine className="w-4 h-4 mr-2" />
-                                Scan to Complete
-                            </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 absolute top-4 right-4"
+                            onClick={() => setShowClearConfirm(true)}
+                            title="Discard Session"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
+
+                        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            {intakeData.isCheckInReady ? (
+                                <>
+                                    <Button
+                                        className="flex-1 md:flex-none bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                                        onClick={() => setShowQRModal(true)}
+                                    >
+                                        <QrCode className="w-4 h-4 mr-2" />
+                                        Show Check-In QR
+                                    </Button>
+                                    <Button
+                                        className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                                        onClick={() => setShowScannerModal(true)}
+                                    >
+                                        <ScanLine className="w-4 h-4 mr-2" />
+                                        Complete Session
+                                    </Button>
+                                </>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 md:flex-none border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
+                                    onClick={() => navigate("/intake")}
+                                >
+                                    Resume Intake
+                                </Button>
+                            )}
                         </div>
                     </div>
                 ) : (
                     <>
-                        <Button
-                            variant="outline"
-                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
-                            onClick={() => navigate("/intake")}
-                        >
-                            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                <Plus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Start Session</span>
-                        </Button>
+                        {/* 1. Start Session / Check In (Primary) */}
+                        {nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? (
+                            <Button
+                                variant="outline"
+                                className="h-auto py-6 flex flex-col gap-3 border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all group relative overflow-hidden"
+                                onClick={() => navigate("/intake", { state: { appointmentId: nextAppointment.id } })}
+                            >
+                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                    <CalendarIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="text-center">
+                                    <span className="block font-bold text-zinc-900 dark:text-zinc-100">Check In</span>
+                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                        {new Date(nextAppointment.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} Appointment
+                                    </span>
+                                </div>
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                                onClick={() => navigate("/intake")}
+                            >
+                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                    <Plus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <span className="font-medium text-zinc-700 dark:text-zinc-300">Start Session</span>
+                            </Button>
+                        )}
 
+                        {/* 2. Profile (Always Visible) */}
                         <Button
                             variant="outline"
-                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group"
                             onClick={() => navigate("/profile")}
                         >
-                            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                <User className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                             </div>
                             <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile</span>
                         </Button>
 
-                        <Button
-                            variant="outline"
-                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
-                            onClick={() => setShowScannerModal(true)}
-                        >
-                            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                <ScanLine className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Scan Session</span>
-                        </Button>
+                        {/* 3. Wellness Routine (Conditional) */}
+                        {activeHomeworkCount > 0 && (
+                            <Button
+                                variant="outline"
+                                className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all group"
+                                onClick={() => navigate("/calendar")}
+                            >
+                                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                    <ShieldCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div className="text-center">
+                                    <span className="block font-medium text-zinc-700 dark:text-zinc-300">Wellness Routine</span>
+                                    <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">{activeHomeworkCount} due today</span>
+                                </div>
+                            </Button>
+                        )}
+
+                        {/* 4. Kiosk Scanner (Conditional) */}
+                        {mode === 'guest' && (
+                            <Button
+                                variant="outline"
+                                className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
+                                onClick={() => setShowScannerModal(true)}
+                            >
+                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
+                                    <ScanLine className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div className="text-center">
+                                    <span className="block font-medium text-zinc-700 dark:text-zinc-300">Scan Patient QR</span>
+                                    <span className="text-xs text-zinc-500">Kiosk Mode</span>
+                                </div>
+                            </Button>
+                        )}
                     </>
                 )}
             </div>
@@ -252,6 +321,12 @@ export default function Dashboard() {
                 onScanSuccess={() => {
                     // Refresh data? Dexie useLiveQuery handles it automatically!
                 }}
+            />
+
+            <PatientQRModal
+                isOpen={showQRModal}
+                onClose={() => setShowQRModal(false)}
+                user={user}
             />
 
             <WelcomeModal />
@@ -293,6 +368,19 @@ export default function Dashboard() {
                 confirmLabel="Delete"
                 cancelLabel="Cancel"
                 onConfirm={confirmDelete}
+                variant="danger"
+            />
+            <Modal
+                isOpen={showClearConfirm}
+                onClose={() => setShowClearConfirm(false)}
+                title="Discard Session?"
+                description="This will clear your current progress. This action cannot be undone."
+                confirmLabel="Discard"
+                cancelLabel="Cancel"
+                onConfirm={() => {
+                    clearIntakeData();
+                    setShowClearConfirm(false);
+                }}
                 variant="danger"
             />
         </div>

@@ -23,7 +23,7 @@
 ## 3. Goals & Objectives
 *   **Build a Robust PWA:** Create a high-performance, offline-capable web application that feels native.
 *   **Enhance Collaboration:** Streamline the "hand-off" experience between user (intake) and practitioner (session log).
-*   **Visualize Wellness:** Move beyond text logs to visual body maps and calendar views.
+*   **Visualize Wellness:** Move beyond text logs to intuitive button-style body maps and calendar views.
 *   **Ship Native Apps:** Deploy to Apple App Store and Google Play Store using Capacitor.
 
 ## 4. Global Compliance & Privacy (Security by Design)
@@ -42,6 +42,7 @@
 *   **"Bento Grid" Layout:** High-contrast, dark mode aesthetic ("Bioluminescent Nature").
 *   **Status Indicators:** "Active Care Plan" status, next appointment, daily habits count.
 *   **Quick Actions:** Start Session, View History, View Calendar.
+*   **Persistent Check-In QR:** Prominent "Show Check-In QR" button appears if a session is ready for check-in but hasn't been scanned, ensuring easy access.
 *   **Recent Activity:** List of recent sessions.
 
 ### 6.2. Calendar & Scheduling
@@ -67,14 +68,29 @@
 *   **Session Report:** Detailed view of a completed session.
 *   **PDF Export:** Generate professional PDF reports for insurance or personal records.
 
-### 6.6. Profile
+### 6.6. Profile ("The Passport")
+*   **Inline Creation:** Profile creation is integrated directly into the onboarding "Welcome Modal". Users must complete their profile before accessing the app.
+*   **Validation:** Critical fields (Name, DOB, Height, Weight, Phone) are strictly enforced with visual cues (red highlights, asterisks) to ensure data validity.
 *   **User Details:** Name, biometrics, and preferences. Address auto-fill via Google Places.
 *   **Practitioner List:** Manage saved practitioners. Add new practitioners instantly using Google Places search.
 
 ### 6.7. Settings & Data Management
 *   **Dedicated Settings Page:** Central location for app configuration.
+*   **ChiroCard Brain:** "Smart AI Export" feature that processes raw data into a clean, human-readable, and AI-contextualized JSON format for intelligent insights.
 *   **Data Backup & Restore:** Export full database to JSON and restore from backup.
 *   **Persistent Storage Request:** Automatically requests browser persistence to prevent data eviction.
+
+## 7. Workflow & Data Exchange (The "Blueprint")
+*   **Philosophy:** "The Handshake" — A seamless, offline-capable context transfer between User and Practitioner via QR codes.
+*   **User Journey:**
+    1.  **Passport Creation:** Validated profile setup on first launch.
+    2.  **Intake:** User maps body issues and subjective data.
+    3.  **Check-In:** Session locks, generating a secure QR code.
+*   **Practitioner Journey (Kiosk Mode):**
+    1.  **Scan:** Practitioner scans User's QR code.
+    2.  **Ingest:** Data is instantly imported to Practitioner's device (creating a Guest Profile if needed).
+    3.  **Treat & Log:** Practitioner adds SOAP notes and signs off.
+*   **Compliance:** All exchanges happen locally (camera scan) or via user-initiated export, ensuring HIPAA/GDPR compliance by design.
 
 ## 7. Mobile Deployment Strategy
 **Framework:** [Capacitor](https://capacitorjs.com/) (Installed & Configured)
@@ -106,7 +122,7 @@
 *   **Icons:** Lucide React.
 *   ***New* Mobile Wrapper:** Capacitor (Core, iOS, Android).
 
-## 9. Future Roadmap
+## 10. Future Roadmap
 *   **Cloud Sync (Optional):** Encrypted backup and multi-device sync.
 *   **Practitioner Portal:** Dedicated web portal for practitioners to view client data (if shared).
-*   **AI Body Architect:** On-device LLM for personalized stretching/recovery protocols.
+*   **AI Body Architect:** Advanced integration of "ChiroCard Brain" for personalized stretching/recovery protocols and predictive health insights.

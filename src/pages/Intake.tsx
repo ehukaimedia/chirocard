@@ -148,9 +148,13 @@ export default function Intake() {
         // }
 
         // Validate Profile
-        if (!user || !user.name || !user.dateOfBirth) {
-            console.log("Profile incomplete:", { name: user?.name, dob: user?.dateOfBirth });
+        const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
+        const missingProfileFields = user ? requiredFields.filter(field => !user[field as keyof typeof user]) : requiredFields;
+
+        if (!user || missingProfileFields.length > 0) {
+            console.log("Profile incomplete:", missingProfileFields);
             setShowProfileEditModal(true);
+            toast("Please complete your profile to continue.", "error");
             return;
         }
 
@@ -180,6 +184,22 @@ export default function Intake() {
     };
 
     const handleSaveProfile = async () => {
+        // Validation
+        const requiredFields = [
+            { key: 'name', label: 'Name' },
+            { key: 'dateOfBirth', label: 'Date of Birth' },
+            { key: 'height', label: 'Height' },
+            { key: 'weight', label: 'Weight' },
+            { key: 'phone', label: 'Phone' }
+        ];
+
+        const missingFields = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
+
+        if (missingFields.length > 0) {
+            toast(`Please fill in required fields: ${missingFields.map(f => f.label).join(', ')}`, "error");
+            return;
+        }
+
         try {
             await db.users.put({
                 id: "me",
@@ -222,8 +242,9 @@ export default function Intake() {
     const handleConfirmStart = async () => {
         // if (!selectedPractitioner) return;
 
-        // Get signature (currently unused in QR flow, but good to have ready)
-        // const signature = sigPadRef.current?.getTrimmedCanvas().toDataURL("image/png") || null;
+        // Get signature as vector data for QR optimization
+        const signatureData = sigPadRef.current?.getData();
+        const signature = signatureData && signatureData.length > 0 ? JSON.stringify(signatureData) : undefined;
 
         // Update global store with current intake data so it's included in the QR code
         useAppStore.getState().updateIntakeData({
@@ -231,12 +252,10 @@ export default function Intake() {
             bodyNotes: bodyNotes,
             bodyLevels: bodyLevels,
             bodyBadges: bodyBadges,
-            notes: notes
+            notes: notes,
+            isCheckInReady: true,
+            userSignature: signature
         });
-
-        // Also update signature if possible, or just rely on the fact that we're showing the QR code now
-        // The PatientQRModal pulls from `intakeData` in the store.
-        // We might need to manually inject the signature into the payload in PatientQRModal if it's not in the store type yet.
         // For now, let's just show the modal. The signature is less critical for the *start* than the intake data.
 
         setShowQRModal(true);

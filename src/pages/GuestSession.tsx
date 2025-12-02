@@ -4,20 +4,27 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { useAppStore } from "../store/useAppStore";
 import { Button } from "../components/ui/Button";
-import { CheckCircle, FileText, Home } from "lucide-react";
+import { CheckCircle, FileText, Home, QrCode } from "lucide-react";
 import { type Homework } from "../db/db";
 import { useToast } from "../components/ui/Toast";
 import { SessionEditor, type SessionData } from "../components/Session/SessionEditor";
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
+import { SessionCompletionQRModal } from "../components/Session/SessionCompletionQRModal";
 
 export default function GuestSession() {
     const navigate = useNavigate();
-    const { activePractitioner, intakeData, resumedSessionData, activeAppointmentId } = useAppStore();
-    const user = useLiveQuery(() => db.users.get("me"));
+    const { activePractitioner, intakeData, resumedSessionData, activeAppointmentId, scannedPatientData } = useAppStore();
+    const localUser = useLiveQuery(() => db.users.get("me"));
+
+    // Prioritize scanned data if available (Guest Mode)
+    const user = scannedPatientData?.profile || localUser;
+    const currentIntake = scannedPatientData?.intake || intakeData;
     const { toast } = useToast();
 
     const [step, setStep] = useState<"editor" | "completed">("editor");
     const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
+    const [completedSessionData, setCompletedSessionData] = useState<any | null>(null);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     const handleExit = () => {
         // Sync current state back to store so Intake page reflects changes
@@ -121,7 +128,7 @@ export default function GuestSession() {
                 }
             }
 
-            await db.sessions.put({
+            const fullSessionData = {
                 ...existingSession,
                 id: sessionId,
                 date: existingSession.date || Date.now(),
@@ -131,9 +138,9 @@ export default function GuestSession() {
                 notes: data.notes,
                 recommendations: data.recommendations,
                 bodyMap: data.bodyMap,
-                bodyNotes: intakeData?.bodyNotes || {}, // Keep original patient notes
-                bodyLevels: intakeData?.bodyLevels || {}, // Keep original patient levels
-                bodyBadges: intakeData?.bodyBadges || {}, // Keep original patient badges
+                bodyNotes: intakeData?.bodyNotes || {},
+                bodyLevels: intakeData?.bodyLevels || {},
+                bodyBadges: intakeData?.bodyBadges || {},
                 treatmentNotes: data.treatmentNotes,
                 practitionerLevels: data.practitionerLevels,
                 practitionerBadges: data.practitionerBadges,
@@ -143,7 +150,10 @@ export default function GuestSession() {
                 createdAt: existingSession.createdAt || Date.now(),
                 postSessionLog: updatedLog,
                 appointmentId: activeAppointmentId || undefined
-            });
+            };
+
+            await db.sessions.put(fullSessionData);
+            setCompletedSessionData(fullSessionData);
 
             if (activeAppointmentId) {
                 await db.appointments.update(activeAppointmentId, { status: 'completed' });
@@ -186,6 +196,12 @@ export default function GuestSession() {
                         <FileText className="w-4 h-4" /> View/ Print Session Report
                     </Button>
                     <Button
+                        className="w-full flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                        onClick={() => setShowQRModal(true)}
+                    >
+                        <QrCode className="w-4 h-4" /> Show Session QR
+                    </Button>
+                    <Button
                         variant="ghost"
                         className="w-full flex items-center justify-center gap-2 h-12 text-zinc-500"
                         onClick={() => navigate("/dashboard")}
@@ -193,6 +209,12 @@ export default function GuestSession() {
                         <Home className="w-4 h-4" /> Return to Dashboard
                     </Button>
                 </div>
+
+                <SessionCompletionQRModal
+                    isOpen={showQRModal}
+                    onClose={() => setShowQRModal(false)}
+                    sessionData={completedSessionData}
+                />
             </div>
         );
     }
@@ -200,7 +222,7 @@ export default function GuestSession() {
     return (
         <SessionEditor
             initialData={resumedSessionData || undefined}
-            intakeData={intakeData}
+            intakeData={currentIntake}
             clientProfile={user}
             defaultPractitionerName={activePractitioner?.name}
             onSave={handleSave}

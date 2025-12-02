@@ -10,7 +10,7 @@ import { HelpModal } from "../components/Help/HelpModal";
 
 export default function Settings() {
     const navigate = useNavigate();
-    const { calendarViewSpan, setCalendarViewSpan, reset } = useAppStore();
+    const { calendarViewSpan, setCalendarViewSpan, reset, mode, setMode } = useAppStore();
     const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
@@ -106,17 +106,24 @@ export default function Settings() {
                     </div>
 
                     <div
-                        onClick={() => navigate("/practitioner")}
-                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
+                        onClick={() => setMode(mode === 'user' ? 'guest' : 'user')}
+                        className={`
+                            p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border cursor-pointer transition-all duration-300 flex flex-col items-center text-center gap-3
+                            ${mode === 'guest'
+                                ? 'bg-zinc-900 border-zinc-900 ring-2 ring-zinc-900 ring-offset-2'
+                                : 'bg-white border-zinc-100 hover:border-zinc-300'}
+                        `}
                     >
-                        <div className="p-3 bg-zinc-100 rounded-full">
-                            <svg className="w-6 h-6 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className={`p-3 rounded-full ${mode === 'guest' ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                            <svg className={`w-6 h-6 ${mode === 'guest' ? 'text-white' : 'text-zinc-600'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
                         </div>
                         <div>
-                            <h2 className="font-semibold text-zinc-900">Practitioner Mode</h2>
-                            <p className="text-xs text-zinc-500">Open Kiosk Interface</p>
+                            <h2 className={`font-semibold ${mode === 'guest' ? 'text-white' : 'text-zinc-900'}`}>Practitioner Mode</h2>
+                            <p className={`text-xs ${mode === 'guest' ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                                {mode === 'guest' ? 'Active (Kiosk)' : 'Switch to Kiosk'}
+                            </p>
                         </div>
                     </div>
 

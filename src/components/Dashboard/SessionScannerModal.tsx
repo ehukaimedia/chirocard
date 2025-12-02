@@ -5,6 +5,8 @@ import { Button } from "../ui/Button";
 import { decompressData } from "../../utils/compression";
 import { db } from "../../db/db";
 import { useToast } from "../ui/Toast";
+import { useNavigate } from "react-router-dom";
+import { useAppStore } from "../../store/useAppStore";
 
 interface SessionScannerModalProps {
     isOpen: boolean;
@@ -17,6 +19,8 @@ export function SessionScannerModal({ isOpen, onClose, onScanSuccess }: SessionS
     const [error, setError] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
     const { toast } = useToast();
+    const navigate = useNavigate();
+    const { setScannedPatientData, setMode } = useAppStore();
 
     useEffect(() => {
         if (isOpen && !scannerRef.current) {
@@ -91,11 +95,27 @@ export function SessionScannerModal({ isOpen, onClose, onScanSuccess }: SessionS
 
             console.log("Parsed session data:", sessionData);
 
-            if (!sessionData || !sessionData.practitionerName) {
+            // 1. Check for Patient Check-In Payload (Profile + Intake)
+            if (sessionData.profile && sessionData.intake) {
+                console.log("Detected Patient Check-In QR");
+
+                // Store data and switch to Guest Mode
+                setScannedPatientData(sessionData);
+                setMode('guest');
+
+                toast("Starting Guest Session...", "success");
+                onClose();
+                navigate("/guest-session");
+                return;
+            }
+
+            // 2. Check for Session Record Payload (Completed Session)
+            if (!sessionData.practitionerName) {
                 throw new Error("Invalid session data format");
             }
 
-            // 1. Auto-Add Practitioner to Team
+            // 3. Process Session Record Import
+            // Auto-Add Practitioner to Team
             if (sessionData.practitionerId) {
                 const existingPractitioner = await db.practitioners.get(sessionData.practitionerId);
                 if (!existingPractitioner) {

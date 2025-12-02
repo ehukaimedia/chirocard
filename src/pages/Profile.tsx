@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
@@ -15,6 +15,7 @@ import { QrCode } from "lucide-react";
 
 export default function Profile() {
     const navigate = useNavigate();
+    const location = useLocation();
     const user = useLiveQuery(() => db.users.get("me"));
     const [isEditing, setIsEditing] = useState(false);
 
@@ -69,12 +70,37 @@ export default function Profile() {
                 hydration: user.hydration || "",
                 insurance: Array.isArray(user.insurance) ? user.insurance : (user.insurance ? [user.insurance] : [])
             });
+
+            // Auto-enable edit mode if requested AND fields are missing
+            if (location.state?.editMode) {
+                const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
+                const isComplete = requiredFields.every(field => user[field as keyof typeof user]);
+                if (!isComplete) {
+                    setIsEditing(true);
+                }
+            }
         }
-    }, [user]);
+    }, [user, location.state]);
 
     const { toast } = useToast();
 
     const handleSave = async () => {
+        // Validation
+        const requiredFields = [
+            { key: 'name', label: 'Name' },
+            { key: 'dateOfBirth', label: 'Date of Birth' },
+            { key: 'height', label: 'Height' },
+            { key: 'weight', label: 'Weight' },
+            { key: 'phone', label: 'Phone' }
+        ];
+
+        const missingFields = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
+
+        if (missingFields.length > 0) {
+            toast(`Please fill in required fields: ${missingFields.map(f => f.label).join(', ')}`, "error");
+            return;
+        }
+
         try {
             await db.users.put({
                 id: "me",
@@ -511,7 +537,12 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
     );
 }
 
-export const EditView = ({ formData, setFormData, handleSave }: { formData: FormData, setFormData: React.Dispatch<React.SetStateAction<FormData>>, handleSave: () => void }) => (
+export const EditView = ({ formData, setFormData, handleSave, missingFields = [] }: {
+    formData: FormData,
+    setFormData: React.Dispatch<React.SetStateAction<FormData>>,
+    handleSave: () => void,
+    missingFields?: string[]
+}) => (
     <Card className="p-6 space-y-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
 
         {/* Advisory Alert */}
@@ -534,11 +565,16 @@ export const EditView = ({ formData, setFormData, handleSave }: { formData: Form
                 <p>Type and press <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Comma</kbd> to add items.</p>
             </div>
         </div>
+        <div className="flex justify-end">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400"><span className="text-red-500">*</span> Required</p>
+        </div>
         <Input
             label="Your Name"
             value={formData.name}
             onChange={e => setFormData((prev: FormData) => ({ ...prev, name: e.target.value }))}
             placeholder="Jane Doe"
+            required
+            error={missingFields.includes('name')}
             className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
         />
 
@@ -606,6 +642,8 @@ export const EditView = ({ formData, setFormData, handleSave }: { formData: Form
                 value={formData.phone}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, phone: e.target.value }))}
                 placeholder="(555) 123-4567"
+                required
+                error={missingFields.includes('phone')}
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />
         </div>
@@ -635,6 +673,8 @@ export const EditView = ({ formData, setFormData, handleSave }: { formData: Form
                 value={formData.height}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
                 placeholder="5'10"
+                required
+                error={missingFields.includes('height')}
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />
             <Input
@@ -642,20 +682,22 @@ export const EditView = ({ formData, setFormData, handleSave }: { formData: Form
                 value={formData.weight}
                 onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
                 placeholder="165 lbs"
+                required
+                error={missingFields.includes('weight')}
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Date of Birth</label>
-                <input
-                    type="date"
-                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    value={formData.dateOfBirth}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
-                />
-            </div>
+            <Input
+                type="date"
+                label="Date of Birth"
+                value={formData.dateOfBirth}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
+                required
+                error={missingFields.includes('dateOfBirth')}
+                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+            />
             <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activity Level</label>
                 <select

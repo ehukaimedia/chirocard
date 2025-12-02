@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { db } from "../../db/db";
-import { importDB } from "dexie-export-import";
+import { importDB, exportDB } from "dexie-export-import";
 import { Button } from "../ui/Button";
 import { Download, Upload, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
 
@@ -15,7 +15,7 @@ export const DataManagement = () => {
         try {
             setIsExporting(true);
             // Use dexie-export-import for a full database backup
-            const blob = await import("dexie-export-import").then(module => module.exportDB(db));
+            const blob = await exportDB(db);
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
