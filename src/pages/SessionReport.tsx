@@ -440,7 +440,7 @@ export default function SessionReport() {
                                 )}
                             </div>
                             <p className="text-sm font-bold text-zinc-900">{user?.name || "Client"}</p>
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Client Initials</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Client Signature</p>
                         </div>
 
                         {/* Practitioner Sig */}
@@ -453,7 +453,7 @@ export default function SessionReport() {
                                 )}
                             </div>
                             <p className="text-sm font-bold text-zinc-900">{session.practitionerName}</p>
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Practitioner Initials</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Practitioner Signature</p>
                         </div>
                     </div>
                 </section>

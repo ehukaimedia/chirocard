@@ -16,6 +16,10 @@ interface SessionData {
     practitionerNotes: string;
     interventions: string[];
     practitionerId?: string;
+    userSignature?: string | null;
+    practitionerLevels?: Record<string, number>;
+    practitionerBadges?: Record<string, string[]>;
+    treatmentNotes?: Record<string, string>;
 }
 
 interface AppState {
@@ -61,7 +65,11 @@ export const useAppStore = create<AppState>()(
                     bodyBadges: {},
                     clientNotes: "",
                     practitionerNotes: "",
-                    interventions: []
+                    interventions: [],
+                    userSignature: null,
+                    practitionerLevels: {},
+                    practitionerBadges: {},
+                    treatmentNotes: {}
                 }
             }),
 
@@ -77,7 +85,11 @@ export const useAppStore = create<AppState>()(
                     clientNotes: "", // Mapping strategy to be refined if needed
                     practitionerNotes: session.notes || "",
                     interventions: session.interventions || [],
-                    practitionerId: session.practitionerId
+                    practitionerId: session.practitionerId,
+                    userSignature: session.userSignature,
+                    practitionerLevels: session.practitionerLevels || {},
+                    practitionerBadges: session.practitionerBadges || {},
+                    treatmentNotes: session.treatmentNotes || {}
                 }
             }),
 
