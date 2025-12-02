@@ -55,7 +55,7 @@ export type Session = {
     notes: string;
     signatureBase64: string | null;
     userSignature?: string; // Client signature
-    recommendations?: Homework[]; // Snapshot of assigned homework
+    recommendations?: BodyworkRoutine[]; // Snapshot of assigned homework
     bodyMap?: Record<string, 'normal' | 'issue' | 'addressed' | 'watch'>; // Snapshot of body status
     bodyNotes?: Record<string, string>; // User notes per body part
     bodyLevels?: Record<string, number>; // User pain/discomfort level (0-10)
@@ -96,7 +96,7 @@ export type Appointment = {
     status?: 'scheduled' | 'completed' | 'cancelled';
 };
 
-export type Homework = {
+export type BodyworkRoutine = {
     id: string;
     title: string; // e.g. "Ice Lower Back"
     description?: string; // "20 mins, 3x a day"
@@ -111,6 +111,23 @@ export type Homework = {
     createdAt: number;
 };
 
+export type RoutineCompletion = {
+    id: string;
+    routineId: string;
+    routineTitle: string;
+    completedAt: number; // Timestamp
+    date: string; // "YYYY-MM-DD" for easy grouping
+};
+
+export type JournalEntry = {
+    id: string;
+    date: number; // Timestamp
+    content: string;
+    mood?: 'Great' | 'Good' | 'Okay' | 'Bad' | 'Awful';
+    tags?: string[];
+    createdAt: number;
+};
+
 // Database Class
 export class ChiroCardDB extends Dexie {
     users!: Table<UserProfile>;
@@ -118,17 +135,21 @@ export class ChiroCardDB extends Dexie {
     sessions!: Table<Session>;
     bodyLogs!: Table<BodyLog>;
     appointments!: Table<Appointment>;
-    homework!: Table<Homework>;
+    routines!: Table<BodyworkRoutine>;
+    routineCompletions!: Table<RoutineCompletion>;
+    journal!: Table<JournalEntry>;
 
     constructor() {
         super('ChiroCardDB');
-        this.version(14).stores({
+        this.version(16).stores({
             users: 'id', // Simple key-value for user settings
             practitioners: 'id, name, role, order', // UUIDs, not auto-increment
             sessions: 'id, date, practitionerId', // UUIDs, not auto-increment
             bodyLogs: '++id, timestamp, status', // Keep auto-increment for logs if they don’t use UUIDs (check usage)
             appointments: '++id, date, practitionerId, status',
-            homework: '++id, isCompletedToday, status'
+            routines: '++id, isCompletedToday, status',
+            routineCompletions: 'id, routineId, date, completedAt',
+            journal: 'id, date'
         });
     }
 }

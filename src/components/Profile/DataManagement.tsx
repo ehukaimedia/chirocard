@@ -113,7 +113,7 @@ export const DataManagement = () => {
                         {isExporting ? "Exporting..." : "Download Backup"}
                     </Button>
                     <p className="text-xs text-zinc-400 leading-relaxed">
-                        Includes: Profile, Medical History, All Sessions, Practitioners, & Homework.
+                        Includes: Profile, Medical History, All Sessions, Practitioners, & Bodywork Routines.
                     </p>
                     <Button
                         variant="ghost"

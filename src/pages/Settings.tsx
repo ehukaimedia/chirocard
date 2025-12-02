@@ -10,7 +10,15 @@ import { HelpModal } from "../components/Help/HelpModal";
 
 export default function Settings() {
     const navigate = useNavigate();
-    const { calendarViewSpan, setCalendarViewSpan, reset } = useAppStore();
+    const {
+        calendarViewSpan,
+        setCalendarViewSpan,
+        reset,
+        defaultRoutineTime,
+        setDefaultRoutineTime,
+        routineTimeInterval,
+        setRoutineTimeInterval
+    } = useAppStore();
     const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
@@ -93,14 +101,14 @@ export default function Settings() {
                     </div>
 
                     <div
-                        onClick={() => navigate("/history")}
+                        onClick={() => navigate("/journal")}
                         className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
                     >
                         <div className="p-3 bg-amber-50 rounded-full">
                             <History className="w-6 h-6 text-amber-600" />
                         </div>
                         <div>
-                            <h2 className="font-semibold text-zinc-900">History</h2>
+                            <h2 className="font-semibold text-zinc-900">Bodywork Journal</h2>
                             <p className="text-xs text-zinc-500">Past Sessions</p>
                         </div>
                     </div>
@@ -137,7 +145,7 @@ export default function Settings() {
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-zinc-900 mb-2">
                                 Upcoming View Range
@@ -158,6 +166,63 @@ export default function Settings() {
                                         `}
                                     >
                                         {days} Days
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Bodywork Routine Settings */}
+                <section className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2.5 bg-emerald-50 rounded-xl">
+                            <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-zinc-900">Bodywork Routine Preferences</h2>
+                            <p className="text-sm text-zinc-500">Customize your daily habits</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-900 mb-2">
+                                Default Routine Time
+                            </label>
+                            <p className="text-xs text-zinc-500 mb-4">
+                                Set the default time for new wellness routine items.
+                            </p>
+                            <input
+                                type="time"
+                                value={defaultRoutineTime}
+                                onChange={(e) => setDefaultRoutineTime(e.target.value)}
+                                className="w-full max-w-xs h-12 px-4 rounded-xl border border-zinc-200 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-900 mb-2">
+                                Time Picker Interval
+                            </label>
+                            <p className="text-xs text-zinc-500 mb-4">
+                                Choose the minute interval for selecting times.
+                            </p>
+                            <div className="grid grid-cols-2 gap-3 max-w-xs">
+                                {[1, 15].map((interval) => (
+                                    <button
+                                        key={interval}
+                                        onClick={() => setRoutineTimeInterval(interval)}
+                                        className={`
+                                            py-2.5 px-3 rounded-xl text-sm font-medium border transition-all duration-200
+                                            ${routineTimeInterval === interval
+                                                ? 'bg-zinc-900 text-white border-zinc-900 shadow-sm'
+                                                : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50'}
+                                        `}
+                                    >
+                                        {interval} Minute{interval > 1 ? 's' : ''}
                                     </button>
                                 ))}
                             </div>

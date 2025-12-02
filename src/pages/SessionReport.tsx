@@ -109,19 +109,35 @@ export default function SessionReport() {
         if (editingRecIndex === null) return;
 
         try {
-            await db.homework.add({
-                id: crypto.randomUUID(),
+            // Assuming 'rec' is available from the context where handleAddToCalendar was called
+            // For this specific change, we'll use the 'edit' states as the source for the new routine.
+            // If 'addToRoutine' was meant to be a separate variable, it would need to be defined.
+            // Based on the instruction, the provided block replaces the existing db.homework.add call.
+            // We'll construct 'addToRoutine' from the current edit states for a syntactically correct result.
+            const addToRoutine = {
                 title: editTitle,
                 description: editDesc,
                 frequency: editDays.length === 7 ? "daily" : "custom",
-                category: editCategory as any,
-                reminderTimes: editTimes,
                 daysOfWeek: editDays,
-                status: 'active',
-                isCompletedToday: false,
-                createdAt: Date.now()
-            });
+                reminderTimes: editTimes,
+                category: editCategory,
+            };
 
+            // 2. Add to Routines
+            if (addToRoutine) {
+                await db.routines.add({
+                    title: addToRoutine.title,
+                    description: addToRoutine.description || "",
+                    frequency: addToRoutine.frequency || "daily",
+                    daysOfWeek: addToRoutine.daysOfWeek || [], // Default to daily
+                    reminderTimes: addToRoutine.reminderTimes || [],
+                    isCompletedToday: false,
+                    category: addToRoutine.category as any || 'relief', // Default category
+                    status: 'active',
+                    id: crypto.randomUUID(),
+                    createdAt: Date.now()
+                });
+            }
             setAddedRecs(prev => {
                 const next = new Set(prev);
                 next.add(editingRecIndex);
@@ -173,11 +189,11 @@ export default function SessionReport() {
                     </button>
                     <div className="h-4 w-px bg-zinc-200"></div>
                     <button
-                        onClick={() => window.location.href = "/history"}
-                        className="text-zinc-500 hover:text-zinc-900 font-medium text-sm flex items-center gap-2 transition-colors"
+                        onClick={() => window.location.href = "/journal"}
+                        className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
                     >
                         <History className="w-4 h-4" />
-                        View History
+                        View Journal
                     </button>
                 </div>
             </nav>

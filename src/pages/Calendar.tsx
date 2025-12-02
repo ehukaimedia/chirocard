@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Appointment, type Homework, type Practitioner } from "../db/db";
+import { db, type Appointment, type BodyworkRoutine, type Practitioner } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -18,28 +18,29 @@ import { useAppStore } from "../store/useAppStore";
 
 export default function Calendar() {
     const navigate = useNavigate();
-    const { calendarViewSpan } = useAppStore();
+    const { calendarViewSpan, defaultRoutineTime, routineTimeInterval } = useAppStore();
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").toArray());
-    const allHomework = useLiveQuery(() => db.homework.toArray());
+    const allRoutines = useLiveQuery(() => db.routines.toArray());
 
-    const activeHomework = allHomework?.filter(h => h.status === 'active' || !h.status) || [];
-    const pendingHomework = allHomework?.filter(h => h.status === 'pending') || [];
+    const activeRoutines = allRoutines?.filter(h => h.status === 'active' || !h.status) || [];
+    const pendingRoutines = allRoutines?.filter(h => h.status === 'pending') || [];
 
     const [date, setDate] = useState<Value>(new Date());
     const [isAddingAppt, setIsAddingAppt] = useState(false);
-    const [isAddingHomework, setIsAddingHomework] = useState(false);
+    const [isAddingRoutine, setIsAddingRoutine] = useState(false);
 
     // Appointment Form State
     const [apptDate, setApptDate] = useState("");
     const [apptTime, setApptTime] = useState("");
     const [selectedPractitioner, setSelectedPractitioner] = useState<{ id: string, name: string } | null>(null);
 
-    // Homework Form State
-    const [homeworkTitle, setHomeworkTitle] = useState("");
-    const [homeworkDesc, setHomeworkDesc] = useState("");
+    // Routine Form State
+    const [routineTitle, setRoutineTitle] = useState("");
+    const [routineDesc, setRoutineDesc] = useState("");
+    const [routineTime, setRoutineTime] = useState(defaultRoutineTime || "07:00");
 
-    // Edit Homework State
-    const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
+    // Edit Routine State
+    const [editingRoutine, setEditingRoutine] = useState<BodyworkRoutine | null>(null);
     const [editTitle, setEditTitle] = useState("");
     const [editDesc, setEditDesc] = useState("");
     const [editTimes, setEditTimes] = useState<string[]>([]);
@@ -50,7 +51,7 @@ export default function Calendar() {
 
     // Delete State
     const [deleteId, setDeleteId] = useState<string | null>(null);
-    const [deleteType, setDeleteType] = useState<'appointment' | 'homework' | null>(null);
+    const [deleteType, setDeleteType] = useState<'appointment' | 'routine' | null>(null);
 
     // Edit Appointment State
     const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
@@ -67,7 +68,7 @@ export default function Calendar() {
         new Date(appt.date).toDateString() === selectedDateStr
     ) || [];
 
-    const selectedDateRoutine = activeHomework.filter(hw => {
+    const selectedDateRoutine = activeRoutines.filter(hw => {
         if (!hw.daysOfWeek || hw.daysOfWeek.length === 0) return true;
         return hw.daysOfWeek.includes(selectedDateObj.getDay());
     });
@@ -88,9 +89,6 @@ export default function Calendar() {
     // For upcoming routine, we just show the active list that *would* appear in the future.
     // Since routines are recurring, we can just show all active routines in the upcoming section
     // or maybe group them? For now, let's show all active routines as "Active Habits".
-    // actually, the user asked for "30 day list". Listing every occurrence of a daily habit for 30 days is too much.
-    // Let's list the *unique* appointments and *unique* active routines in a separate list?
-    // "Upcoming Appointments" and "Active Routine" might be better.
     // But the request said "30 day list".
     // Let's stick to:
     // 1. Selected Date (Appointments + Routine for that day)
@@ -115,38 +113,82 @@ export default function Calendar() {
         setSelectedPractitioner(null);
     };
 
-    const handleAddHomework = async () => {
-        if (!homeworkTitle) return;
+    const handleAddRoutine = async () => {
+        if (!routineTitle) return;
 
-        await db.homework.add({
+        // If no times added to list but input has value, use input value
+        // If times added, use list. If both, use list + input? 
+        // Let's say if list is empty, use current input.
+        // If list has items, use list. (User might forget to click 'Add')
+        let finalTimes = [...editTimes];
+        if (finalTimes.length === 0 && routineTime) {
+            finalTimes = [routineTime];
+        } else if (routineTime && !finalTimes.includes(routineTime)) {
+            // If they typed a time but didn't click add, and have other times, maybe we should include it?
+            // It's safer to include it if it's not already there.
+            finalTimes.push(routineTime);
+            finalTimes.sort();
+        }
+
+        await db.routines.add({
             id: crypto.randomUUID(),
-            title: homeworkTitle,
-            description: homeworkDesc,
+            title: routineTitle,
+            description: routineDesc,
             frequency: editDays.length > 0 && editDays.length < 7 ? "custom" : "daily",
             daysOfWeek: editDays.length > 0 ? editDays : [0, 1, 2, 3, 4, 5, 6],
-            reminderTimes: editTimes,
+            reminderTimes: finalTimes,
             category: 'custom',
             status: 'active',
             createdAt: Date.now(),
             isCompletedToday: false
         });
 
-        setIsAddingHomework(false);
-        setHomeworkTitle("");
-        setHomeworkDesc("");
+        setIsAddingRoutine(false);
+        setRoutineTitle("");
+        setRoutineDesc("");
         setEditDays([]); // Reset days
         setEditTimes([]); // Reset times
+        setRoutineTime(defaultRoutineTime || "07:00");
     };
 
-    const toggleHomework = async (id: string, currentStatus: boolean) => {
-        await db.homework.update(id, {
+    const toggleRoutine = async (id: string, currentStatus: boolean, title: string) => {
+        const now = Date.now();
+        await db.routines.update(id, {
             isCompletedToday: !currentStatus,
             // eslint-disable-next-line react-hooks/purity
-            lastCompletedAt: !currentStatus ? Date.now() : undefined
+            lastCompletedAt: !currentStatus ? now : undefined
         });
+
+        // Log completion to history if marking as done
+        if (!currentStatus) {
+            // Check if already logged for today to avoid duplicates?
+            // Simple approach: just add a log.
+            // Better: Check if a completion exists for this routine on this date?
+            // For now, let's just add it.
+            const todayStr = new Date().toISOString().split('T')[0];
+            await db.routineCompletions.add({
+                id: crypto.randomUUID(),
+                routineId: id,
+                routineTitle: title,
+                completedAt: now,
+                date: todayStr
+            });
+        } else {
+            // If unchecking, maybe remove the log from today?
+            // This is tricky if there are multiple completions.
+            // Let's find the most recent completion for this routine today and delete it.
+            const todayStr = new Date().toISOString().split('T')[0];
+            const recent = await db.routineCompletions
+                .where({ routineId: id, date: todayStr })
+                .last();
+
+            if (recent) {
+                await db.routineCompletions.delete(recent.id);
+            }
+        }
     };
 
-    const deleteItem = (type: 'appointment' | 'homework', id: string) => {
+    const deleteItem = (type: 'appointment' | 'routine', id: string) => {
         setDeleteType(type);
         setDeleteId(id);
     };
@@ -162,10 +204,10 @@ export default function Calendar() {
                 setPractitionerDetails(null);
             }
         } else {
-            await db.homework.delete(deleteId);
-            // If we are editing this homework, close the modal
-            if (editingHomework?.id === deleteId) {
-                setEditingHomework(null);
+            await db.routines.delete(deleteId);
+            // If we are editing this routine, close the modal
+            if (editingRoutine?.id === deleteId) {
+                setEditingRoutine(null);
             }
         }
 
@@ -173,16 +215,16 @@ export default function Calendar() {
         setDeleteType(null);
     };
 
-    const activateHomework = async (id: string, time?: string) => {
-        await db.homework.update(id, {
+    const activateRoutine = async (id: string, time?: string) => {
+        await db.routines.update(id, {
             status: 'active',
             reminderTimes: time ? [time] : []
         });
     };
 
-    const handleEditClick = (hw: Homework, e: React.MouseEvent) => {
+    const handleEditClick = (hw: BodyworkRoutine, e: React.MouseEvent) => {
         e.stopPropagation();
-        setEditingHomework(hw);
+        setEditingRoutine(hw);
         setEditTitle(hw.title);
         setEditDesc(hw.description || "");
         setEditTimes(hw.reminderTimes || []);
@@ -193,9 +235,9 @@ export default function Calendar() {
     };
 
     const handleSaveEdit = async () => {
-        if (!editingHomework) return;
+        if (!editingRoutine) return;
 
-        await db.homework.update(editingHomework.id, {
+        await db.routines.update(editingRoutine.id, {
             title: editTitle,
             description: editDesc,
             reminderTimes: editTimes,
@@ -204,7 +246,7 @@ export default function Calendar() {
             category: editCategory
         });
 
-        setEditingHomework(null);
+        setEditingRoutine(null);
     };
 
     const handleApptClick = async (appt: Appointment) => {
@@ -262,7 +304,7 @@ export default function Calendar() {
         // In a real app, we'd check historical completion data here.
         // For now, we'll just show a dot for today if habits are done.
         const isToday = dateStr === new Date().toDateString();
-        const allHabitsDone = activeHomework.length > 0 && activeHomework.every(h => h.isCompletedToday);
+        const allHabitsDone = activeRoutines.length > 0 && activeRoutines.every(h => h.isCompletedToday);
         const hasCompletedHabits = isToday && allHabitsDone;
 
         return (
@@ -377,15 +419,15 @@ export default function Calendar() {
                     <section className="space-y-3">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                                Wellness Routine
+                                Bodywork Routine Reminders
                             </h3>
-                            <Button size="sm" variant="outline" onClick={() => setIsAddingHomework(!isAddingHomework)} className="h-7 text-xs">
+                            <Button size="sm" variant="outline" onClick={() => setIsAddingRoutine(!isAddingRoutine)} className="h-7 text-xs">
                                 <Plus className="w-3 h-3 mr-1" /> Add
                             </Button>
                         </div>
                         <div className="space-y-2">
                             {selectedDateRoutine.length > 0 ? (
-                                selectedDateRoutine.map((hw: Homework) => (
+                                selectedDateRoutine.map((hw: BodyworkRoutine) => (
                                     <div
                                         key={hw.id}
                                         className={`
@@ -394,7 +436,7 @@ export default function Calendar() {
                                                 ? 'bg-emerald-500/10 border-emerald-500/20'
                                                 : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}
                                         `}
-                                        onClick={() => toggleHomework(hw.id, hw.isCompletedToday)}
+                                        onClick={() => toggleRoutine(hw.id, hw.isCompletedToday, hw.title)}
                                     >
                                         <div className={`
                                             w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0
@@ -416,7 +458,7 @@ export default function Calendar() {
                                                 <Edit2 className="w-3 h-3" />
                                             </button>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
+                                                onClick={(e) => { e.stopPropagation(); deleteItem('routine', hw.id); }}
                                                 className="text-zinc-400 hover:text-red-500 p-1.5"
                                             >
                                                 <Trash2 className="w-3 h-3" />
@@ -438,14 +480,14 @@ export default function Calendar() {
                     </h2>
 
                     {/* Pending Recommendations Review */}
-                    {pendingHomework.length > 0 && (
+                    {pendingRoutines.length > 0 && (
                         <section className="space-y-4 mb-6">
                             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
                                 <h2 className="text-lg font-medium text-emerald-600 dark:text-emerald-400 mb-2 flex items-center gap-2">
                                     <Plus className="w-5 h-5" /> New Recommendations
                                 </h2>
                                 <div className="space-y-3">
-                                    {pendingHomework.map(hw => (
+                                    {pendingRoutines.map(hw => (
                                         <div key={hw.id} className="bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
@@ -456,7 +498,7 @@ export default function Calendar() {
                                                     <p className="text-xs text-zinc-500">{hw.frequency} • {hw.description}</p>
                                                 </div>
                                                 <button
-                                                    onClick={() => deleteItem('homework', hw.id)}
+                                                    onClick={() => deleteItem('routine', hw.id)}
                                                     className="text-zinc-400 hover:text-red-500 p-1"
                                                     title="Remove Recommendation"
                                                 >
@@ -468,6 +510,7 @@ export default function Calendar() {
                                                     type="time"
                                                     className="h-8 text-xs w-32"
                                                     defaultValue={hw.reminderTimes?.[0] || ""}
+                                                    step={routineTimeInterval === 1 ? "60" : "900"}
                                                     onChange={(e) => {
                                                         const btn = document.getElementById(`activate-${hw.id}`);
                                                         if (btn) btn.dataset.time = e.target.value;
@@ -479,7 +522,7 @@ export default function Calendar() {
                                                     className="flex-1 h-8 text-xs"
                                                     onClick={(e) => {
                                                         const time = (e.currentTarget as HTMLElement).dataset.time;
-                                                        activateHomework(hw.id, time);
+                                                        activateRoutine(hw.id, time);
                                                     }}
                                                 >
                                                     Add to Schedule
@@ -525,8 +568,8 @@ export default function Calendar() {
                             Active Routine Items
                         </h3>
                         <div className="grid grid-cols-1 gap-2">
-                            {activeHomework.length > 0 ? (
-                                activeHomework.map((hw: Homework) => (
+                            {activeRoutines.length > 0 ? (
+                                activeRoutines.map((hw: BodyworkRoutine) => (
                                     <div key={hw.id} className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                                         <div>
                                             <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{hw.title}</p>
@@ -546,7 +589,7 @@ export default function Calendar() {
                                                 <Edit2 className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={(e) => { e.stopPropagation(); deleteItem('homework', hw.id); }}
+                                                onClick={(e) => { e.stopPropagation(); deleteItem('routine', hw.id); }}
                                                 className="text-zinc-400 hover:text-red-500 p-2"
                                                 title="Delete"
                                             >
@@ -566,10 +609,10 @@ export default function Calendar() {
 
             {/* Edit Modal */}
             <Modal
-                isOpen={!!editingHomework}
-                onClose={() => setEditingHomework(null)}
-                title="Edit Recommendation"
-                description="Update the details or schedule for this habit."
+                isOpen={!!editingRoutine}
+                onClose={() => setEditingRoutine(null)}
+                title="Edit Bodywork Routine"
+                description="Update the details or schedule for this routine."
                 confirmLabel="Save Changes"
                 cancelLabel="Cancel"
                 onConfirm={handleSaveEdit}
@@ -634,6 +677,7 @@ export default function Calendar() {
                                     type="time"
                                     value={newTimeInput}
                                     onChange={(e) => setNewTimeInput(e.target.value)}
+                                    step={routineTimeInterval === 1 ? "60" : "900"}
                                     className="flex-1"
                                 />
                                 <Button
@@ -798,64 +842,46 @@ export default function Calendar() {
                 </div>
             </Modal>
 
-            {/* Add Habit Modal */}
+            {/* Add Routine Modal */}
             <Modal
-                isOpen={isAddingHomework}
-                onClose={() => { setIsAddingHomework(false); setEditDays([]); }}
-                title="New Wellness Routine"
+                isOpen={isAddingRoutine}
+                onClose={() => { setIsAddingRoutine(false); setEditDays([]); setEditTimes([]); }}
+                title="New Bodywork Routine"
                 description="Add a routine activity."
                 confirmLabel="Add Routine"
                 cancelLabel="Cancel"
-                onConfirm={handleAddHomework}
+                onConfirm={handleAddRoutine}
             >
-                <div className="space-y-4 py-2">
-                    <Input
-                        label="Title"
-                        placeholder="e.g. Cold Plunge"
-                        value={homeworkTitle}
-                        onChange={e => setHomeworkTitle(e.target.value)}
-                    />
-                    <Input
-                        label="Description"
-                        placeholder="e.g. 3 minutes @ 50F"
-                        value={homeworkDesc}
-                        onChange={e => setHomeworkDesc(e.target.value)}
-                    />
-                    <div>
-                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
-                        <div className="flex justify-between gap-1">
-                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
-                                const isSelected = editDays.includes(i);
-                                return (
-                                    <button
-                                        key={i}
-                                        onClick={() => {
-                                            if (isSelected) setEditDays(editDays.filter(d => d !== i));
-                                            else setEditDays([...editDays, i].sort());
-                                        }}
-                                        className={`
-                                            w-8 h-8 rounded-full text-xs font-medium transition-all
-                                            ${isSelected
-                                                ? 'bg-emerald-500 text-white shadow-sm scale-110'
-                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200 dark:hover:bg-zinc-700'}
-                                        `}
-                                    >
-                                        {day}
-                                    </button>
-                                );
-                            })}
+                <div className="space-y-5 py-2">
+                    <div className="space-y-2">
+                        <Input
+                            label="Title"
+                            placeholder="e.g. Cold Plunge"
+                            value={routineTitle}
+                            onChange={e => setRoutineTitle(e.target.value)}
+                        />
+                        {/* Smart Autofill Chips */}
+                        <div className="flex flex-wrap gap-2">
+                            {["Ice Bath", "Sauna", "Red Light", "Breathwork", "Stretch", "Hydrate", "Journal", "Walk"].map(suggestion => (
+                                <button
+                                    key={suggestion}
+                                    onClick={() => setRoutineTitle(suggestion)}
+                                    className="text-xs px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-zinc-200 dark:border-zinc-700"
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
                         </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 text-center">Select days to schedule (leave empty for daily)</p>
                     </div>
 
                     <div>
-                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Reminders</label>
+                        <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Reminder Times</label>
                         <div className="space-y-2">
                             <div className="flex flex-wrap gap-2">
                                 {editTimes.map((time, i) => (
-                                    <div key={i} className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-sm">
+                                    <div key={i} className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-sm border border-zinc-200 dark:border-zinc-700">
                                         <Clock className="w-3 h-3 text-zinc-400" />
-                                        <span>{time}</span>
+                                        <span className="text-zinc-700 dark:text-zinc-300">{time}</span>
                                         <button
                                             onClick={() => setEditTimes(editTimes.filter((_, idx) => idx !== i))}
                                             className="text-zinc-400 hover:text-red-500 ml-1"
@@ -868,25 +894,76 @@ export default function Calendar() {
                             <div className="flex gap-2">
                                 <Input
                                     type="time"
-                                    value={newTimeInput}
-                                    onChange={(e) => setNewTimeInput(e.target.value)}
+                                    value={routineTime}
+                                    onChange={e => setRoutineTime(e.target.value)}
+                                    step={routineTimeInterval === 1 ? "60" : "900"}
                                     className="flex-1"
                                 />
                                 <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => {
-                                        if (newTimeInput && !editTimes.includes(newTimeInput)) {
-                                            setEditTimes([...editTimes, newTimeInput].sort());
-                                            setNewTimeInput("");
+                                        if (routineTime && !editTimes.includes(routineTime)) {
+                                            setEditTimes([...editTimes, routineTime].sort());
                                         }
                                     }}
                                 >
-                                    Add
+                                    Add Time
                                 </Button>
                             </div>
+                            <p className="text-[10px] text-zinc-400 mt-1">
+                                Add multiple reminders. Defaults to {routineTimeInterval}-minute intervals.
+                            </p>
                         </div>
                     </div>
+
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
+                        <div className="flex justify-between gap-1">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
+                                const isSelected = editDays.length === 0 || editDays.includes(i);
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => {
+                                            if (editDays.length === 0) {
+                                                setEditDays([i]);
+                                            } else {
+                                                if (isSelected) {
+                                                    const newDays = editDays.filter(d => d !== i);
+                                                    if (newDays.length === 0) {
+                                                        setEditDays([]);
+                                                    } else {
+                                                        setEditDays(newDays);
+                                                    }
+                                                } else {
+                                                    setEditDays([...editDays, i].sort());
+                                                }
+                                            }
+                                        }}
+                                        className={`
+                                            w-9 h-9 rounded-xl text-xs font-medium transition-all
+                                            ${isSelected
+                                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 scale-105'
+                                                : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-100 dark:border-zinc-700'}
+                                        `}
+                                    >
+                                        {day}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-[10px] text-zinc-400 mt-2 text-center">
+                            {editDays.length === 0 || editDays.length === 7 ? "Repeats Daily" : "Repeats on selected days"}
+                        </p>
+                    </div>
+
+                    <Input
+                        label="Notes (Optional)"
+                        placeholder="e.g. 3 minutes @ 50F"
+                        value={routineDesc}
+                        onChange={e => setRoutineDesc(e.target.value)}
+                    />
                 </div>
             </Modal>
             {/* Delete Confirmation Modal */}

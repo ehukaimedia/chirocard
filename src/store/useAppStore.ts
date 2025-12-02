@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
+import { type Session } from "../db/db";
 
 export type ViewMode = 'personal' | 'session';
 
@@ -24,6 +25,7 @@ interface AppState {
     // Actions
     setViewMode: (mode: ViewMode) => void;
     startSession: () => void;
+    resumeSession: (session: Session) => void;
     updateSession: (data: Partial<SessionData>) => void;
     endSession: () => void;
     reset: () => void;
@@ -31,6 +33,10 @@ interface AppState {
     // Settings
     calendarViewSpan: number;
     setCalendarViewSpan: (days: number) => void;
+    defaultRoutineTime: string;
+    setDefaultRoutineTime: (time: string) => void;
+    routineTimeInterval: number;
+    setRoutineTimeInterval: (interval: number) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -39,6 +45,8 @@ export const useAppStore = create<AppState>()(
             viewMode: 'personal',
             currentSession: null,
             calendarViewSpan: 30,
+            defaultRoutineTime: "07:00",
+            routineTimeInterval: 15,
 
             setViewMode: (mode) => set({ viewMode: mode }),
 
@@ -57,6 +65,22 @@ export const useAppStore = create<AppState>()(
                 }
             }),
 
+            resumeSession: (session: Session) => set({
+                viewMode: 'session',
+                currentSession: {
+                    id: session.id,
+                    startTime: session.date,
+                    bodyMap: session.bodyMap || {},
+                    bodyNotes: session.bodyNotes || {},
+                    bodyLevels: session.bodyLevels || {},
+                    bodyBadges: session.bodyBadges || {},
+                    clientNotes: "", // Mapping strategy to be refined if needed
+                    practitionerNotes: session.notes || "",
+                    interventions: session.interventions || [],
+                    practitionerId: session.practitionerId
+                }
+            }),
+
             updateSession: (data) => set((state) => ({
                 currentSession: state.currentSession ? { ...state.currentSession, ...data } : null
             })),
@@ -67,11 +91,15 @@ export const useAppStore = create<AppState>()(
             }),
 
             setCalendarViewSpan: (days) => set({ calendarViewSpan: days }),
+            setDefaultRoutineTime: (time) => set({ defaultRoutineTime: time }),
+            setRoutineTimeInterval: (interval) => set({ routineTimeInterval: interval }),
 
             reset: () => set({
                 viewMode: 'personal',
                 currentSession: null,
-                calendarViewSpan: 30
+                calendarViewSpan: 30,
+                defaultRoutineTime: "07:00",
+                routineTimeInterval: 15
             })
         }),
         {
@@ -79,7 +107,9 @@ export const useAppStore = create<AppState>()(
             partialize: (state) => ({
                 viewMode: state.viewMode,
                 currentSession: state.currentSession,
-                calendarViewSpan: state.calendarViewSpan
+                calendarViewSpan: state.calendarViewSpan,
+                defaultRoutineTime: state.defaultRoutineTime,
+                routineTimeInterval: state.routineTimeInterval
             })
         }
     )

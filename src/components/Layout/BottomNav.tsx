@@ -29,12 +29,12 @@ export function BottomNav() {
                 </Link>
 
                 <Link
-                    to="/history"
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive("/history") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400"
+                    to="/journal"
+                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive("/journal") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400"
                         }`}
                 >
                     <History className="w-6 h-6" />
-                    <span className="text-[10px] font-medium">History</span>
+                    <span className="text-[10px] font-medium">Journal</span>
                 </Link>
 
                 <Link

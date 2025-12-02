@@ -1,5 +1,5 @@
 import { Modal } from "../ui/Modal";
-import { Smartphone, QrCode, Users, ShieldCheck } from "lucide-react";
+import { Smartphone, Users, ShieldCheck } from "lucide-react";
 
 interface HelpModalProps {
     isOpen: boolean;
@@ -37,13 +37,13 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 <div className="flex gap-4">
                     <div className="flex-shrink-0">
                         <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                            <QrCode className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                            <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">2. Scan to Check In</h3>
+                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">2. Start a Session</h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                            Start a session and show your QR code to your practitioner. This instantly shares your profile and current complaints.
+                            Begin a new session on your device. Hand it to your practitioner or use the Kiosk mode to let them chart your visit.
                         </p>
                     </div>
                 </div>
@@ -52,28 +52,13 @@ export function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 <div className="flex gap-4">
                     <div className="flex-shrink-0">
                         <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                            <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            <ShieldCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                         </div>
                     </div>
                     <div>
-                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">3. Practitioner Kiosk</h3>
+                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">3. Secure & Private</h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                            Practitioners use the <strong>Kiosk Mode</strong> (on tablet or phone) to chart your session. No account required for them.
-                        </p>
-                    </div>
-                </div>
-
-                {/* 4. Save & Auto-Add */}
-                <div className="flex gap-4">
-                    <div className="flex-shrink-0">
-                        <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-                            <ShieldCheck className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-                        </div>
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100">4. Scan to Save</h3>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-                            When done, scan the practitioner's screen to save your record. This <strong>automatically adds</strong> them to your Care Team.
+                            Your session data is stored locally. You can export your history or share it with your care team securely.
                         </p>
                     </div>
                 </div>

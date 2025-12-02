@@ -5,7 +5,7 @@ import Intake from "./pages/Intake";
 import Profile from "./pages/Profile";
 import Team from "./pages/Team";
 import Calendar from "./pages/Calendar";
-import History from "./pages/History";
+import Journal from "./pages/Journal";
 import SessionDetails from "./pages/SessionDetails";
 import SessionReport from "./pages/SessionReport";
 import Settings from "./pages/Settings";
@@ -27,7 +27,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/history" element={<History />} />
+          <Route path="/journal" element={<Journal />} />
           <Route path="/session/:id" element={<SessionDetails />} />
           <Route path="/session/:id/report" element={<SessionReport />} />
         </Route>

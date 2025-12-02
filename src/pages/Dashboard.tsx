@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Homework, type Session } from "../db/db";
+import { db, type BodyworkRoutine, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
-import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { SessionScannerModal } from "../components/Dashboard/SessionScannerModal";
@@ -19,12 +19,30 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const user = useLiveQuery(() => db.users.get("me"));
     const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
-    const homework = useLiveQuery(() => db.homework.toArray());
+
+    // Get active routines for today
+    const activeRoutines = useLiveQuery(
+        async () => {
+            const dayOfWeek = new Date().getDay();
+
+            // Get all routines
+            const allRoutines = await db.routines.toArray();
+
+            // Filter for active routines for today
+            return allRoutines.filter(r => {
+                // Check if active for today (based on daysOfWeek)
+                const days = r.daysOfWeek || [];
+                const isDayMatch = days.length === 0 || days.includes(dayOfWeek);
+                return isDayMatch;
+            });
+        },
+        []
+    ) || [];
+
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
     const { currentSession, endSession, viewMode } = useAppStore();
     const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-    const activeHomeworkCount = homework?.filter((h: Homework) => !h.isCompletedToday).length || 0;
     const nextAppointment = appointments?.[0];
 
     const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
@@ -76,8 +94,8 @@ export default function Dashboard() {
                             <CalendarIcon className="w-5 h-5" />
                         </Button>
                     </Link>
-                    <Link to="/history">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="History">
+                    <Link to="/journal">
+                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Bodywork Journal">
                             <History className="w-5 h-5" />
                         </Button>
                     </Link>
@@ -171,9 +189,9 @@ export default function Dashboard() {
                             onClick={() => navigate("/calendar")}
                             className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50 cursor-pointer hover:border-emerald-500/50 transition-colors"
                         >
-                            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Wellness Routine</p>
+                            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Bodywork Routine</p>
                             <p className="text-zinc-900 dark:text-zinc-200 font-semibold">
-                                {activeHomeworkCount > 0 ? `${activeHomeworkCount} remaining` : "All done!"}
+                                {activeRoutines.filter(r => !r.isCompletedToday).length > 0 ? `${activeRoutines.filter(r => !r.isCompletedToday).length} remaining` : "All done!"}
                             </p>
                         </div>
                     </div>
@@ -269,21 +287,25 @@ export default function Dashboard() {
                             <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile</span>
                         </Button>
 
-                        {/* 3. Wellness Routine (Conditional) */}
-                        {activeHomeworkCount > 0 && (
-                            <Button
-                                variant="outline"
-                                className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all group"
+                        {/* 3. Bodywork Routine (Conditional) */}
+                        {activeRoutines.length > 0 && (
+                            <div
                                 onClick={() => navigate("/calendar")}
+                                className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-colors"
                             >
-                                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                    <ShieldCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                        <CheckCircle className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <span className="block font-medium text-zinc-700 dark:text-zinc-300">Bodywork Routine</span>
+                                        <span className="text-xs text-zinc-500">
+                                            {activeRoutines.filter((r: BodyworkRoutine) => r.isCompletedToday).length}/{activeRoutines.length} completed
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="text-center">
-                                    <span className="block font-medium text-zinc-700 dark:text-zinc-300">Wellness Routine</span>
-                                    <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">{activeHomeworkCount} due today</span>
-                                </div>
-                            </Button>
+                                <ChevronRight className="w-5 h-5 text-zinc-400" />
+                            </div>
                         )}
                     </>
                 )}
