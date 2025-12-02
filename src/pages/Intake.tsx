@@ -11,7 +11,9 @@ import { useToast } from "../components/ui/Toast";
 import { Modal } from "../components/ui/Modal";
 // import { AddPractitionerModal } from "../components/Practitioner/AddPractitionerModal";
 import { PatientQRModal } from "../components/Profile/PatientQRModal";
-import { QrCode } from "lucide-react";
+
+import { QrCode, Smartphone, UserCheck } from "lucide-react";
+import { GuardModal } from "../components/Session/GuardModal";
 
 import { EditView, type FormData } from "./Profile";
 
@@ -41,6 +43,7 @@ export default function Intake() {
     const [showMissingDetailsAlert, setShowMissingDetailsAlert] = useState(false);
     const [showNoSelectionAlert, setShowNoSelectionAlert] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
+    const [showGuardModal, setShowGuardModal] = useState(false);
     const [missingDetailsParts, setMissingDetailsParts] = useState<string[]>([]);
     const sigPadRef = useRef<SignaturePadRef>(null);
 
@@ -265,6 +268,101 @@ export default function Intake() {
         // For now, let's just show the modal. The signature is less critical for the *start* than the intake data.
 
         setShowQRModal(true);
+    };
+
+    const handleReadyForPractitioner = () => {
+        // Prepare data but don't show QR yet, show Guard
+        const signatureData = sigPadRef.current?.getData();
+        const signature = signatureData && signatureData.length > 0 ? JSON.stringify(signatureData) : undefined;
+
+        useAppStore.getState().updateIntakeData({
+            bodyMap: bodyStatus,
+            bodyNotes: bodyNotes,
+            bodyLevels: bodyLevels,
+            bodyBadges: bodyBadges,
+            notes: notes,
+            isCheckInReady: true,
+            userSignature: signature
+        });
+
+        setShowGuardModal(true);
+    };
+
+    const handleGuardUnlock = () => {
+        setShowGuardModal(false);
+        // Transition to Kiosk Mode
+        // We need to start a session effectively, or just switch mode and go to guest session
+        // If we treat this as "Guest Session" where the practitioner takes over:
+        const sessionId = crypto.randomUUID();
+        // We might need to ensure the store knows we are in guest mode
+        useAppStore.getState().startSession(sessionId, selectedPractitioner || undefined, {
+            bodyMap: bodyStatus,
+            bodyNotes: bodyNotes,
+            bodyLevels: bodyLevels,
+            bodyBadges: bodyBadges,
+            notes: notes,
+            userSignature: intakeData?.userSignature, // Use what we just saved
+            isCheckInReady: true
+        });
+
+        navigate("/guest-session");
+    };
+
+    const handleTextToPractitioner = () => {
+        // Generate a link that would open the app in Kiosk mode
+        // For now, we'll just copy it to clipboard and show a toast
+        // In a real app, this would trigger an SMS intent or similar
+        const sessionId = crypto.randomUUID();
+        const link = `${window.location.origin}/handoff/${sessionId}`;
+
+        // We can't easily "deep link" into the same running instance on another device without a backend sync
+        // But for "Remote Handoff" description: "Practitioner clicks the link on their device... launches app in Dark Mode"
+        // This implies the practitioner is on a DIFFERENT device.
+        // So we need to save the session to the DB so the practitioner can pick it up?
+        // Or is this just a "magic link" that contains the data? Data might be too large.
+        // Let's assume we save a "pending" session or appointment.
+
+        // For this specific task "Text to Practitioner that automatically puts ChiroCard in Kiosk mode":
+        // If it's the SAME device (just sending a text to themselves?), it's weird.
+        // If it's a DIFFERENT device, we need to sync.
+        // Given "Workflow B: Remote Handoff", it says "Practitioner clicks the link on THEIR device".
+        // So we must save the data to the cloud/DB.
+        // Since we are using Dexie (local DB), this "Remote Handoff" is tricky without a sync server.
+        // HOWEVER, the prompt says "User selects 'Text to Practitioner' that automatically puts ChiroCard in Kiosk mode."
+        // Wait, "User selects... that automatically puts ChiroCard in Kiosk mode" - this sounds like the USER'S device goes into Kiosk mode?
+        // BUT "Practitioner clicks the link on their device...".
+        // Let's assume for this task, since we don't have a backend sync implemented in the provided files,
+        // we will implement the "Link" generation as a simulation or assume the user might hand over the device?
+        // Actually, looking at the prompt: "Practitioner clicks the link on their device, which immediately launches the app in Dark Mode (Kiosk). The practioner can then scan the users QR code to enter the session."
+        // Ah! The practitioner's device opens in Kiosk mode, and THEN they scan the user's QR code.
+        // So the link just needs to open the app in Kiosk mode on the practitioner's device.
+        // The User's device stays in "User Mode" (Intake) showing the QR code?
+        // "User selects 'Text to Practitioner' that automatically puts ChiroCard in Kiosk mode." -> This sentence is confusing in the prompt.
+        // "User selects 'Text to Practitioner.' that automatically puts ChiroCard in Kiosk mode."
+        // AND "Practitioner clicks the link... launches the app in Dark Mode".
+        // Maybe it means: User sends text -> Practitioner gets link -> Practitioner opens link -> Practitioner App opens in Kiosk Mode.
+        // AND User's App ALSO goes into Kiosk mode? Or User's app shows QR?
+        // "The practioner can then scan the users QR code to enter the session." implies User's device has the QR.
+        // So User's device should probably stay in "Review/QR" mode, NOT Kiosk mode?
+        // BUT "Workflow A" says "User presses 'Ready for Practitioner'... transition to Kiosk Mode". This is Single Device.
+        // "Workflow B" says "User selects 'Text to Practitioner'... that automatically puts ChiroCard in Kiosk mode."
+        // This might mean the USER'S device goes to Kiosk mode? But then how does the Practitioner scan the QR code if the User's device is in Kiosk mode (which is for the practitioner)?
+        // If the User's device is in Kiosk mode, the Practitioner would use the User's device (Single Device Handoff).
+        // If the Practitioner uses THEIR OWN device, they need to scan the User's QR.
+        // So the User's device must display the QR.
+        // If the User's device displays the QR, it is NOT in Kiosk mode (which is the Practitioner interface).
+        // UNLESS "Kiosk Mode" just means "Ready for Practitioner" state?
+        // Let's stick to the most logical interpretation:
+        // Workflow A (Single Device): User -> Guard -> Kiosk Mode (Practitioner Interface on User's Device).
+        // Workflow B (Remote): User -> Text Link -> Practitioner opens Link on THEIR device (Kiosk Mode) -> Practitioner Scans User's QR (on User's Device).
+        // So for B, the User's device should probably show the QR code.
+        // The "Text to Practitioner" button should probably just open the SMS app with a link that opens the app in Kiosk mode.
+
+        const textBody = `I'm ready for my session. Open ChiroCard in Kiosk Mode: ${window.location.origin}/practitioner`;
+        window.open(`sms:?body=${encodeURIComponent(textBody)}`, '_blank');
+
+        // And maybe show the QR code on the user's device so it's ready to be scanned?
+        handleConfirmStart();
     };
 
     // Auto-select first practitioner if available and none selected
@@ -595,18 +693,36 @@ export default function Intake() {
                         </p>
                     </>
                 ) : (
-                    <div className="flex gap-4">
-                        <Button variant="ghost" onClick={() => setStep("intake")} className="flex-1 h-auto min-h-[3.5rem]">
-                            Back
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="flex-[2] shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3 leading-tight"
-                            onClick={handleConfirmStart}
-                        >
-                            Check In (Show QR) <QrCode className="ml-2 w-5 h-5 flex-shrink-0" />
-                        </Button>
+                    <div className="flex flex-col gap-3 w-full">
+                        <div className="flex gap-4">
+                            <Button variant="ghost" onClick={() => setStep("intake")} className="flex-1 h-auto min-h-[3.5rem]">
+                                Back
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                className="flex-[2] shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3 leading-tight"
+                                onClick={handleReadyForPractitioner}
+                            >
+                                Ready for Practitioner <UserCheck className="ml-2 w-5 h-5 flex-shrink-0" />
+                            </Button>
+                        </div>
+                        <div className="flex gap-4">
+                            <Button
+                                variant="outline"
+                                className="flex-1 h-auto min-h-[3rem] text-sm"
+                                onClick={handleTextToPractitioner}
+                            >
+                                <Smartphone className="mr-2 w-4 h-4" /> Text to Practitioner
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="flex-1 h-auto min-h-[3rem] text-sm"
+                                onClick={handleConfirmStart}
+                            >
+                                <QrCode className="mr-2 w-4 h-4" /> Show QR Only
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -615,6 +731,12 @@ export default function Intake() {
                 isOpen={showQRModal}
                 onClose={() => setShowQRModal(false)}
                 user={user}
+            />
+
+            <GuardModal
+                isOpen={showGuardModal}
+                onUnlock={handleGuardUnlock}
+                onCancel={() => setShowGuardModal(false)}
             />
         </div>
     );

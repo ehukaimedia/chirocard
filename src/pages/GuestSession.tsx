@@ -9,6 +9,7 @@ import { useToast } from "../components/ui/Toast";
 import { SessionEditor, type SessionData } from "../components/Session/SessionEditor";
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { SessionCompletionQRModal } from "../components/Session/SessionCompletionQRModal";
+import { KioskLayout } from "../components/Layout/KioskLayout";
 
 export default function GuestSession() {
     const navigate = useNavigate();
@@ -171,12 +172,12 @@ export default function GuestSession() {
 
     if (step === "completed") {
         return (
-            <div className="dark">
-                <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 p-4 pb-24 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
+            <KioskLayout>
+                <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300 p-4 pb-24">
                     <div className="bg-emerald-500/10 p-6 rounded-full mb-6">
                         <CheckCircle className="w-16 h-16 text-emerald-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Session Completed!</h2>
+                    <h2 className="text-2xl font-bold text-zinc-100 mb-2">Session Completed!</h2>
                     <p className="text-zinc-400 text-center max-w-md mb-8">
                         The session has been recorded and the PDF has been generated.
                     </p>
@@ -184,7 +185,7 @@ export default function GuestSession() {
                     <div className="flex flex-col gap-4 w-full max-w-xs">
                         <Button
                             variant="outline"
-                            className="w-full flex items-center justify-center gap-2 h-12"
+                            className="w-full flex items-center justify-center gap-2 h-12 border-zinc-800 text-zinc-300 hover:bg-zinc-900 hover:text-white"
                             onClick={() => {
                                 if (completedSessionId) {
                                     navigate(`/session/${completedSessionId}/report`);
@@ -201,7 +202,7 @@ export default function GuestSession() {
                         </Button>
                         <Button
                             variant="ghost"
-                            className="w-full flex items-center justify-center gap-2 h-12 text-zinc-500"
+                            className="w-full flex items-center justify-center gap-2 h-12 text-zinc-500 hover:text-zinc-300"
                             onClick={() => navigate("/dashboard")}
                         >
                             <Home className="w-4 h-4" /> Return to Dashboard
@@ -214,12 +215,12 @@ export default function GuestSession() {
                         sessionData={completedSessionData}
                     />
                 </div>
-            </div>
+            </KioskLayout>
         );
     }
 
     return (
-        <div className="dark min-h-screen bg-zinc-950 text-zinc-50">
+        <KioskLayout>
             <SessionEditor
                 initialData={resumedSessionData || undefined}
                 intakeData={currentIntake}
@@ -228,6 +229,6 @@ export default function GuestSession() {
                 onSave={handleSave}
                 onExit={handleExit}
             />
-        </div>
+        </KioskLayout>
     );
 }

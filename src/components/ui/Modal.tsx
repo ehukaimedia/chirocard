@@ -16,6 +16,7 @@ interface ModalProps {
     confirmDisabled?: boolean;
     variant?: "default" | "danger";
     className?: string;
+    hideFooter?: boolean;
 }
 
 export function Modal({
@@ -30,7 +31,8 @@ export function Modal({
     onCancel,
     confirmDisabled = false,
     variant = "default",
-    className
+    className,
+    hideFooter = false
 }: ModalProps) {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -81,27 +83,29 @@ export function Modal({
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
-                    <Button variant="ghost" onClick={() => {
-                        if (onCancel) onCancel();
-                        else onClose();
-                    }}>
-                        {cancelLabel}
-                    </Button>
-                    {onConfirm && (
-                        <Button
-                            variant={variant === "danger" ? "danger" : "primary"}
-                            disabled={confirmDisabled}
-                            onClick={() => {
-                                onConfirm();
-                                // Only close if not disabled (though button is disabled so click won't fire, good to be safe)
-                                onClose();
-                            }}
-                        >
-                            {confirmLabel}
+                {!hideFooter && (
+                    <div className="flex justify-end gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
+                        <Button variant="ghost" onClick={() => {
+                            if (onCancel) onCancel();
+                            else onClose();
+                        }}>
+                            {cancelLabel}
                         </Button>
-                    )}
-                </div>
+                        {onConfirm && (
+                            <Button
+                                variant={variant === "danger" ? "danger" : "primary"}
+                                disabled={confirmDisabled}
+                                onClick={() => {
+                                    onConfirm();
+                                    // Only close if not disabled (though button is disabled so click won't fire, good to be safe)
+                                    onClose();
+                                }}
+                            >
+                                {confirmLabel}
+                            </Button>
+                        )}
+                    </div>
+                )}
             </div>
         </div>,
         document.body
