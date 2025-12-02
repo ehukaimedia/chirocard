@@ -20,13 +20,15 @@ export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
     const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseInt(e.target.value);
         setSliderValue(value);
-        if (value >= 95) {
+        if (value >= 90) {
             onUnlock();
         }
     };
 
     const handleDragEnd = () => {
-        if (sliderValue < 95) {
+        if (sliderValue >= 90) {
+            onUnlock();
+        } else {
             // Snap back
             setSliderValue(0);
         }
@@ -47,9 +49,9 @@ export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
 
                 <div className="w-full max-w-xs relative h-14 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 select-none">
                     {/* Track Text */}
-                    <div className="absolute inset-0 flex items-center justify-center text-sm font-medium text-zinc-400 pointer-events-none">
-                        Slide to Unlock Kiosk Mode
-                    </div>
+                    <span className="absolute inset-0 flex items-center justify-center text-zinc-500 font-medium pointer-events-none select-none uppercase tracking-wider text-sm">
+                        Slide for Practitioner Access
+                    </span>
 
                     {/* Progress Fill */}
                     <div
@@ -79,7 +81,7 @@ export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
                 </div>
 
                 <p className="text-xs text-center text-zinc-500 max-w-[200px]">
-                    This will switch the app to Kiosk Mode (Dark Mode) for the session.
+                    This will switch the app to Practitioner Mode for the session.
                 </p>
             </div>
         </Modal>

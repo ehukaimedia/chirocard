@@ -7,7 +7,7 @@ import { BodyRegionSelector, type BodyStatus, REGIONS } from "../BodyMap/BodyReg
 import { BodyAreaCard } from "../Practitioner/BodyAreaCard";
 import { Hand, AlertTriangle, Info, Plus, Trash2, CheckCircle } from "lucide-react";
 import { useToast } from "../ui/Toast";
-import { type Homework } from "../../db/db";
+import { type Homework, SERVICE_TAGS, FINDING_TAGS } from "../../db/db";
 
 export interface SessionData {
     id?: string;
@@ -21,7 +21,10 @@ export interface SessionData {
     practitionerLevels: Record<string, number>;
     practitionerBadges: Record<string, string[]>;
     recommendations: Homework[];
-    signatureBase64: string;
+    serviceTags: string[];
+    modalityTags: string[];
+    findingTags: string[];
+    signatureBase64: string | null;
 }
 
 interface SessionEditorProps {
@@ -57,17 +60,21 @@ export function SessionEditor({
     const [step, setStep] = useState<"work" | "sign">("work");
 
     // State
-    const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || initialData?.bodyMap || {});
-    // Note: We don't edit patient body notes/levels/badges, only display them.
-    // Practitioner edits:
-    const [treatmentNotes, setTreatmentNotes] = useState<Record<string, string>>(initialData?.treatmentNotes || {});
-    const [practitionerLevels, setPractitionerLevels] = useState<Record<string, number>>(initialData?.practitionerLevels || {});
-    const [practitionerBadges, setPractitionerBadges] = useState<Record<string, string[]>>(initialData?.practitionerBadges || {});
-    const [notes, setNotes] = useState(initialData?.notes || "");
-    const [practitionerName, setPractitionerName] = useState(defaultPractitionerName);
+    const [data, setData] = useState<SessionData>({
+        practitionerName: defaultPractitionerName || "",
+        notes: initialData?.notes || "",
+        recommendations: initialData?.recommendations || [],
+        bodyMap: intakeData?.bodyMap || initialData?.bodyMap || {},
+        treatmentNotes: initialData?.treatmentNotes || {},
+        practitionerLevels: initialData?.practitionerLevels || {},
+        practitionerBadges: initialData?.practitionerBadges || {},
+        serviceTags: initialData?.serviceTags || [],
+        modalityTags: initialData?.modalityTags || [],
+        findingTags: initialData?.findingTags || [],
+        signatureBase64: initialData?.signatureBase64 || null
+    });
 
     // Recommendations
-    const [recommendations, setRecommendations] = useState<Homework[]>(initialData?.recommendations || []);
     const [newRecTitle, setNewRecTitle] = useState("");
     const [newRecDesc, setNewRecDesc] = useState("");
     const [newRecFreq, setNewRecFreq] = useState<string>("Daily");
@@ -81,17 +88,20 @@ export function SessionEditor({
 
     const handleAddRec = () => {
         if (!newRecTitle) return;
-        setRecommendations(prev => [...prev, {
-            id: crypto.randomUUID(),
-            title: newRecTitle,
-            description: newRecDesc,
-            frequency: newRecFreq,
-            category: newRecCategory,
-            reminderTimes: [],
-            isCompletedToday: false,
-            status: 'pending',
-            createdAt: Date.now()
-        }]);
+        setData(prev => ({
+            ...prev,
+            recommendations: [...prev.recommendations, {
+                id: crypto.randomUUID(),
+                title: newRecTitle,
+                description: newRecDesc,
+                frequency: newRecFreq,
+                category: newRecCategory,
+                reminderTimes: [],
+                isCompletedToday: false,
+                status: 'pending',
+                createdAt: Date.now()
+            }]
+        }));
         setNewRecTitle("");
         setNewRecDesc("");
         setNewRecFreq("Daily");
@@ -100,7 +110,7 @@ export function SessionEditor({
 
     const handleProceedToSign = () => {
         // Validation: Require at least one body area
-        const activeRegions = Object.entries(bodyStatus).filter(([_, status]) => status !== 'normal');
+        const activeRegions = Object.entries(data.bodyMap).filter(([_, status]) => status !== 'normal');
         if (activeRegions.length === 0) {
             setShowNoSelectionAlert(true);
             return;
@@ -108,8 +118,8 @@ export function SessionEditor({
 
         // Validation: Require details for selected areas
         const missingDetails = activeRegions.some(([partId, _]) => {
-            const hasNote = treatmentNotes[partId] && treatmentNotes[partId].trim().length > 0;
-            const hasBadges = practitionerBadges[partId] && practitionerBadges[partId].length > 0;
+            const hasNote = data.treatmentNotes[partId] && data.treatmentNotes[partId].trim().length > 0;
+            const hasBadges = data.practitionerBadges[partId] && data.practitionerBadges[partId].length > 0;
             return !hasNote && !hasBadges;
         });
 
@@ -124,16 +134,10 @@ export function SessionEditor({
     const handleFinalSave = async () => {
         setIsSaving(true);
         try {
-            const signature = `Digitally Signed by ${practitionerName || "Guest Practitioner"} on ${new Date().toLocaleDateString()}`;
+            const signature = `Digitally Signed by ${data.practitionerName || "Guest Practitioner"} on ${new Date().toLocaleDateString()}`;
 
             await onSave({
-                practitionerName,
-                notes,
-                bodyMap: bodyStatus,
-                treatmentNotes,
-                practitionerLevels,
-                practitionerBadges,
-                recommendations,
+                ...data,
                 signatureBase64: signature
             });
             // Parent handles navigation/state update after promise resolves
@@ -151,7 +155,7 @@ export function SessionEditor({
                 <div className="flex items-center gap-2 text-emerald-500">
                     <Hand className="w-5 h-5" />
                     <span className="font-mono text-sm uppercase tracking-widest">
-                        Practitioner Mode: {practitionerName || "Guest"}
+                        Practitioner Mode: {data.practitionerName || "Guest"}
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -243,17 +247,122 @@ export function SessionEditor({
                         <section>
                             <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">1. Log Bodywork</h2>
                             <BodyRegionSelector
-                                value={bodyStatus}
-                                onChange={(part, status) => setBodyStatus(prev => ({ ...prev, [part]: status }))}
+                                value={data.bodyMap}
+                                onChange={(part, status) => setData(prev => ({ ...prev, bodyMap: { ...prev.bodyMap, [part]: status } }))}
                             />
                         </section>
 
-                        {/* 2. Details */}
+                        {/* 2. Service & Modalities (New) */}
+                        <section className="space-y-4">
+                            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-300">2. Services & Modalities</h2>
+                            <Card className="bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 p-4 space-y-6 shadow-sm">
+                                {/* Service Tags */}
+                                <div>
+                                    <h3 className="text-sm font-medium text-zinc-500 mb-3 uppercase tracking-wider">Services Performed</h3>
+                                    <div className="space-y-4">
+                                        {Object.entries(SERVICE_TAGS).filter(([cat]) => cat !== 'Modalities').map(([category, tags]) => (
+                                            <div key={category}>
+                                                <p className="text-xs text-zinc-400 mb-2">{category}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {tags.map(tag => {
+                                                        const isSelected = data.serviceTags.includes(tag);
+                                                        return (
+                                                            <button
+                                                                key={tag}
+                                                                onClick={() => setData(prev => ({
+                                                                    ...prev,
+                                                                    serviceTags: isSelected
+                                                                        ? prev.serviceTags.filter(t => t !== tag)
+                                                                        : [...prev.serviceTags, tag]
+                                                                }))}
+                                                                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${isSelected
+                                                                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
+                                                                    : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/50'
+                                                                    }`}
+                                                            >
+                                                                {tag}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <hr className="border-zinc-100 dark:border-zinc-800" />
+
+                                {/* Modalities */}
+                                <div>
+                                    <h3 className="text-sm font-medium text-zinc-500 mb-3 uppercase tracking-wider">Modalities Used</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {SERVICE_TAGS['Modalities'].map(tag => {
+                                            const isSelected = data.modalityTags.includes(tag);
+                                            return (
+                                                <button
+                                                    key={tag}
+                                                    onClick={() => setData(prev => ({
+                                                        ...prev,
+                                                        modalityTags: isSelected
+                                                            ? prev.modalityTags.filter(t => t !== tag)
+                                                            : [...prev.modalityTags, tag]
+                                                    }))}
+                                                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${isSelected
+                                                        ? 'bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                                                        : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-blue-500/50'
+                                                        }`}
+                                                >
+                                                    {tag}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </Card>
+                        </section>
+
+                        {/* 3. Findings (New) */}
+                        <section className="space-y-4">
+                            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-300">3. Findings</h2>
+                            <Card className="bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 p-4 space-y-6 shadow-sm">
+                                <div className="space-y-4">
+                                    {Object.entries(FINDING_TAGS).map(([category, tags]) => (
+                                        <div key={category}>
+                                            <p className="text-xs text-zinc-400 mb-2">{category}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {tags.map(tag => {
+                                                    const isSelected = data.findingTags.includes(tag);
+                                                    return (
+                                                        <button
+                                                            key={tag}
+                                                            onClick={() => setData(prev => ({
+                                                                ...prev,
+                                                                findingTags: isSelected
+                                                                    ? prev.findingTags.filter(t => t !== tag)
+                                                                    : [...prev.findingTags, tag]
+                                                            }))}
+                                                            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${isSelected
+                                                                ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20'
+                                                                : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-amber-500/50'
+                                                                }`}
+                                                        >
+                                                            {tag}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        </section>
+
+                        {/* 4. Details */}
                         <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                            <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">2. Details for Selected Areas</h2>
+                            <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">4. Details for Selected Areas</h2>
                             <div className="grid gap-4">
-                                {Object.entries(bodyStatus).some(([_, status]) => status !== 'normal') ? (
-                                    Object.entries(bodyStatus)
+                                {Object.entries(data.bodyMap).some(([_, status]) => status !== 'normal') ? (
+                                    Object.entries(data.bodyMap)
                                         .filter(([_, status]) => status !== 'normal')
                                         .map(([partId, status]) => {
                                             const region = REGIONS.find(r => r.id === partId);
@@ -266,15 +375,15 @@ export function SessionEditor({
                                                     patientStatus={intakeData?.bodyMap?.[partId]}
                                                     patientNote={intakeData?.bodyNotes?.[partId]}
                                                     practitionerStatus={status}
-                                                    practitionerNote={treatmentNotes[partId] || ""}
-                                                    practitionerLevel={practitionerLevels[partId]}
-                                                    practitionerBadges={practitionerBadges[partId]}
+                                                    practitionerNote={data.treatmentNotes[partId] || ""}
+                                                    practitionerLevel={data.practitionerLevels[partId]}
+                                                    practitionerBadges={data.practitionerBadges[partId]}
                                                     patientLevel={intakeData?.bodyLevels?.[partId]}
                                                     patientBadges={intakeData?.bodyBadges?.[partId]}
-                                                    onStatusChange={(newStatus) => setBodyStatus(prev => ({ ...prev, [partId]: newStatus }))}
-                                                    onNoteChange={(note) => setTreatmentNotes(prev => ({ ...prev, [partId]: note }))}
-                                                    onLevelChange={(level) => setPractitionerLevels(prev => ({ ...prev, [partId]: level }))}
-                                                    onBadgesChange={(badges) => setPractitionerBadges(prev => ({ ...prev, [partId]: badges }))}
+                                                    onStatusChange={(newStatus) => setData(prev => ({ ...prev, bodyMap: { ...prev.bodyMap, [partId]: newStatus } }))}
+                                                    onNoteChange={(note) => setData(prev => ({ ...prev, treatmentNotes: { ...prev.treatmentNotes, [partId]: note } }))}
+                                                    onLevelChange={(level) => setData(prev => ({ ...prev, practitionerLevels: { ...prev.practitionerLevels, [partId]: level } }))}
+                                                    onBadgesChange={(badges) => setData(prev => ({ ...prev, practitionerBadges: { ...prev.practitionerBadges, [partId]: badges } }))}
                                                 />
                                             );
                                         })
@@ -286,20 +395,20 @@ export function SessionEditor({
                             </div>
                         </section>
 
-                        {/* 3. Notes */}
+                        {/* 5. Notes */}
                         <section>
-                            <h2 className="text-lg font-medium mb-3 text-zinc-300">3. Session Notes</h2>
+                            <h2 className="text-lg font-medium mb-3 text-zinc-300">5. Session Notes</h2>
                             <textarea
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
+                                value={data.notes}
+                                onChange={(e) => setData(prev => ({ ...prev, notes: e.target.value }))}
                                 placeholder="Tap microphone to dictate or type notes..."
                                 className="w-full h-32 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                         </section>
 
-                        {/* 4. Recommendations */}
+                        {/* 6. Recommendations */}
                         <section>
-                            <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">4. Holistic Recommendations</h2>
+                            <h2 className="text-lg font-medium mb-3 text-zinc-900 dark:text-zinc-300">6. Holistic Recommendations</h2>
                             <Card className="bg-white dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 p-4 space-y-4 shadow-sm">
                                 {/* Quick Add Options */}
                                 <div className="space-y-3 mb-4">
@@ -418,9 +527,9 @@ export function SessionEditor({
                                     </div>
                                 </div>
 
-                                {recommendations.length > 0 && (
+                                {data.recommendations.length > 0 && (
                                     <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                                        {recommendations.map((rec) => (
+                                        {data.recommendations.map((rec) => (
                                             <div key={rec.id} className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-950 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800">
                                                 <div>
                                                     <div className="flex items-center gap-2">
@@ -442,7 +551,7 @@ export function SessionEditor({
                                                         )}
                                                     </p>
                                                 </div>
-                                                <button onClick={() => setRecommendations(prev => prev.filter(r => r.id !== rec.id))} className="text-zinc-500 hover:text-red-400">
+                                                <button onClick={() => setData(prev => ({ ...prev, recommendations: prev.recommendations.filter(r => r.id !== rec.id) }))} className="text-zinc-500 hover:text-red-400">
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -454,7 +563,7 @@ export function SessionEditor({
 
                         <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center z-50">
                             <span className="text-sm text-zinc-500">
-                                {Object.values(bodyStatus).filter(s => s !== 'normal').length} Areas Logged
+                                {Object.values(data.bodyMap).filter(s => s !== 'normal').length} Areas Logged
                             </span>
                             <Button onClick={handleProceedToSign} className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20">
                                 Review & Sign <CheckCircle className="w-4 h-4 ml-2" />
@@ -495,13 +604,13 @@ export function SessionEditor({
                             {/* 2. Bodywork Log */}
                             <div className="space-y-3">
                                 <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Bodywork Log</h3>
-                                {Object.entries(bodyStatus).filter(([_, s]) => s !== 'normal').length > 0 ? (
+                                {Object.entries(data.bodyMap).filter(([_, s]) => s !== 'normal').length > 0 ? (
                                     <div className="space-y-4">
-                                        {Object.entries(bodyStatus)
+                                        {Object.entries(data.bodyMap)
                                             .filter(([_, status]) => status !== 'normal')
                                             .map(([partId, status]) => {
                                                 const region = REGIONS.find(r => r.id === partId);
-                                                const note = treatmentNotes[partId];
+                                                const note = data.treatmentNotes[partId];
                                                 return (
                                                     <div key={partId} className="flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 pb-4 last:border-0 last:pb-0">
                                                         <div className="w-full">
@@ -527,14 +636,14 @@ export function SessionEditor({
                                                                 </div>
                                                             )}
                                                             {note && <p className="text-sm text-zinc-600 dark:text-zinc-400 italic">"{note}"</p>}
-                                                            {(practitionerLevels[partId] !== undefined || (practitionerBadges[partId] && practitionerBadges[partId].length > 0)) && (
+                                                            {(data.practitionerLevels[partId] !== undefined || (data.practitionerBadges[partId] && data.practitionerBadges[partId].length > 0)) && (
                                                                 <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                                                     <p className="text-[10px] uppercase text-emerald-500 font-bold mb-1">Practitioner Assessment</p>
                                                                     <div className="flex flex-wrap gap-2">
-                                                                        {practitionerLevels[partId] !== undefined && (
-                                                                            <span className="text-xs font-bold text-zinc-500">Level: {practitionerLevels[partId]}/10</span>
+                                                                        {data.practitionerLevels[partId] !== undefined && (
+                                                                            <span className="text-xs font-bold text-zinc-500">Level: {data.practitionerLevels[partId]}/10</span>
                                                                         )}
-                                                                        {practitionerBadges[partId]?.map(badge => (
+                                                                        {data.practitionerBadges[partId]?.map(badge => (
                                                                             <span key={badge} className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20">
                                                                                 {badge}
                                                                             </span>
@@ -558,7 +667,7 @@ export function SessionEditor({
                             <div className="space-y-2">
                                 <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Session Notes</h3>
                                 <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
-                                    {notes || "No general notes added."}
+                                    {data.notes || "No general notes added."}
                                 </p>
                             </div>
 
@@ -567,9 +676,9 @@ export function SessionEditor({
                             {/* 4. Holistic Recommendations */}
                             <div className="space-y-3">
                                 <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Holistic Recommendations</h3>
-                                {recommendations.length > 0 ? (
+                                {data.recommendations.length > 0 ? (
                                     <div className="space-y-2">
-                                        {recommendations.map((rec) => (
+                                        {data.recommendations.map((rec) => (
                                             <div key={rec.id} className="flex items-start gap-3 bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800/50">
                                                 <div className={`mt-1 w-2 h-2 rounded-full ${rec.category === 'relief' ? 'bg-blue-500' :
                                                     rec.category === 'movement' ? 'bg-emerald-500' :
@@ -622,8 +731,8 @@ export function SessionEditor({
                                 <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-200">Sign to Complete</h3>
                                 <Input
                                     label="Practitioner Name"
-                                    value={practitionerName}
-                                    onChange={(e) => setPractitionerName(e.target.value)}
+                                    value={data.practitionerName}
+                                    onChange={(e) => setData(prev => ({ ...prev, practitionerName: e.target.value }))}
                                     placeholder="Dr. Name or Therapist Name"
                                     className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white mb-4"
                                 />
@@ -642,7 +751,7 @@ export function SessionEditor({
 
                                 <div className="mt-2">
                                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                        Digitally Signed by: <span className="font-medium text-zinc-900 dark:text-zinc-100">{practitionerName || "Guest Practitioner"}</span>
+                                        Digitally Signed by: <span className="font-medium text-zinc-900 dark:text-zinc-100">{data.practitionerName || "Guest Practitioner"}</span>
                                     </p>
                                 </div>
                             </div>

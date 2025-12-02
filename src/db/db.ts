@@ -63,7 +63,13 @@ export type Session = {
     treatmentNotes?: Record<string, string>; // Practitioner notes per body part
     practitionerLevels?: Record<string, number>; // Practitioner findings level (0-10)
     practitionerBadges?: Record<string, string[]>; // Practitioner findings (e.g. "Hypertonic", "Subluxation")
-    interventions?: string[]; // List of performed interventions
+
+    // Standardized Tags (Replacing free-text interventions)
+    serviceTags?: string[]; // e.g. "Adjustment", "Deep Tissue"
+    modalityTags?: string[]; // e.g. "Cupping", "E-Stim"
+    findingTags?: string[]; // e.g. "Spasm", "Restricted ROM"
+
+    interventions?: string[]; // Legacy / Custom additions
     isLocked: boolean;
     appointmentId?: string; // Link to source appointment
     createdAt: number;
@@ -159,3 +165,19 @@ export class ChiroCardDB extends Dexie {
 }
 
 export const db = new ChiroCardDB();
+
+// Standardized Service Tags
+export const SERVICE_TAGS = {
+    "Chiropractic": ["Spinal Adjustment", "Extremity Adjustment", "Mobilization", "Traction", "Activator", "Drop Table"],
+    "Massage": ["Deep Tissue", "Swedish", "Myofascial Release", "Trigger Point", "Sports Massage", "Lymphatic Drainage"],
+    "Physical Therapy": ["Therapeutic Exercise", "Manual Therapy", "Neuromuscular Re-ed", "Gait Training", "Balance Training"],
+    "Acupuncture": ["Acupuncture", "Electro-Acupuncture", "Dry Needling", "Tui Na", "Shiatsu", "Ear Seeds"],
+    "Cupping": ["Stationary Cupping", "Sliding Cupping", "Fire Cupping", "Flash Cupping"],
+    "Modalities": ["E-Stim/TENS", "Ultrasound", "Laser Therapy", "Heat", "Cryotherapy", "Kinesio Taping", "Gua Sha"]
+};
+
+export const FINDING_TAGS = {
+    "Tissue": ["Hypertonic", "Spasm", "Inflammation", "Trigger Points", "Scar Tissue"],
+    "Joint": ["Restricted ROM", "Subluxation", "Hypermobile", "Fixation"],
+    "Sensory": ["Tenderness", "Radiating Pain", "Numbness", "Tingling"]
+};
