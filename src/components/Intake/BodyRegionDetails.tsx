@@ -16,10 +16,14 @@ export function BodyRegionDetails({ bodyPart, data, onChange, mode = 'client' }:
 
     const getPainColor = (level: number) => {
         if (level === 0) return "#e4e4e7"; // zinc-200
-        if (level <= 3) return "#22c55e"; // green-500
-        if (level <= 6) return "#eab308"; // yellow-500
-        if (level <= 8) return "#f97316"; // orange-500
-        return "#ef4444"; // red-500
+
+        // Interpolate between Sky-100 (224, 242, 254) and Red-500 (239, 68, 68)
+        const ratio = level / 10;
+        const r = Math.round(224 + (239 - 224) * ratio);
+        const g = Math.round(242 + (68 - 242) * ratio);
+        const b = Math.round(254 + (68 - 254) * ratio);
+
+        return `rgb(${r}, ${g}, ${b})`;
     };
 
     const painColor = getPainColor(data.level);
