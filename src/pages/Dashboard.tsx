@@ -11,7 +11,6 @@ import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { SessionScannerModal } from "../components/Dashboard/SessionScannerModal";
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { PatientQRModal } from "../components/Profile/PatientQRModal";
 import { Trash2 } from "lucide-react";
 
 
@@ -47,7 +46,6 @@ export default function Dashboard() {
 
     const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
     const [showScannerModal, setShowScannerModal] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
 
     const handleDeleteClick = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -319,11 +317,7 @@ export default function Dashboard() {
                 }}
             />
 
-            <PatientQRModal
-                isOpen={showQRModal}
-                onClose={() => setShowQRModal(false)}
-                user={user}
-            />
+
 
             <WelcomeModal />
 

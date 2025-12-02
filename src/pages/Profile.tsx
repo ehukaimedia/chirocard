@@ -10,8 +10,7 @@ import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info
 import { TagInput } from "../components/ui/TagInput";
 import { PlacesAutocomplete } from "../components/ui/PlacesAutocomplete";
 import { useToast } from "../components/ui/Toast";
-import { PatientQRModal } from "../components/Profile/PatientQRModal";
-import { QrCode } from "lucide-react";
+
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -144,7 +143,7 @@ export default function Profile() {
 
 
 
-    const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+
 
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
@@ -166,15 +165,7 @@ export default function Profile() {
                 <div className="flex gap-3 items-center flex-wrap sm:flex-nowrap">
                     {!isEditing && (
                         <>
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={() => setIsQRModalOpen(true)}
-                                className="whitespace-nowrap bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20 border-0 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] px-4"
-                            >
-                                <QrCode className="w-4 h-4 mr-2" />
-                                Show My Card
-                            </Button>
+
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -222,11 +213,7 @@ export default function Profile() {
                 )}
             </div>
 
-            <PatientQRModal
-                isOpen={isQRModalOpen}
-                onClose={() => setIsQRModalOpen(false)}
-                user={user}
-            />
+
         </div>
     );
 }

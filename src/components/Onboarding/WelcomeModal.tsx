@@ -139,7 +139,7 @@ export function WelcomeModal() {
             isOpen={isOpen}
             onClose={handleDismiss}
             title={showForm ? "Complete Your Profile" : "Welcome to ChiroCard"}
-            description={showForm ? "Please provide your details to ensure the best session experience." : "Your personal digital health passport for holistic bodywork."}
+            description={showForm ? "Please provide your details to ensure the best session experience." : "The digital passport for your holistic health journey. Track bodywork sessions and monitor your self-improvement."}
             variant="default"
             className={showForm ? "sm:max-w-2xl" : "sm:max-w-lg"}
         >
@@ -163,7 +163,7 @@ export function WelcomeModal() {
                             <div>
                                 <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Digital Bodywork Passport</h4>
                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                                    Your complete history in your pocket. <strong>Scan to Check-In</strong> with any practitioner instantly.
+                                    Your complete bodywork journal in your pocket. Use it as a digital passport to check in with any hands-on holistic practitioner.
                                 </p>
                             </div>
                         </div>
@@ -175,7 +175,7 @@ export function WelcomeModal() {
                             <div>
                                 <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Practitioner Kiosk</h4>
                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
-                                    Practitioners use the app to chart sessions. Scan their screen to <strong>Auto-Add</strong> them to your team.
+                                    Designed for all hands-on practitioners. Scan their screen to log sessions and track your progress.
                                 </p>
                             </div>
                         </div>

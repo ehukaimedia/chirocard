@@ -11,6 +11,7 @@ import { IntakeProfileSection } from "../components/Intake/IntakeProfileSection"
 import { IntakePractitionerSection } from "../components/Intake/IntakePractitionerSection";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { SignaturePad } from "../components/Shared/SignaturePad";
+import { GuardModal } from "../components/Session/GuardModal";
 
 export default function Intake() {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ export default function Intake() {
 
     const user = useLiveQuery(() => db.users.get("me"));
     const [showReview, setShowReview] = useState(false);
+    const [showGuard, setShowGuard] = useState(false);
     const [signature, setSignature] = useState<string | null>(null);
 
     const practitioner = useLiveQuery(
@@ -61,7 +63,12 @@ export default function Intake() {
             userSignature: signature
         });
 
-        navigate("/session-active");
+        setShowGuard(true);
+    };
+
+    const handleUnlock = () => {
+        setShowGuard(false);
+        navigate("/guest-session");
     };
 
     if (!currentSession) return null; // Loading...
@@ -170,7 +177,13 @@ export default function Intake() {
                         Start Session <Play className="ml-2 w-5 h-5 flex-shrink-0" />
                     </Button>
                 </div>
-            </div>
+
+                <GuardModal
+                    isOpen={showGuard}
+                    onUnlock={handleUnlock}
+                    onCancel={() => setShowGuard(false)}
+                />
+            </div >
         );
     }
 

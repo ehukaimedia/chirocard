@@ -1,28 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { useAppStore } from "../store/useAppStore";
 import { Button } from "../components/ui/Button";
-import { CheckCircle, FileText, Home, QrCode } from "lucide-react";
+import { CheckCircle, FileText, Home } from "lucide-react";
 import { type Homework } from "../db/db";
 import { useToast } from "../components/ui/Toast";
 import { SessionEditor, type SessionData } from "../components/Session/SessionEditor";
 import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
-import { SessionCompletionQRModal } from "../components/Session/SessionCompletionQRModal";
 import { KioskLayout } from "../components/Layout/KioskLayout";
 
 export default function GuestSession() {
     const navigate = useNavigate();
     const { activePractitioner, intakeData, resumedSessionData, activeAppointmentId, scannedPatientData } = useAppStore();
-    // Prioritize scanned data if available (Guest Mode)
-    const user = scannedPatientData?.profile;
+
+    // In Pass-the-Phone mode, we use the local user
+    const localUser = useLiveQuery(() => db.users.get("me"));
+    const user = scannedPatientData?.profile || localUser;
+
     const currentIntake = scannedPatientData?.intake || intakeData;
     const { toast } = useToast();
 
     const [step, setStep] = useState<"editor" | "completed">("editor");
     const [completedSessionId, setCompletedSessionId] = useState<string | null>(null);
-    const [completedSessionData, setCompletedSessionData] = useState<any | null>(null);
-    const [showQRModal, setShowQRModal] = useState(false);
 
     const handleExit = () => {
         // Sync current state back to store so Intake page reflects changes
@@ -151,7 +152,7 @@ export default function GuestSession() {
             };
 
             await db.sessions.put(fullSessionData);
-            setCompletedSessionData(fullSessionData);
+            // setCompletedSessionData(fullSessionData); // Removed as unused
 
             if (activeAppointmentId) {
                 await db.appointments.update(activeAppointmentId, { status: 'completed' });
@@ -195,12 +196,6 @@ export default function GuestSession() {
                             <FileText className="w-4 h-4" /> View/ Print Session Report
                         </Button>
                         <Button
-                            className="w-full flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                            onClick={() => setShowQRModal(true)}
-                        >
-                            <QrCode className="w-4 h-4" /> Show Session QR
-                        </Button>
-                        <Button
                             variant="ghost"
                             className="w-full flex items-center justify-center gap-2 h-12 text-zinc-500 hover:text-zinc-300"
                             onClick={() => navigate("/dashboard")}
@@ -208,12 +203,6 @@ export default function GuestSession() {
                             <Home className="w-4 h-4" /> Return to Dashboard
                         </Button>
                     </div>
-
-                    <SessionCompletionQRModal
-                        isOpen={showQRModal}
-                        onClose={() => setShowQRModal(false)}
-                        sessionData={completedSessionData}
-                    />
                 </div>
             </KioskLayout>
         );

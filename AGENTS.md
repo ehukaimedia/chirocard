@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-ChiroCard is a Vite + React 18 + TypeScript PWA that keeps all data local through Dexie/IndexedDB. Use this guide to stay consistent and ship safely.
+ChiroCard is a **Bodywork Journal & Digital Passport** built as a Vite + React 18 + TypeScript PWA that keeps all data local through Dexie/IndexedDB. Use this guide to stay consistent and ship safely.
 
 ## Project Structure & Module Organization
 - `src/main.tsx` mounts `App.tsx` and the router for Dashboard, Intake, Profile, Team, Calendar, and Guest Session.
