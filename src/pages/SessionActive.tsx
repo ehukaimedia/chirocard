@@ -192,30 +192,120 @@ export default function SessionActive() {
                 </header>
 
                 <main className="flex-1 p-4 space-y-6 max-w-3xl mx-auto w-full">
-                    {/* Summary Card */}
+
+                    {/* 1. Intake Overview (Client Data) */}
                     <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
-                        <div className="flex items-center gap-3 text-emerald-400 mb-2">
+                        <div className="flex items-center gap-3 text-zinc-400 mb-2">
                             <FileText className="w-5 h-5" />
-                            <h3 className="font-semibold">Session Summary</h3>
+                            <h3 className="font-semibold uppercase tracking-wider text-xs">Intake Overview</h3>
                         </div>
 
-                        <div className="space-y-4 text-sm text-zinc-300">
+                        <div className="space-y-4">
+                            {/* Client Notes */}
                             <div>
-                                <span className="text-zinc-500 block text-xs uppercase tracking-wider mb-1">Interventions</span>
+                                <span className="text-zinc-500 block text-xs font-medium mb-1">Client Notes</span>
+                                <p className="text-zinc-300 text-sm bg-zinc-950/50 p-3 rounded border border-zinc-800/50 italic">
+                                    "{currentSession.clientNotes || "No notes provided."}"
+                                </p>
+                            </div>
+
+                            {/* Reported Issues */}
+                            <div>
+                                <span className="text-zinc-500 block text-xs font-medium mb-2">Reported Issues</span>
+                                {activeBodyParts.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {activeBodyParts.map(part => {
+                                            const level = currentSession.bodyLevels[part];
+                                            const note = currentSession.bodyNotes[part];
+                                            if (!level && !note) return null; // Skip if no client data for this active part
+
+                                            return (
+                                                <div key={part} className="bg-zinc-950 p-3 rounded border border-zinc-800 flex flex-col gap-1">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-zinc-200 font-medium capitalize text-sm">
+                                                            {part.replace(/([A-Z])/g, ' $1').trim()}
+                                                        </span>
+                                                        {level && (
+                                                            <span className="text-xs bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full">
+                                                                Pain: {level}/10
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {note && (
+                                                        <p className="text-zinc-500 text-xs italic">"{note}"</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-zinc-500 text-sm italic">No specific areas reported.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. Examination & Treatment (Practitioner Data) */}
+                    <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+                        <div className="flex items-center gap-3 text-emerald-400 mb-2">
+                            <CheckCircle className="w-5 h-5" />
+                            <h3 className="font-semibold uppercase tracking-wider text-xs">Examination & Treatment</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Findings & Notes per Area */}
+                            <div>
+                                <span className="text-zinc-500 block text-xs font-medium mb-2">Findings & Treatment Notes</span>
+                                {activeBodyParts.length > 0 ? (
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {activeBodyParts.map(part => {
+                                            const level = currentSession.practitionerLevels?.[part];
+                                            const note = currentSession.treatmentNotes?.[part];
+
+                                            return (
+                                                <div key={part} className="bg-zinc-950 p-3 rounded border border-zinc-800 flex flex-col gap-1">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-zinc-200 font-medium capitalize text-sm">
+                                                            {part.replace(/([A-Z])/g, ' $1').trim()}
+                                                        </span>
+                                                        {level !== undefined && (
+                                                            <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">
+                                                                Tenderness: {level}/10
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {note ? (
+                                                        <p className="text-zinc-400 text-sm mt-1">{note}</p>
+                                                    ) : (
+                                                        <p className="text-zinc-600 text-xs italic mt-1">No specific treatment notes.</p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-zinc-500 text-sm italic">No areas treated.</p>
+                                )}
+                            </div>
+
+                            {/* Interventions Summary */}
+                            <div>
+                                <span className="text-zinc-500 block text-xs font-medium mb-2">Interventions Performed</span>
                                 <div className="flex flex-wrap gap-2">
                                     {currentSession.interventions.length > 0 ? (
                                         currentSession.interventions.map(i => (
-                                            <span key={i} className="bg-zinc-800 px-2 py-1 rounded text-zinc-200">{i}</span>
+                                            <span key={i} className="bg-zinc-800 px-2 py-1 rounded text-zinc-200 text-sm border border-zinc-700">{i}</span>
                                         ))
                                     ) : (
-                                        <span className="text-zinc-500 italic">None recorded</span>
+                                        <span className="text-zinc-500 italic text-sm">None recorded</span>
                                     )}
                                 </div>
                             </div>
 
+                            {/* SOAP Notes */}
                             <div>
-                                <span className="text-zinc-500 block text-xs uppercase tracking-wider mb-1">SOAP Notes</span>
-                                <div className="bg-zinc-950 p-3 rounded border border-zinc-800 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+                                <span className="text-zinc-500 block text-xs font-medium mb-2">Final SOAP Notes</span>
+                                <div className="bg-zinc-950 p-3 rounded border border-zinc-800 font-mono text-xs leading-relaxed whitespace-pre-wrap text-zinc-300">
                                     {currentSession.practitionerNotes || "No notes recorded."}
                                 </div>
                             </div>
@@ -223,7 +313,7 @@ export default function SessionActive() {
                     </div>
 
                     {/* Signatures */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                         <div className="space-y-2">
                             <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Client Authorization</h3>
                             <div className="bg-zinc-950 p-4 rounded border border-zinc-800 h-24 flex items-center justify-center">
