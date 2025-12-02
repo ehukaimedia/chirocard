@@ -1,374 +1,41 @@
-import { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Practitioner } from "../db/db";
+import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
-import { BodyRegionSelector, type BodyStatus, REGIONS } from "../components/BodyMap/BodyRegionSelector";
-import { ArrowLeft, Play, User } from "lucide-react";
+import { BodyRegionSelector } from "../components/BodyMap/BodyRegionSelector";
+import { ArrowLeft, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { SignaturePad, type SignaturePadRef } from "../components/SignaturePad";
 import { useToast } from "../components/ui/Toast";
-import { Modal } from "../components/ui/Modal";
-// import { AddPractitionerModal } from "../components/Practitioner/AddPractitionerModal";
-import { PatientQRModal } from "../components/Profile/PatientQRModal";
-
-import { QrCode, Smartphone, UserCheck } from "lucide-react";
-import { GuardModal } from "../components/Session/GuardModal";
-
-import { EditView, type FormData } from "./Profile";
 
 export default function Intake() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const appointmentId = location.state?.appointmentId;
-    const { intakeData, activePractitioner, clearIntakeData } = useAppStore();
-
-    // Initialize with existing data if returning from session
-    const [bodyStatus, setBodyStatus] = useState<Record<string, BodyStatus>>(intakeData?.bodyMap || {});
-    const [bodyNotes, setBodyNotes] = useState<Record<string, string>>(intakeData?.bodyNotes || {});
-    const [bodyLevels, setBodyLevels] = useState<Record<string, number>>(intakeData?.bodyLevels || {});
-    const [bodyBadges, setBodyBadges] = useState<Record<string, string[]>>(intakeData?.bodyBadges || {});
-    const [selectedPractitioner, setSelectedPractitioner] = useState<Practitioner | null>(
-        activePractitioner ? { ...activePractitioner } as Practitioner : null
-    );
-    const [notes, setNotes] = useState(intakeData?.notes || "");
-
+    const { currentSession, startSession, updateSession } = useAppStore();
+    const { toast } = useToast();
     const user = useLiveQuery(() => db.users.get("me"));
 
-    const [step, setStep] = useState<"intake" | "review">("intake");
-    const [showResumeModal, setShowResumeModal] = useState(false);
-    // const [showAddPractitionerModal, setShowAddPractitionerModal] = useState(false);
-    const [showPractitionerAlert, setShowPractitionerAlert] = useState(false);
-    const [showProfileEditModal, setShowProfileEditModal] = useState(false);
-    const [showMissingDetailsAlert, setShowMissingDetailsAlert] = useState(false);
-    const [showNoSelectionAlert, setShowNoSelectionAlert] = useState(false);
-    const [showQRModal, setShowQRModal] = useState(false);
-    const [showGuardModal, setShowGuardModal] = useState(false);
-    const [missingDetailsParts, setMissingDetailsParts] = useState<string[]>([]);
-    const sigPadRef = useRef<SignaturePadRef>(null);
-
-    const [formData, setFormData] = useState<FormData>({
-        name: "",
-        photo: "",
-        email: "",
-        phone: "",
-        address: "",
-        primaryComplaints: [] as string[],
-        contraindications: [] as string[],
-        preferences: [] as string[],
-        height: "",
-        weight: "",
-        dateOfBirth: "",
-        occupation: "",
-        activityLevel: "Moderate",
-        bodyHistory: [] as string[],
-        medications: [] as string[],
-        allergies: [] as string[],
-        mobilityStatus: [] as string[],
-        physicalActivities: [] as string[],
-        diet: [] as string[],
-        supplements: [] as string[],
-        hydration: "",
-        insurance: [] as string[]
-    });
-
+    // Initialize session on mount if not exists
     useEffect(() => {
-        if (user) {
-            setFormData({
-                name: user.name || "",
-                photo: user.photo || "",
-                email: user.email || "",
-                phone: user.phone || "",
-                address: user.address || "",
-                primaryComplaints: user.primaryComplaints || [],
-                contraindications: user.contraindications || [],
-                preferences: user.preferences || [],
-                height: user.height || "",
-                weight: user.weight || "",
-                dateOfBirth: user.dateOfBirth || "",
-                occupation: user.occupation || "",
-                activityLevel: user.activityLevel || "Moderate",
-                bodyHistory: user.bodyHistory || [],
-                medications: user.medications || [],
-                allergies: user.allergies || [],
-                mobilityStatus: user.mobilityStatus || [],
-                physicalActivities: user.physicalActivities || [],
-                diet: user.diet || [],
-                supplements: user.supplements || [],
-                hydration: user.hydration || "",
-                insurance: Array.isArray(user.insurance) ? user.insurance : (user.insurance ? [user.insurance] : [])
-            });
+        if (!currentSession) {
+            startSession();
         }
-    }, [user]);
+    }, [currentSession, startSession]);
 
-    const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
+    const handleReady = () => {
+        if (!currentSession) return;
 
-    const { toast } = useToast();
-
-    const hasCheckedResume = useRef(false);
-
-    useEffect(() => {
-        // Check if there is existing intake data when the component mounts
-        // We use a ref to ensure this only happens once (on entry), not when data updates during the session
-        if (!hasCheckedResume.current) {
-            if (intakeData && (Object.keys(intakeData.bodyMap).length > 0 || intakeData.notes)) {
-                setShowResumeModal(true);
-            } else if (appointmentId) {
-                // If starting from an appointment, try to find it and pre-fill
-                db.appointments.get(appointmentId).then(appt => {
-                    if (appt) {
-                        db.practitioners.get(appt.practitionerId).then(p => {
-                            if (p) {
-                                setSelectedPractitioner(p);
-                                toast(`Starting session with ${p.name}`, "info");
-                            }
-                        });
-                    }
-                });
-            }
-            hasCheckedResume.current = true;
-        }
-    }, [appointmentId, intakeData]);
-
-    const handleResume = () => {
-        setShowResumeModal(false);
-        toast("Resumed previous session intake.", "info");
-    };
-
-    const handleStartNew = () => {
-        clearIntakeData();
-        setBodyStatus({});
-        setBodyNotes({});
-        setBodyLevels({});
-        setBodyBadges({});
-        setNotes("");
-        setSelectedPractitioner(null);
-        setShowResumeModal(false);
-        toast("Started a new session intake.", "success");
-    };
-
-    const handleStartClick = () => {
-        console.log("Checking requirements. User:", user);
-
-        // Practitioner check removed for Lite workflow
-        // if (!selectedPractitioner) {
-        //    setShowPractitionerAlert(true);
-        //    return;
-        // }
-
-        // Validate Profile
-        const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
-        const missingProfileFields = user ? requiredFields.filter(field => !user[field as keyof typeof user]) : requiredFields;
-
-        if (!user || missingProfileFields.length > 0) {
-            console.log("Profile incomplete:", missingProfileFields);
-            setShowProfileEditModal(true);
-            toast("Please complete your profile to continue.", "error");
+        // Basic validation
+        const hasIssues = Object.values(currentSession.bodyMap).some(s => s === 'issue' || s === 'watch');
+        if (!hasIssues && !currentSession.clientNotes) {
+            toast("Please select an area of concern or add a note.", "error");
             return;
         }
 
-        // Validate Body Details
-        const activeRegions = Object.entries(bodyStatus)
-            .filter(([_, status]) => status === 'issue' || status === 'watch')
-            .map(([part]) => part);
-
-        if (activeRegions.length === 0) {
-            setShowNoSelectionAlert(true);
-            return;
-        }
-
-        const missingDetails = activeRegions.filter(part => {
-            const hasBadges = bodyBadges[part] && bodyBadges[part].length > 0;
-            const hasNotes = bodyNotes[part] && bodyNotes[part].trim().length > 0;
-            return !hasBadges && !hasNotes;
-        });
-
-        if (missingDetails.length > 0) {
-            setMissingDetailsParts(missingDetails);
-            setShowMissingDetailsAlert(true);
-            return;
-        }
-
-        setStep("review");
+        // Navigate to Practitioner View
+        navigate("/session-active");
     };
 
-    const handleSaveProfile = async () => {
-        // Validation
-        const requiredFields = [
-            { key: 'name', label: 'Name' },
-            { key: 'dateOfBirth', label: 'Date of Birth' },
-            { key: 'height', label: 'Height' },
-            { key: 'weight', label: 'Weight' },
-            { key: 'phone', label: 'Phone' }
-        ];
-
-        const missingFields = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
-
-        if (missingFields.length > 0) {
-            toast(`Please fill in required fields: ${missingFields.map(f => f.label).join(', ')}`, "error");
-            return;
-        }
-
-        try {
-            await db.users.put({
-                id: "me",
-                name: formData.name,
-                photo: formData.photo,
-                primaryComplaints: formData.primaryComplaints,
-                contraindications: formData.contraindications,
-                preferences: formData.preferences,
-                height: formData.height,
-                weight: formData.weight,
-                dateOfBirth: formData.dateOfBirth,
-                occupation: formData.occupation,
-                activityLevel: formData.activityLevel as 'Sedentary' | 'Light' | 'Moderate' | 'Active' | 'Athlete',
-                bodyHistory: formData.bodyHistory,
-                medications: formData.medications,
-                allergies: formData.allergies,
-                mobilityStatus: formData.mobilityStatus,
-                physicalActivities: formData.physicalActivities,
-                diet: formData.diet,
-                supplements: formData.supplements,
-                hydration: formData.hydration,
-                insurance: formData.insurance,
-                pin: user?.pin || null,
-                biometricEnabled: user?.biometricEnabled || false,
-                theme: user?.theme || "dark",
-                email: formData.email,
-                phone: formData.phone,
-                address: formData.address
-            });
-            setShowProfileEditModal(false);
-            toast("Profile updated successfully", "success");
-            // Automatically proceed if valid? Or let user click again? 
-            // Let's let them click again or just stay there. The modal closing is enough feedback.
-        } catch (error) {
-            console.error("Failed to update profile:", error);
-            toast("Failed to update profile", "error");
-        }
-    };
-
-    const handleConfirmStart = async () => {
-        // if (!selectedPractitioner) return;
-
-        // Get signature as vector data for QR optimization
-        const signatureData = sigPadRef.current?.getData();
-        const signature = signatureData && signatureData.length > 0 ? JSON.stringify(signatureData) : undefined;
-
-        // Update global store with current intake data so it's included in the QR code
-        useAppStore.getState().updateIntakeData({
-            bodyMap: bodyStatus,
-            bodyNotes: bodyNotes,
-            bodyLevels: bodyLevels,
-            bodyBadges: bodyBadges,
-            notes: notes,
-            isCheckInReady: true,
-            userSignature: signature
-        });
-        // For now, let's just show the modal. The signature is less critical for the *start* than the intake data.
-
-        setShowQRModal(true);
-    };
-
-    const handleReadyForPractitioner = () => {
-        // Prepare data but don't show QR yet, show Guard
-        const signatureData = sigPadRef.current?.getData();
-        const signature = signatureData && signatureData.length > 0 ? JSON.stringify(signatureData) : undefined;
-
-        useAppStore.getState().updateIntakeData({
-            bodyMap: bodyStatus,
-            bodyNotes: bodyNotes,
-            bodyLevels: bodyLevels,
-            bodyBadges: bodyBadges,
-            notes: notes,
-            isCheckInReady: true,
-            userSignature: signature
-        });
-
-        setShowGuardModal(true);
-    };
-
-    const handleGuardUnlock = () => {
-        setShowGuardModal(false);
-        // Transition to Kiosk Mode
-        // We need to start a session effectively, or just switch mode and go to guest session
-        // If we treat this as "Guest Session" where the practitioner takes over:
-        const sessionId = crypto.randomUUID();
-        // We might need to ensure the store knows we are in guest mode
-        useAppStore.getState().startSession(sessionId, selectedPractitioner || undefined, {
-            bodyMap: bodyStatus,
-            bodyNotes: bodyNotes,
-            bodyLevels: bodyLevels,
-            bodyBadges: bodyBadges,
-            notes: notes,
-            userSignature: intakeData?.userSignature, // Use what we just saved
-            isCheckInReady: true
-        });
-
-        navigate("/guest-session");
-    };
-
-    const handleTextToPractitioner = () => {
-        // Generate a link that would open the app in Kiosk mode
-        // For now, we'll just copy it to clipboard and show a toast
-        // In a real app, this would trigger an SMS intent or similar
-        const sessionId = crypto.randomUUID();
-        const link = `${window.location.origin}/handoff/${sessionId}`;
-
-        // We can't easily "deep link" into the same running instance on another device without a backend sync
-        // But for "Remote Handoff" description: "Practitioner clicks the link on their device... launches app in Dark Mode"
-        // This implies the practitioner is on a DIFFERENT device.
-        // So we need to save the session to the DB so the practitioner can pick it up?
-        // Or is this just a "magic link" that contains the data? Data might be too large.
-        // Let's assume we save a "pending" session or appointment.
-
-        // For this specific task "Text to Practitioner that automatically puts ChiroCard in Kiosk mode":
-        // If it's the SAME device (just sending a text to themselves?), it's weird.
-        // If it's a DIFFERENT device, we need to sync.
-        // Given "Workflow B: Remote Handoff", it says "Practitioner clicks the link on THEIR device".
-        // So we must save the data to the cloud/DB.
-        // Since we are using Dexie (local DB), this "Remote Handoff" is tricky without a sync server.
-        // HOWEVER, the prompt says "User selects 'Text to Practitioner' that automatically puts ChiroCard in Kiosk mode."
-        // Wait, "User selects... that automatically puts ChiroCard in Kiosk mode" - this sounds like the USER'S device goes into Kiosk mode?
-        // BUT "Practitioner clicks the link on their device...".
-        // Let's assume for this task, since we don't have a backend sync implemented in the provided files,
-        // we will implement the "Link" generation as a simulation or assume the user might hand over the device?
-        // Actually, looking at the prompt: "Practitioner clicks the link on their device, which immediately launches the app in Dark Mode (Kiosk). The practioner can then scan the users QR code to enter the session."
-        // Ah! The practitioner's device opens in Kiosk mode, and THEN they scan the user's QR code.
-        // So the link just needs to open the app in Kiosk mode on the practitioner's device.
-        // The User's device stays in "User Mode" (Intake) showing the QR code?
-        // "User selects 'Text to Practitioner' that automatically puts ChiroCard in Kiosk mode." -> This sentence is confusing in the prompt.
-        // "User selects 'Text to Practitioner.' that automatically puts ChiroCard in Kiosk mode."
-        // AND "Practitioner clicks the link... launches the app in Dark Mode".
-        // Maybe it means: User sends text -> Practitioner gets link -> Practitioner opens link -> Practitioner App opens in Kiosk Mode.
-        // AND User's App ALSO goes into Kiosk mode? Or User's app shows QR?
-        // "The practioner can then scan the users QR code to enter the session." implies User's device has the QR.
-        // So User's device should probably stay in "Review/QR" mode, NOT Kiosk mode?
-        // BUT "Workflow A" says "User presses 'Ready for Practitioner'... transition to Kiosk Mode". This is Single Device.
-        // "Workflow B" says "User selects 'Text to Practitioner'... that automatically puts ChiroCard in Kiosk mode."
-        // This might mean the USER'S device goes to Kiosk mode? But then how does the Practitioner scan the QR code if the User's device is in Kiosk mode (which is for the practitioner)?
-        // If the User's device is in Kiosk mode, the Practitioner would use the User's device (Single Device Handoff).
-        // If the Practitioner uses THEIR OWN device, they need to scan the User's QR.
-        // So the User's device must display the QR.
-        // If the User's device displays the QR, it is NOT in Kiosk mode (which is the Practitioner interface).
-        // UNLESS "Kiosk Mode" just means "Ready for Practitioner" state?
-        // Let's stick to the most logical interpretation:
-        // Workflow A (Single Device): User -> Guard -> Kiosk Mode (Practitioner Interface on User's Device).
-        // Workflow B (Remote): User -> Text Link -> Practitioner opens Link on THEIR device (Kiosk Mode) -> Practitioner Scans User's QR (on User's Device).
-        // So for B, the User's device should probably show the QR code.
-        // The "Text to Practitioner" button should probably just open the SMS app with a link that opens the app in Kiosk mode.
-
-        const textBody = `I'm ready for my session. Open ChiroCard in Kiosk Mode: ${window.location.origin}/practitioner`;
-        window.open(`sms:?body=${encodeURIComponent(textBody)}`, '_blank');
-
-        // And maybe show the QR code on the user's device so it's ready to be scanned?
-        handleConfirmStart();
-    };
-
-    // Auto-select first practitioner if available and none selected
-    if (practitioners && practitioners.length > 0 && !selectedPractitioner) {
-        setSelectedPractitioner(practitioners[0]);
-    }
+    if (!currentSession) return null; // Loading...
 
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24 flex flex-col">
@@ -377,367 +44,54 @@ export default function Intake() {
                 <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
                     <ArrowLeft className="w-6 h-6" />
                 </Button>
-                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Session Intake</h1>
+                <div>
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Check In</h1>
+                    <p className="text-sm text-zinc-500">
+                        {user?.name ? `Hi ${user.name.split(' ')[0]}, how are you feeling?` : "How are you feeling?"}
+                    </p>
+                </div>
             </div>
 
-            <Modal
-                isOpen={showResumeModal}
-                onClose={() => { /* Prevent closing by clicking outside to force choice? Or just default to resume? Let's default to resume if they click out */ setShowResumeModal(false); }}
-                title="Resume Session?"
-                description="You have an unfinished session intake in progress. Would you like to resume it or start over?"
-                confirmLabel="Resume Session"
-                cancelLabel="Start New"
-                onConfirm={handleResume}
-                onCancel={handleStartNew}
-            />
-
-            <Modal
-                isOpen={showPractitionerAlert}
-                onClose={() => setShowPractitionerAlert(false)}
-                title="Practitioner Required"
-                description="Please select a practitioner to continue with the session intake."
-                confirmLabel="OK"
-                onConfirm={() => setShowPractitionerAlert(false)}
-            />
-
-            <Modal
-                isOpen={showNoSelectionAlert}
-                onClose={() => setShowNoSelectionAlert(false)}
-                title="No Area Selected"
-                description="Please select at least one area of concern to continue."
-                confirmLabel="OK"
-                onConfirm={() => setShowNoSelectionAlert(false)}
-            />
-
-            <Modal
-                isOpen={showMissingDetailsAlert}
-                onClose={() => setShowMissingDetailsAlert(false)}
-                title="Missing Details"
-                description={`Please add at least one detail (e.g., Pain, Stiffness) for the following areas: ${missingDetailsParts.map(id => REGIONS.find(r => r.id === id)?.label).join(", ")}.`}
-                confirmLabel="OK"
-                onConfirm={() => setShowMissingDetailsAlert(false)}
-            />
-
-            <Modal
-                isOpen={showProfileEditModal}
-                onClose={() => setShowProfileEditModal(false)}
-                title="Complete Your Profile"
-                description="Please provide your details to ensure the best session experience."
-                className="max-w-2xl" // Make it wider
-            >
-                <div className="max-h-[70vh] overflow-y-auto pr-2">
-                    <EditView
-                        formData={formData}
-                        setFormData={setFormData}
-                        handleSave={handleSaveProfile}
+            <div className="flex-1 space-y-8 max-w-xl mx-auto w-full">
+                {/* Body Map */}
+                <section className="space-y-4">
+                    <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
+                        1. Tap areas of concern
+                    </h2>
+                    <BodyRegionSelector
+                        value={currentSession.bodyMap}
+                        onChange={(part, status) => updateSession({
+                            bodyMap: { ...currentSession.bodyMap, [part]: status }
+                        })}
+                        mode="simple"
                     />
-                </div>
-            </Modal>
+                </section>
 
-            <div className="flex-1 space-y-8">
-                {step === "intake" ? (
-                    <>
-                        {/* Client Profile Section */}
-                        <section className="mb-8">
-                            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-4">1. Client Profile</h2>
-                            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden border border-zinc-200 dark:border-zinc-700">
-                                        {user?.photo ? (
-                                            <img src={user.photo} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-lg font-bold text-zinc-400">
-                                                {user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : <User className="w-6 h-6" />}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{user?.name || "Guest User"}</h3>
-                                        <p className="text-sm text-zinc-500">
-                                            {user?.dateOfBirth ? `${new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear()} years old` : "Age not set"}
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button variant="outline" size="sm" onClick={() => setShowProfileEditModal(true)}>
-                                    Edit
-                                </Button>
-                            </div>
-                        </section>
-
-                        {/* Practitioner Selection Removed for Lite Workflow */}
-                        {/* The practitioner is identified when THEY scan the patient's QR code. */}
-
-                        {/* Question 3 */}
-                        <section className="space-y-4 pb-4">
-                            <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-                                3. Tap areas of concern
-                            </h2>
-                            <BodyRegionSelector
-                                value={bodyStatus}
-                                onChange={(part, status) => setBodyStatus(prev => ({ ...prev, [part]: status }))}
-                                mode="simple"
-                            />
-                        </section>
-
-                        {/* Dynamic Body Notes */}
-                        <section className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                            <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-                                4. Details for Selected Areas
-                            </h2>
-                            <div className="grid gap-4">
-                                {Object.entries(bodyStatus).some(([_, status]) => status === 'issue' || status === 'watch') ? (
-                                    Object.entries(bodyStatus)
-                                        .filter(([_, status]) => status === 'issue' || status === 'watch')
-                                        .map(([partId, status]) => {
-                                            const region = REGIONS.find(r => r.id === partId);
-                                            if (!region) return null;
-                                            return (
-                                                <div key={partId} className="space-y-3 bg-zinc-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                                                    <div className="flex items-center justify-between">
-                                                        <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
-                                                            <span className={`w-2 h-2 rounded-full ${status === 'issue' ? 'bg-red-500' : 'bg-blue-500'}`} />
-                                                            {region.label}
-                                                        </label>
-                                                        <span className="text-xs font-bold text-zinc-500">
-                                                            Pain Level: {bodyLevels[partId] || 0}/10
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Intensity Slider */}
-                                                    <div className="px-2">
-                                                        <input
-                                                            type="range"
-                                                            min="0"
-                                                            max="10"
-                                                            step="1"
-                                                            value={bodyLevels[partId] || 0}
-                                                            onChange={(e) => setBodyLevels(prev => ({ ...prev, [partId]: parseInt(e.target.value) }))}
-                                                            className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer dark:bg-zinc-700 accent-emerald-500"
-                                                        />
-                                                        <div className="flex justify-between text-[10px] text-zinc-400 mt-1">
-                                                            <span>None</span>
-                                                            <span>Moderate</span>
-                                                            <span>Severe</span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Badges */}
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {["Pain", "Stiffness", "Numbness", "Tingling", "Weakness", "Spasm", "Limited ROM", "Swelling"].map(badge => {
-                                                            const isSelected = (bodyBadges[partId] || []).includes(badge);
-                                                            return (
-                                                                <button
-                                                                    key={badge}
-                                                                    onClick={() => {
-                                                                        setBodyBadges(prev => {
-                                                                            const current = prev[partId] || [];
-                                                                            return {
-                                                                                ...prev,
-                                                                                [partId]: isSelected
-                                                                                    ? current.filter(b => b !== badge)
-                                                                                    : [...current, badge]
-                                                                            };
-                                                                        });
-                                                                    }}
-                                                                    className={`text-xs px-2.5 py-1 rounded-full border transition-all ${isSelected
-                                                                        ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
-                                                                        : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-emerald-500/50'
-                                                                        }`}
-                                                                >
-                                                                    {badge}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-
-                                                    <input
-                                                        type="text"
-                                                        value={bodyNotes[partId] || ""}
-                                                        onChange={(e) => setBodyNotes(prev => ({ ...prev, [partId]: e.target.value }))}
-                                                        placeholder={`Specifics for ${region.label}...`}
-                                                        className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                                                    />
-                                                </div>
-                                            );
-                                        })
-                                ) : (
-                                    <div className="text-center py-8 bg-zinc-50 dark:bg-zinc-900/30 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
-                                        <p className="text-sm text-zinc-500">Select an area above to add details.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* Question 5: Notes */}
-                        <section className="space-y-4">
-                            <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-                                5. Notes for Practitioner
-                            </h2>
-                            <textarea
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                                placeholder="Type or dictate notes here..."
-                                className="w-full h-24 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
-                        </section>
-                    </>
-                ) : (
-                    <section className="space-y-6 animate-in fade-in slide-in-from-bottom-4 max-w-3xl mx-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Review & Sign</h2>
-                            <Button variant="ghost" onClick={() => setStep("intake")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white">
-                                Edit Intake
-                            </Button>
-                        </div>
-
-                        {/* Digital Document Preview */}
-                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 shadow-2xl relative overflow-hidden space-y-8">
-                            {/* Header */}
-                            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-6">
-                                <h1 className="text-2xl font-serif text-emerald-600 dark:text-emerald-500 mb-2">Intake Summary</h1>
-                                <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400">
-                                    <span>Date: {new Date().toLocaleDateString()}</span>
-                                    {/* <span>Practitioner: {selectedPractitioner?.name}</span> */}
-                                </div>
-                            </div>
-
-                            {/* Body Areas */}
-                            <div className="space-y-4">
-                                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Areas of Concern</h3>
-                                {Object.entries(bodyStatus).filter(([_, s]) => s === 'issue' || s === 'watch').length > 0 ? (
-                                    <div className="space-y-4">
-                                        {Object.entries(bodyStatus)
-                                            .filter(([_, status]) => status === 'issue' || status === 'watch')
-                                            .map(([partId, status]) => {
-                                                const region = REGIONS.find(r => r.id === partId);
-                                                const note = bodyNotes[partId];
-                                                return (
-                                                    <div key={partId} className="flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 pb-4 last:border-0 last:pb-0">
-                                                        <div className="w-full">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <span className="font-medium text-zinc-900 dark:text-zinc-200">{region?.label}</span>
-                                                                <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${status === 'issue' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
-                                                                    {status}
-                                                                </span>
-                                                            </div>
-                                                            {(bodyLevels[partId] !== undefined || (bodyBadges[partId] && bodyBadges[partId].length > 0)) && (
-                                                                <div className="flex flex-wrap gap-2 mb-2">
-                                                                    {bodyLevels[partId] !== undefined && (
-                                                                        <span className="text-xs font-bold text-zinc-500">Pain Level: {bodyLevels[partId]}/10</span>
-                                                                    )}
-                                                                    {bodyBadges[partId]?.map(badge => (
-                                                                        <span key={badge} className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
-                                                                            {badge}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            {note && <p className="text-sm text-zinc-600 dark:text-zinc-400 italic">"{note}"</p>}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
-                                ) : (
-                                    <p className="text-sm text-zinc-500 italic">No specific areas marked.</p>
-                                )}
-                            </div>
-
-                            <hr className="border-zinc-200 dark:border-zinc-800" />
-
-                            {/* Notes */}
-                            <div className="space-y-2">
-                                <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider">Notes for Practitioner</h3>
-                                <p className="text-zinc-700 dark:text-zinc-300 text-sm whitespace-pre-wrap leading-relaxed">
-                                    {notes || "No notes added."}
-                                </p>
-                            </div>
-
-                            <hr className="border-zinc-200 dark:border-zinc-800" />
-
-                            {/* Signature Section */}
-                            <div className="space-y-4 pt-2">
-                                <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-200">Sign to Start Session</h3>
-                                <div>
-                                    <label className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Client Initials</label>
-                                    <SignaturePad ref={sigPadRef} />
-                                    <div className="mt-2">
-                                        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                            Signed by: <span className="font-medium text-zinc-900 dark:text-zinc-100">{user?.name || "Guest"}</span>
-                                        </p>
-                                    </div>
-                                    <p className="text-xs text-zinc-400 mt-4 text-center">
-                                        By signing, you confirm that the information provided is accurate.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                )}
+                {/* Notes */}
+                <section className="space-y-4">
+                    <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
+                        2. Notes for today
+                    </h2>
+                    <textarea
+                        value={currentSession.clientNotes}
+                        onChange={(e) => updateSession({ clientNotes: e.target.value })}
+                        placeholder="Describe your pain, stiffness, or goals for this session..."
+                        className="w-full h-32 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    />
+                </section>
             </div>
 
             {/* Footer Action */}
             <div className="fixed bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-light-bg via-light-bg to-transparent dark:from-dark-bg dark:via-dark-bg z-10">
-                {step === "intake" ? (
-                    <>
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="w-full shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
-                            onClick={handleStartClick}
-                        >
-                            Review & Sign <Play className="ml-2 w-5 h-5 fill-current flex-shrink-0" />
-                        </Button>
-                        <p className="text-center text-xs text-zinc-500 mt-3">
-                            Review your information before starting
-                        </p>
-                    </>
-                ) : (
-                    <div className="flex flex-col gap-3 w-full">
-                        <div className="flex gap-4">
-                            <Button variant="ghost" onClick={() => setStep("intake")} className="flex-1 h-auto min-h-[3.5rem]">
-                                Back
-                            </Button>
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                className="flex-[2] shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3 leading-tight"
-                                onClick={handleReadyForPractitioner}
-                            >
-                                Ready for Practitioner <UserCheck className="ml-2 w-5 h-5 flex-shrink-0" />
-                            </Button>
-                        </div>
-                        <div className="flex gap-4">
-                            <Button
-                                variant="outline"
-                                className="flex-1 h-auto min-h-[3rem] text-sm"
-                                onClick={handleTextToPractitioner}
-                            >
-                                <Smartphone className="mr-2 w-4 h-4" /> Text to Practitioner
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="flex-1 h-auto min-h-[3rem] text-sm"
-                                onClick={handleConfirmStart}
-                            >
-                                <QrCode className="mr-2 w-4 h-4" /> Show QR Only
-                            </Button>
-                        </div>
-                    </div>
-                )}
+                <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full max-w-xl mx-auto shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
+                    onClick={handleReady}
+                >
+                    Ready for Session <Play className="ml-2 w-5 h-5 fill-current flex-shrink-0" />
+                </Button>
             </div>
-
-            <PatientQRModal
-                isOpen={showQRModal}
-                onClose={() => setShowQRModal(false)}
-                user={user}
-            />
-
-            <GuardModal
-                isOpen={showGuardModal}
-                onUnlock={handleGuardUnlock}
-                onCancel={() => setShowGuardModal(false)}
-            />
         </div>
     );
 }

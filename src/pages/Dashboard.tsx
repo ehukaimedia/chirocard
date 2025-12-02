@@ -12,7 +12,7 @@ import { SessionScannerModal } from "../components/Dashboard/SessionScannerModal
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { PatientQRModal } from "../components/Profile/PatientQRModal";
-import { QrCode, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 
 export default function Dashboard() {
@@ -21,7 +21,7 @@ export default function Dashboard() {
     const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
     const homework = useLiveQuery(() => db.homework.toArray());
     const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
-    const { intakeData, clearIntakeData, mode } = useAppStore();
+    const { currentSession, endSession, viewMode } = useAppStore();
     const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     const activeHomeworkCount = homework?.filter((h: Homework) => !h.isCompletedToday).length || 0;
@@ -180,8 +180,8 @@ export default function Dashboard() {
                 </Card>
             </section>
             {/* Quick Actions Grid */}
-            <div className={`grid ${intakeData ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'} gap-4`}>
-                {intakeData ? (
+            <div className={`grid ${currentSession ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'} gap-4`}>
+                {currentSession ? (
                     <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-4 relative">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 rounded-full animate-pulse">
@@ -190,7 +190,7 @@ export default function Dashboard() {
                             <div>
                                 <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Session in Progress</h3>
                                 <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                    Started {intakeData.startTime ? new Date(intakeData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'just now'}
+                                    Started {currentSession.startTime ? new Date(currentSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'just now'}
                                 </p>
                             </div>
                         </div>
@@ -206,30 +206,21 @@ export default function Dashboard() {
                         </Button>
 
                         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                            {intakeData.isCheckInReady ? (
-                                <>
-                                    <Button
-                                        className="flex-1 md:flex-none bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700"
-                                        onClick={() => setShowQRModal(true)}
-                                    >
-                                        <QrCode className="w-4 h-4 mr-2" />
-                                        Show Check-In QR
-                                    </Button>
-                                    <Button
-                                        className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                                        onClick={() => setShowScannerModal(true)}
-                                    >
-                                        <ScanLine className="w-4 h-4 mr-2" />
-                                        Complete Session
-                                    </Button>
-                                </>
+                            {viewMode === 'session' ? (
+                                <Button
+                                    className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                                    onClick={() => navigate("/session-active")}
+                                >
+                                    <ScanLine className="w-4 h-4 mr-2" />
+                                    Return to Session
+                                </Button>
                             ) : (
                                 <Button
                                     variant="outline"
                                     className="flex-1 md:flex-none border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
                                     onClick={() => navigate("/intake")}
                                 >
-                                    Resume Intake
+                                    Resume Check-In
                                 </Button>
                             )}
                         </div>
@@ -291,23 +282,6 @@ export default function Dashboard() {
                                 <div className="text-center">
                                     <span className="block font-medium text-zinc-700 dark:text-zinc-300">Wellness Routine</span>
                                     <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">{activeHomeworkCount} due today</span>
-                                </div>
-                            </Button>
-                        )}
-
-                        {/* 4. Kiosk Scanner (Conditional) */}
-                        {mode === 'guest' && (
-                            <Button
-                                variant="outline"
-                                className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
-                                onClick={() => setShowScannerModal(true)}
-                            >
-                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                    <ScanLine className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                                <div className="text-center">
-                                    <span className="block font-medium text-zinc-700 dark:text-zinc-300">Scan Patient QR</span>
-                                    <span className="text-xs text-zinc-500">Kiosk Mode</span>
                                 </div>
                             </Button>
                         )}
@@ -378,7 +352,7 @@ export default function Dashboard() {
                 confirmLabel="Discard"
                 cancelLabel="Cancel"
                 onConfirm={() => {
-                    clearIntakeData();
+                    endSession();
                     setShowClearConfirm(false);
                 }}
                 variant="danger"

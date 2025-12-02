@@ -6,21 +6,11 @@ import Profile from "./pages/Profile";
 import Team from "./pages/Team";
 import Calendar from "./pages/Calendar";
 import History from "./pages/History";
-import GuestSession from "./pages/GuestSession";
 import SessionDetails from "./pages/SessionDetails";
 import SessionReport from "./pages/SessionReport";
 import Settings from "./pages/Settings";
-import PractitionerKiosk from "./pages/PractitionerKiosk";
-import { useAppStore } from "./store/useAppStore";
 import { MainLayout } from "./components/Layout/MainLayout";
-
-function ProtectedGuestRoute({ children }: { children: React.ReactElement }) {
-  const { mode } = useAppStore();
-  if (mode !== "guest") {
-    return <Navigate to="/" replace />;
-  }
-  return children;
-}
+import SessionActive from "./pages/SessionActive";
 
 import { useReminders } from "./hooks/useReminders";
 import { usePersistence } from "./hooks/usePersistence";
@@ -43,15 +33,7 @@ function App() {
         </Route>
 
         <Route path="/intake" element={<Intake />} />
-        <Route path="/practitioner" element={<PractitionerKiosk />} />
-        <Route
-          path="/guest-session"
-          element={
-            <ProtectedGuestRoute>
-              <GuestSession />
-            </ProtectedGuestRoute>
-          }
-        />
+        <Route path="/session-active" element={<SessionActive />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

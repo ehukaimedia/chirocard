@@ -63,6 +63,7 @@ export type Session = {
     treatmentNotes?: Record<string, string>; // Practitioner notes per body part
     practitionerLevels?: Record<string, number>; // Practitioner findings level (0-10)
     practitionerBadges?: Record<string, string[]>; // Practitioner findings (e.g. "Hypertonic", "Subluxation")
+    interventions?: string[]; // List of performed interventions
     isLocked: boolean;
     appointmentId?: string; // Link to source appointment
     createdAt: number;
