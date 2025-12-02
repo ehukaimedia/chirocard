@@ -54,8 +54,11 @@ export function BodyRegionDetails({ bodyPart, data, onChange, mode = 'client' }:
                     step="1"
                     value={data.level}
                     onChange={(e) => onChange({ ...data, level: parseInt(e.target.value) })}
-                    className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer transition-all"
-                    style={{ accentColor: painColor }}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer transition-all"
+                    style={{
+                        background: `linear-gradient(to right, ${painColor} 0%, ${painColor} ${(data.level / 10) * 100}%, #27272a ${(data.level / 10) * 100}%, #27272a 100%)`,
+                        accentColor: painColor
+                    }}
                 />
                 <div className="flex justify-between text-xs text-zinc-400">
                     <span>None</span>
