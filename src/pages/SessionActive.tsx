@@ -382,7 +382,7 @@ export default function SessionActive() {
                         <div className="scale-95 origin-top-left">
                             <BodyRegionSelector
                                 value={currentSession.bodyMap}
-                                levels={currentSession.bodyLevels}
+                                levels={{ ...currentSession.bodyLevels, ...currentSession.practitionerLevels }}
                                 onChange={(part, status) => updateSession({
                                     bodyMap: { ...currentSession.bodyMap, [part]: status }
                                 })}
