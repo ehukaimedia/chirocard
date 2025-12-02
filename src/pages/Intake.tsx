@@ -8,10 +8,10 @@ import { ArrowLeft, Play, CheckCircle } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { useToast } from "../components/ui/Toast";
 import { IntakeProfileSection } from "../components/Intake/IntakeProfileSection";
-import { IntakePractitionerSection } from "../components/Intake/IntakePractitionerSection";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { SignaturePad } from "../components/Shared/SignaturePad";
 import { GuardModal } from "../components/Session/GuardModal";
+import { Modal } from "../components/ui/Modal";
 
 export default function Intake() {
     const navigate = useNavigate();
@@ -21,15 +21,13 @@ export default function Intake() {
     const user = useLiveQuery(() => db.users.get("me"));
     const [showReview, setShowReview] = useState(false);
     const [showGuard, setShowGuard] = useState(false);
+    const [showProfileWarning, setShowProfileWarning] = useState(false);
     const [signature, setSignature] = useState<string | null>(null);
 
-    const practitioner = useLiveQuery(
-        async () => {
-            if (!currentSession?.practitionerId) return null;
-            return await db.practitioners.get(currentSession.practitionerId);
-        },
-        [currentSession?.practitionerId]
-    );
+    // Remove practitioner selection from session intake
+    // Enforce completed profile requirement for session intake
+    // The practitioner selection logic is removed as per the instruction.
+    // The `practitioner` variable and its `useLiveQuery` hook are no longer needed.
 
     // Initialize session on mount if not exists
     useEffect(() => {
@@ -37,6 +35,18 @@ export default function Intake() {
             startSession();
         }
     }, [currentSession, startSession]);
+
+    // Check for profile completion
+    useEffect(() => {
+        if (user) {
+            const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
+            // @ts-ignore
+            const isComplete = requiredFields.every(field => user[field]);
+            if (!isComplete) {
+                setShowProfileWarning(true);
+            }
+        }
+    }, [user]);
 
     const handleReview = () => {
         if (!currentSession) return;
@@ -101,18 +111,7 @@ export default function Intake() {
                             </div>
                         </div>
 
-                        {practitioner && (
-                            <div className="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                                    {practitioner.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Practitioner</p>
-                                    <p className="font-medium text-zinc-900 dark:text-zinc-100">{practitioner.name}</p>
-                                    <p className="text-xs text-zinc-500">{practitioner.role}</p>
-                                </div>
-                            </div>
-                        )}
+
                     </div>
 
                     <div className="space-y-4">
@@ -209,10 +208,7 @@ export default function Intake() {
                     <IntakeProfileSection />
                 </section>
 
-                {/* 2. Practitioner */}
-                <section className="space-y-4">
-                    <IntakePractitionerSection />
-                </section>
+
 
                 {/* 3. Body Map */}
                 <section className="space-y-4">
@@ -282,7 +278,19 @@ export default function Intake() {
                     Review & Sign <CheckCircle className="ml-2 w-5 h-5 flex-shrink-0" />
                 </Button>
             </div>
-        </div>
+
+
+            <Modal
+                isOpen={showProfileWarning}
+                onClose={() => navigate("/")}
+                title="Complete Profile Required"
+                description="To ensure your safety and the best possible care, we need a few more details about you before starting a session."
+                confirmLabel="Complete Profile"
+                cancelLabel="Return to Dashboard"
+                onConfirm={() => navigate("/profile", { state: { editMode: true } })}
+                onCancel={() => navigate("/")}
+            />
+        </div >
     );
 }
 

@@ -11,6 +11,7 @@ import { db } from "../db/db";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { SignaturePad } from "../components/Shared/SignaturePad";
 import { SERVICE_TAGS, FINDING_TAGS } from "../db/db";
+import { useLiveQuery } from "dexie-react-hooks";
 
 
 
@@ -21,6 +22,17 @@ export default function SessionActive() {
     const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
     const [showReview, setShowReview] = useState(false);
     const [practitionerSignature, setPractitionerSignature] = useState<string | null>(null);
+
+    const user = useLiveQuery(() => db.users.get("me"));
+    const practitioner = useLiveQuery(
+        async () => {
+            if (currentSession?.practitionerId) {
+                return await db.practitioners.get(currentSession.practitionerId);
+            }
+            return undefined;
+        },
+        [currentSession?.practitionerId]
+    );
 
     // Recommendations State
     const [newRecTitle, setNewRecTitle] = useState("");
@@ -140,8 +152,8 @@ export default function SessionActive() {
                 id: currentSession.id,
                 date: currentSession.startTime, // Use start time as session date
                 practitionerId: currentSession.practitionerId || "me",
-                practitionerName: "Dr. Chiro", // Placeholder, ideally fetch from profile
-                practitionerClass: "Chiropractor", // Placeholder
+                practitionerName: currentSession.practitionerName || "Dr. Chiro",
+                practitionerClass: currentSession.practitionerClass || "Chiropractor",
                 notes: currentSession.practitionerNotes, // Main notes
                 signatureBase64: practitionerSignature, // Save practitioner signature
                 userSignature: currentSession.userSignature || undefined,
@@ -153,6 +165,10 @@ export default function SessionActive() {
                 practitionerLevels: currentSession.practitionerLevels,
                 practitionerBadges: currentSession.practitionerBadges,
                 interventions: currentSession.interventions,
+                recommendations: currentSession.recommendations,
+                serviceTags: currentSession.serviceTags,
+                modalityTags: currentSession.modalityTags,
+                findingTags: currentSession.findingTags,
                 isLocked: true,
                 createdAt: Date.now()
             });
@@ -242,7 +258,12 @@ export default function SessionActive() {
                     <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
                         <div className="flex items-center gap-3 text-emerald-400 mb-2">
                             <CheckCircle className="w-5 h-5" />
-                            <h3 className="font-semibold uppercase tracking-wider text-xs">Examination & Treatment</h3>
+                            <div className="flex flex-col">
+                                <h3 className="font-semibold uppercase tracking-wider text-xs">Examination & Treatment</h3>
+                                <span className="text-xs text-emerald-500 font-medium">
+                                    Practitioner: {currentSession.practitionerName || "Unknown"}
+                                </span>
+                            </div>
                         </div>
 
                         <div className="space-y-4">
@@ -295,6 +316,46 @@ export default function SessionActive() {
                                 </div>
                             </div>
 
+                            {/* Services & Modalities */}
+                            <div>
+                                <span className="text-zinc-500 block text-xs font-medium mb-2">Services & Modalities</span>
+                                <div className="space-y-2">
+                                    {/* Services */}
+                                    {currentSession.serviceTags && currentSession.serviceTags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {currentSession.serviceTags.map(tag => (
+                                                <span key={tag} className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs border border-emerald-500/20">{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {/* Modalities */}
+                                    {currentSession.modalityTags && currentSession.modalityTags.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {currentSession.modalityTags.map(tag => (
+                                                <span key={tag} className="bg-blue-500/10 text-blue-400 px-2 py-1 rounded text-xs border border-blue-500/20">{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {(!currentSession.serviceTags?.length && !currentSession.modalityTags?.length) && (
+                                        <span className="text-zinc-500 italic text-sm">None recorded</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Findings Tags */}
+                            <div>
+                                <span className="text-zinc-500 block text-xs font-medium mb-2">Clinical Findings</span>
+                                <div className="flex flex-wrap gap-2">
+                                    {currentSession.findingTags && currentSession.findingTags.length > 0 ? (
+                                        currentSession.findingTags.map(tag => (
+                                            <span key={tag} className="bg-amber-500/10 text-amber-400 px-2 py-1 rounded text-xs border border-amber-500/20">{tag}</span>
+                                        ))
+                                    ) : (
+                                        <span className="text-zinc-500 italic text-sm">None recorded</span>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* SOAP Notes */}
                             <div>
                                 <span className="text-zinc-500 block text-xs font-medium mb-2">Final SOAP Notes</span>
@@ -302,6 +363,42 @@ export default function SessionActive() {
                                     {currentSession.practitionerNotes || "No notes recorded."}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* 3. Recommendations */}
+                    <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+                        <div className="flex items-center gap-3 text-blue-400 mb-2">
+                            <Wand2 className="w-5 h-5" />
+                            <h3 className="font-semibold uppercase tracking-wider text-xs">Plan & Recommendations</h3>
+                        </div>
+
+                        <div className="space-y-4">
+                            {currentSession.recommendations && currentSession.recommendations.length > 0 ? (
+                                <div className="space-y-2">
+                                    {currentSession.recommendations.map((rec) => (
+                                        <div key={rec.id} className="bg-zinc-950 p-3 rounded border border-zinc-800 flex justify-between items-center">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-[10px] uppercase px-1.5 py-0.5 rounded border ${rec.category === 'relief' ? 'bg-blue-500/10 text-blue-300 border-blue-500/20' :
+                                                        rec.category === 'movement' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' :
+                                                            rec.category === 'lifestyle' ? 'bg-purple-500/10 text-purple-300 border-purple-500/20' :
+                                                                'bg-zinc-500/10 text-zinc-300 border-zinc-500/20'
+                                                        }`}>
+                                                        {rec.category}
+                                                    </span>
+                                                    <span className="text-zinc-200 font-medium text-sm">{rec.title}</span>
+                                                </div>
+                                                <p className="text-zinc-500 text-xs mt-1">
+                                                    {rec.frequency} • {rec.description}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-zinc-500 text-sm italic">No specific recommendations.</p>
+                            )}
                         </div>
                     </div>
 
@@ -316,15 +413,24 @@ export default function SessionActive() {
                                     <span className="text-zinc-600 text-xs italic">No signature recorded</span>
                                 )}
                             </div>
-                            <p className="text-xs text-zinc-500">Signed by Client</p>
+                            <p className="text-xs text-zinc-500">
+                                Signed by: <span className="font-medium text-zinc-300">{user?.name || "Guest"}</span>
+                            </p>
                         </div>
 
                         <div className="space-y-2">
-                            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Practitioner Signature</h3>
+                            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+                                Practitioner Signature ({currentSession.practitionerName || "Practitioner"})
+                            </h3>
                             <div className="bg-white rounded h-24 overflow-hidden">
                                 <SignaturePad onChange={setPractitionerSignature} />
                             </div>
-                            <p className="text-xs text-zinc-500">Sign above to certify</p>
+                            <p className="text-xs text-zinc-500">
+                                Signed by: <span className="font-medium text-zinc-300">{practitioner?.name || currentSession.practitionerName || "Practitioner"}</span>
+                                {practitioner?.clinicName && (
+                                    <span className="block text-zinc-500 mt-0.5">{practitioner.clinicName}</span>
+                                )}
+                            </p>
                         </div>
                     </div>
                 </main>
@@ -355,7 +461,9 @@ export default function SessionActive() {
                     </Button>
                     <div>
                         <h1 className="text-xl font-bold">Active Session</h1>
-                        <p className="text-xs text-zinc-400">Practitioner View</p>
+                        <p className="text-xs text-zinc-400">
+                            {currentSession.practitionerName ? `Practitioner: ${currentSession.practitionerName}` : "Practitioner View"}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -579,36 +687,40 @@ export default function SessionActive() {
                 <section className="space-y-4">
                     <h2 className="text-lg font-semibold text-zinc-400 uppercase tracking-wider text-xs">Recommendations</h2>
                     <Card className="bg-zinc-900 border-zinc-800 p-4 space-y-4 shadow-sm">
-                        {/* Quick Add Options */}
-                        <div className="space-y-3 mb-4">
+                        <div className="space-y-4">
+                            {/* Category Select */}
                             <div>
-                                <p className="text-xs font-medium text-zinc-500 mb-2 uppercase tracking-wider">Relief & Recovery</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {[
-                                        { label: "Cold Therapy", desc: "Ice/Cold pack, 15-20 mins", freq: "Acute (3x/day)" },
-                                        { label: "Heat Therapy", desc: "Heating pad/Warm compress, 20 mins", freq: "As Needed" },
-                                        { label: "Contrast Therapy", desc: "3 min heat / 1 min ice", freq: "Daily" },
-                                        { label: "Rest & Elevation", desc: "Elevate and rest area", freq: "As Needed" },
-                                        { label: "Topical Relief", desc: "Apply biofreeze/cream", freq: "As Needed" }
-                                    ].map(opt => (
-                                        <button
-                                            key={opt.label}
-                                            onClick={() => {
-                                                setNewRecTitle(opt.label);
-                                                setNewRecDesc(opt.desc);
-                                                setNewRecFreq(opt.freq);
-                                                setNewRecCategory('relief');
-                                            }}
-                                            className="text-xs bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-1.5 rounded-full border border-blue-500/20 transition-colors"
-                                        >
-                                            + {opt.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
+                                <select
+                                    value={newRecCategory}
+                                    onChange={(e) => setNewRecCategory(e.target.value as any)}
+                                    className="w-full h-10 bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="relief">Relief & Recovery</option>
+                                    <option value="movement">Movement & Mobility</option>
+                                    <option value="lifestyle">Lifestyle & Wellness</option>
+                                    <option value="custom">Custom</option>
+                                </select>
                             </div>
-                        </div>
 
-                        <div className="space-y-3">
+                            {/* Dynamic Suggestions */}
+                            <div className="flex flex-wrap gap-2">
+                                {({
+                                    relief: ["Cold Therapy", "Heat Therapy", "Contrast Therapy", "Rest & Elevation", "Topical Relief"],
+                                    movement: ["Walk", "Run", "Yoga", "Mobility", "Swim", "Gym"],
+                                    lifestyle: ["Breathwork", "Meditate", "Journal", "Hydrate", "Sleep", "Nature"],
+                                    custom: ["Ice Bath", "Sauna", "Walk", "Journal", "Stretch", "Breathwork"]
+                                }[newRecCategory] || []).map(suggestion => (
+                                    <button
+                                        key={suggestion}
+                                        onClick={() => setNewRecTitle(suggestion)}
+                                        className="text-xs px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors border border-zinc-700"
+                                    >
+                                        + {suggestion}
+                                    </button>
+                                ))}
+                            </div>
+
                             <div className="grid grid-cols-2 gap-2">
                                 <Input
                                     placeholder="Recommendation (e.g. Ice Back)"
@@ -632,7 +744,7 @@ export default function SessionActive() {
                             </div>
                             <div>
                                 <textarea
-                                    placeholder="Details (e.g. 20 mins, specific instructions...)"
+                                    placeholder="Details"
                                     value={newRecDesc}
                                     onChange={(e) => setNewRecDesc(e.target.value)}
                                     className="w-full min-h-[80px] bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-y"

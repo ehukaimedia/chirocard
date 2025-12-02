@@ -5,10 +5,9 @@ import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { Info, AlertTriangle, ChevronLeft, History, Printer, Calendar, Check, Clock, Trash2, Edit } from "lucide-react";
 import { useState } from "react";
 import { Modal } from "../components/ui/Modal";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
 import { useAppStore } from "../store/useAppStore";
 import { useNavigate } from "react-router-dom";
+import { BodyworkRoutineModal, type BodyworkRoutineData } from "../components/Shared/BodyworkRoutineModal";
 
 export default function SessionReport() {
     const { id } = useParams();
@@ -21,12 +20,7 @@ export default function SessionReport() {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRecIndex, setEditingRecIndex] = useState<number | null>(null);
-    const [editTitle, setEditTitle] = useState("");
-    const [editDesc, setEditDesc] = useState("");
-    const [editCategory, setEditCategory] = useState("");
-    const [editDays, setEditDays] = useState<number[]>([]);
-    const [editTimes, setEditTimes] = useState<string[]>([]);
-    const [newTimeInput, setNewTimeInput] = useState("");
+    const [modalInitialValues, setModalInitialValues] = useState<BodyworkRoutineData | undefined>(undefined);
 
     // Post-Session Data State
     const [journalEntry, setJournalEntry] = useState("");
@@ -97,47 +91,33 @@ export default function SessionReport() {
 
     const handleAddToCalendar = (rec: any, index: number) => {
         setEditingRecIndex(index);
-        setEditTitle(rec.title);
-        setEditDesc(rec.description || "");
-        setEditCategory(rec.category);
-        setEditDays(rec.daysOfWeek || [0, 1, 2, 3, 4, 5, 6]);
-        setEditTimes(rec.reminderTimes || []);
+        setModalInitialValues({
+            title: rec.title,
+            description: rec.description || "",
+            category: rec.category,
+            daysOfWeek: rec.daysOfWeek || [0, 1, 2, 3, 4, 5, 6],
+            reminderTimes: [] // Explicitly ignoring legacy reminder times as requested
+        });
         setIsModalOpen(true);
     };
 
-    const handleConfirmAdd = async () => {
+    const handleConfirmAdd = async (data: BodyworkRoutineData) => {
         if (editingRecIndex === null) return;
 
         try {
-            // Assuming 'rec' is available from the context where handleAddToCalendar was called
-            // For this specific change, we'll use the 'edit' states as the source for the new routine.
-            // If 'addToRoutine' was meant to be a separate variable, it would need to be defined.
-            // Based on the instruction, the provided block replaces the existing db.homework.add call.
-            // We'll construct 'addToRoutine' from the current edit states for a syntactically correct result.
-            const addToRoutine = {
-                title: editTitle,
-                description: editDesc,
-                frequency: editDays.length === 7 ? "daily" : "custom",
-                daysOfWeek: editDays,
-                reminderTimes: editTimes,
-                category: editCategory,
-            };
+            await db.routines.add({
+                title: data.title,
+                description: data.description || "",
+                frequency: data.daysOfWeek.length === 7 ? "daily" : "custom",
+                daysOfWeek: data.daysOfWeek,
+                reminderTimes: data.reminderTimes,
+                isCompletedToday: false,
+                category: data.category || 'relief',
+                status: 'active',
+                id: crypto.randomUUID(),
+                createdAt: Date.now()
+            });
 
-            // 2. Add to Routines
-            if (addToRoutine) {
-                await db.routines.add({
-                    title: addToRoutine.title,
-                    description: addToRoutine.description || "",
-                    frequency: addToRoutine.frequency || "daily",
-                    daysOfWeek: addToRoutine.daysOfWeek || [], // Default to daily
-                    reminderTimes: addToRoutine.reminderTimes || [],
-                    isCompletedToday: false,
-                    category: addToRoutine.category as any || 'relief', // Default category
-                    status: 'active',
-                    id: crypto.randomUUID(),
-                    createdAt: Date.now()
-                });
-            }
             setAddedRecs(prev => {
                 const next = new Set(prev);
                 next.add(editingRecIndex);
@@ -292,6 +272,66 @@ export default function SessionReport() {
                                 </div>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {/* Services, Modalities & Findings Grid */}
+                {(session.serviceTags?.length > 0 || session.modalityTags?.length > 0 || session.findingTags?.length > 0) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 break-inside-avoid">
+                        {/* Services & Modalities */}
+                        {(session.serviceTags?.length > 0 || session.modalityTags?.length > 0) && (
+                            <section>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <h2 className="text-lg font-bold text-zinc-900">Services & Modalities</h2>
+                                    <div className="h-px bg-zinc-200 flex-1"></div>
+                                </div>
+                                <div className="bg-white border border-zinc-200 rounded-xl p-4 space-y-4">
+                                    {session.serviceTags?.length > 0 && (
+                                        <div>
+                                            <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Services</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {session.serviceTags?.map((tag: string) => (
+                                                    <span key={tag} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded border border-emerald-100 font-medium">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {session.modalityTags?.length > 0 && (
+                                        <div>
+                                            <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Modalities</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {session.modalityTags?.map((tag: string) => (
+                                                    <span key={tag} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 font-medium">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Clinical Findings */}
+                        {session.findingTags?.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <h2 className="text-lg font-bold text-zinc-900">Clinical Findings</h2>
+                                    <div className="h-px bg-zinc-200 flex-1"></div>
+                                </div>
+                                <div className="bg-white border border-zinc-200 rounded-xl p-4">
+                                    <div className="flex flex-wrap gap-2">
+                                        {session.findingTags?.map((tag: string) => (
+                                            <span key={tag} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-100 font-medium">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+                        )}
                     </div>
                 )}
 
@@ -590,96 +630,16 @@ export default function SessionReport() {
                 </p>
             </footer>
 
-            {/* Add to Calendar Modal */}
-            <Modal
+            {/* Add to Bodywork Routine Modal */}
+            <BodyworkRoutineModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title="Add to Wellness Routine"
+                onConfirm={handleConfirmAdd}
+                initialValues={modalInitialValues}
+                title="Add to Bodywork Routine"
                 description="Customize this recommendation for your calendar."
                 confirmLabel="Add Routine"
-                cancelLabel="Cancel"
-                onConfirm={handleConfirmAdd}
-            >
-                <div className="space-y-4 py-2">
-                    <Input
-                        label="Title"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                    />
-                    <Input
-                        label="Description"
-                        value={editDesc}
-                        onChange={(e) => setEditDesc(e.target.value)}
-                    />
-
-                    <div>
-                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
-                        <div className="flex justify-between gap-1">
-                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
-                                const isSelected = editDays.includes(i);
-                                return (
-                                    <button
-                                        key={i}
-                                        onClick={() => {
-                                            if (isSelected) setEditDays(editDays.filter(d => d !== i));
-                                            else setEditDays([...editDays, i].sort());
-                                        }}
-                                        className={`
-                                            w-8 h-8 rounded-full text-xs font-medium transition-all
-                                            ${isSelected
-                                                ? 'bg-emerald-500 text-white shadow-sm scale-110'
-                                                : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'}
-                                        `}
-                                    >
-                                        {day}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <p className="text-[10px] text-zinc-400 mt-1 text-center">Select days to schedule</p>
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-medium text-zinc-500 mb-2 block">Reminders</label>
-                        <div className="space-y-2">
-                            <div className="flex flex-wrap gap-2">
-                                {editTimes.map((time, i) => (
-                                    <div key={i} className="flex items-center gap-1 bg-zinc-100 px-2 py-1 rounded-md text-sm">
-                                        <Clock className="w-3 h-3 text-zinc-400" />
-                                        <span>{time}</span>
-                                        <button
-                                            onClick={() => setEditTimes(editTimes.filter((_, idx) => idx !== i))}
-                                            className="text-zinc-400 hover:text-red-500 ml-1"
-                                        >
-                                            <Trash2 className="w-3 h-3" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex gap-2">
-                                <Input
-                                    type="time"
-                                    value={newTimeInput}
-                                    onChange={(e) => setNewTimeInput(e.target.value)}
-                                    className="flex-1"
-                                />
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                        if (newTimeInput && !editTimes.includes(newTimeInput)) {
-                                            setEditTimes([...editTimes, newTimeInput].sort());
-                                            setNewTimeInput("");
-                                        }
-                                    }}
-                                >
-                                    Add
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Modal>
+            />
 
             {/* Delete Confirmation Modal */}
             <Modal
