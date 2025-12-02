@@ -1,70 +1,65 @@
-# ChiroCard: The Digital Body Work Passport
+# ChiroCard Lite
 
-**ChiroCard** is a privacy-first, local-first Progressive Web App (PWA) designed to be the definitive "Digital Passport" for your holistic health. It bridges the gap between you and your bodywork practitioners (Chiropractors, Massage Therapists, PTs) by giving you ownership of your own body history.
+**Your Digital Body Work Passport.**
 
-## 🚀 Core Concept
+ChiroCard is a privacy-first, local-first web application that empowers patients to own their health data. It serves as a bridge between patients and holistic practitioners (Chiropractors, Massage Therapists, PTs, etc.), enabling seamless data sharing without centralized servers or accounts.
 
-Unlike traditional medical records held by clinics, **ChiroCard is user-owned**. It lives on your device, encrypts your data locally, and serves as a "Passport" you present to any practitioner to give them instant, accurate context about your body.
+## Core Philosophy
 
-### Key Features
+*   **Patient is the Database**: All health records, history, and preferences live on the patient's device (indexedDB).
+*   **Zero-Knowledge Cloud**: We do not store user data. Syncing is optional and user-controlled.
+*   **Frictionless Practitioner Experience**: Practitioners use a stateless "Kiosk Mode" to view and chart sessions. No accounts, no login, no installation required.
 
-*   **🪪 Digital Passport Profile:** A professional-grade, read-only view for practitioners. Instantly communicates:
-    *   **Contact Info:** Email, Phone, and Address for seamless communication.
-    *   **Biometrics:** Height, Weight, Age, Activity Level, Occupation.
-    *   **Clinical Data:** Medical History, Medications, Allergies, Mobility/ROM limitations.
-    *   **Critical Alerts:** Contraindications (Red) and Focus Areas (Amber).
-*   **📄 Professional PDF Reports:** Generate universally compatible, professionally styled PDF session records.
-    *   **Comprehensive Data:** Includes patient contact info, practitioner details, body log, notes, and recommendations.
-    *   **Digital Signature:** Authenticated with practitioner signature.
-    *   **Universal Compatibility:** Robust generation ensures correct formatting and download across devices.
-*   **📊 Gen Z Dashboard:** A modern, high-contrast "Bioluminescent" dark mode interface with a Bento Grid layout for intuitive insights.
-*   **🔒 Local-First Privacy:** All data is stored locally on your device using IndexedDB (Dexie.js). No cloud servers, no tracking.
-*   **🌍 Global Compliance:** Designed for HIPAA, GDPR, and CCPA adherence. Your data never leaves your device unless *you* export it.
-*   **🤝 Practitioner Mode (Guest View):** A zero-friction flow where you hand your unlocked device to a practitioner to log a session without them needing an account or app.
-*   **📅 Smart Scheduling:** Track appointments and assigned "Homework" (stretches, exercises).
-*   **📍 Google Places Integration:** Instantly add practitioners and auto-fill addresses using Google Maps data.
+## Key Features
 
-## 🛠 Tech Stack
+### For Patients
+*   **Digital Passport**: Carry your MRI results, body history, and preferences in your pocket.
+*   **One-Tap Check-In**: Start a session and generate a QR code to instantly share your status with your practitioner.
+*   **Session History**: Keep a permanent record of every adjustment, massage, and therapy session.
+*   **Care Team**: Automatically build a list of your trusted practitioners just by scanning their session records.
 
-*   **Frontend:** React 18 + Vite
-*   **Language:** TypeScript
-*   **Styling:** Tailwind CSS (Dark Mode enforced)
-*   **Database:** Dexie.js (IndexedDB wrapper)
-*   **Icons:** Lucide React
-*   **Routing:** React Router DOM
+### For Practitioners
+*   **Kiosk Mode**: A dedicated interface for tablets and phones to chart sessions.
+*   **Instant Intake**: Scan a patient's QR code to instantly load their profile and current complaints.
+*   **Smart Charting**: Interactive body map for logging adjustments and notes.
+*   **Auto-Add**: Your contact info (Name, Clinic) is automatically saved to the patient's phone when they scan your session record.
+*   **Google Places Integration**: Accurate clinic address auto-fill.
+*   **Web Share**: Easily text or email session records to patients who can't scan immediately.
 
-## 🏃‍♂️ Getting Started
+## Workflow
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/chirocard.git
-    cd chirocard
-    ```
+1.  **Patient** starts a session on their phone and enters current complaints.
+2.  **Patient** shows the "Check-In" QR code to the Practitioner.
+3.  **Practitioner** scans the code with the **Kiosk** (Tablet/Phone).
+4.  **Practitioner** performs the treatment and charts it in the Kiosk.
+5.  **Practitioner** hits "Finish" to generate a session QR code.
+6.  **Patient** scans the session QR code to save the record and automatically add the practitioner to their team.
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+## Tech Stack
 
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
+*   **Frontend**: React, TypeScript, Vite, Tailwind CSS
+*   **Database**: Dexie.js (IndexedDB wrapper) for local storage.
+*   **State Management**: Zustand
+*   **QR/Scanning**: `html5-qrcode`, `qrcode.react`
+*   **Compression**: `pako` (zlib) for efficient QR data transfer.
 
-4.  **Open in Browser:**
-    Navigate to `http://localhost:5173`
+## Development
 
-## 📱 Mobile-First Design
+### Install Dependencies
+```bash
+npm install
+```
 
-ChiroCard is designed as a PWA. For the best experience, use Chrome or Safari on mobile and "Add to Home Screen" to install it as a native-feeling app.
+### Run Local Server
+```bash
+npm run dev
+```
 
-## 🚀 Future Roadmap
+### Build for Production
+```bash
+npm run build
+```
 
-We are actively working on bringing ChiroCard to the Apple App Store and Google Play Store.
-*   **Native Mobile Apps:** Using Capacitor to wrap the existing web app for iOS and Android.
-*   **Cloud Sync (Optional):** Future ability to sync data between devices (currently local-only).
-*   **Practitioner Portal:** A dedicated app for practitioners to manage multiple client "Passports".
+## License
 
-## 📄 License
-
-MIT
+Proprietary. All rights reserved.

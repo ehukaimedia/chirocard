@@ -6,11 +6,13 @@ import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
 import { db } from "../db/db";
 import { Modal } from "../components/ui/Modal";
+import { HelpModal } from "../components/Help/HelpModal";
 
 export default function Settings() {
     const navigate = useNavigate();
     const { calendarViewSpan, setCalendarViewSpan, reset } = useAppStore();
     const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
+    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
     const handleFreshStart = async () => {
         try {
@@ -105,7 +107,7 @@ export default function Settings() {
 
                     <div
                         onClick={() => navigate("/practitioner")}
-                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3 col-span-2"
+                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
                     >
                         <div className="p-3 bg-zinc-100 rounded-full">
                             <svg className="w-6 h-6 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,6 +117,21 @@ export default function Settings() {
                         <div>
                             <h2 className="font-semibold text-zinc-900">Practitioner Mode</h2>
                             <p className="text-xs text-zinc-500">Open Kiosk Interface</p>
+                        </div>
+                    </div>
+
+                    <div
+                        onClick={() => setIsHelpModalOpen(true)}
+                        className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
+                    >
+                        <div className="p-3 bg-teal-50 rounded-full">
+                            <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="font-semibold text-zinc-900">Help & Guide</h2>
+                            <p className="text-xs text-zinc-500">How it works</p>
                         </div>
                     </div>
                 </section>
@@ -200,6 +217,11 @@ export default function Settings() {
                 cancelLabel="Cancel"
                 variant="danger"
                 onConfirm={handleFreshStart}
+            />
+
+            <HelpModal
+                isOpen={isHelpModalOpen}
+                onClose={() => setIsHelpModalOpen(false)}
             />
         </div>
     );
