@@ -102,22 +102,28 @@ export default function Intake() {
 
     const { toast } = useToast();
 
+    const hasCheckedResume = useRef(false);
+
     useEffect(() => {
         // Check if there is existing intake data when the component mounts
-        if (intakeData && (Object.keys(intakeData.bodyMap).length > 0 || intakeData.notes)) {
-            setShowResumeModal(true);
-        } else if (appointmentId) {
-            // If starting from an appointment, try to find it and pre-fill
-            db.appointments.get(appointmentId).then(appt => {
-                if (appt) {
-                    db.practitioners.get(appt.practitionerId).then(p => {
-                        if (p) {
-                            setSelectedPractitioner(p);
-                            toast(`Starting session with ${p.name}`, "info");
-                        }
-                    });
-                }
-            });
+        // We use a ref to ensure this only happens once (on entry), not when data updates during the session
+        if (!hasCheckedResume.current) {
+            if (intakeData && (Object.keys(intakeData.bodyMap).length > 0 || intakeData.notes)) {
+                setShowResumeModal(true);
+            } else if (appointmentId) {
+                // If starting from an appointment, try to find it and pre-fill
+                db.appointments.get(appointmentId).then(appt => {
+                    if (appt) {
+                        db.practitioners.get(appt.practitionerId).then(p => {
+                            if (p) {
+                                setSelectedPractitioner(p);
+                                toast(`Starting session with ${p.name}`, "info");
+                            }
+                        });
+                    }
+                });
+            }
+            hasCheckedResume.current = true;
         }
     }, [appointmentId, intakeData]);
 
