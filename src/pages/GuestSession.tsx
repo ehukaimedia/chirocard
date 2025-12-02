@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../db/db";
 import { useAppStore } from "../store/useAppStore";
 import { Button } from "../components/ui/Button";
@@ -14,10 +13,8 @@ import { SessionCompletionQRModal } from "../components/Session/SessionCompletio
 export default function GuestSession() {
     const navigate = useNavigate();
     const { activePractitioner, intakeData, resumedSessionData, activeAppointmentId, scannedPatientData } = useAppStore();
-    const localUser = useLiveQuery(() => db.users.get("me"));
-
     // Prioritize scanned data if available (Guest Mode)
-    const user = scannedPatientData?.profile || localUser;
+    const user = scannedPatientData?.profile;
     const currentIntake = scannedPatientData?.intake || intakeData;
     const { toast } = useToast();
 
@@ -174,59 +171,63 @@ export default function GuestSession() {
 
     if (step === "completed") {
         return (
-            <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 p-4 pb-24 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
-                <div className="bg-emerald-500/10 p-6 rounded-full mb-6">
-                    <CheckCircle className="w-16 h-16 text-emerald-500" />
-                </div>
-                <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Session Completed!</h2>
-                <p className="text-zinc-400 text-center max-w-md mb-8">
-                    The session has been recorded and the PDF has been generated.
-                </p>
+            <div className="dark">
+                <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 p-4 pb-24 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
+                    <div className="bg-emerald-500/10 p-6 rounded-full mb-6">
+                        <CheckCircle className="w-16 h-16 text-emerald-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Session Completed!</h2>
+                    <p className="text-zinc-400 text-center max-w-md mb-8">
+                        The session has been recorded and the PDF has been generated.
+                    </p>
 
-                <div className="flex flex-col gap-4 w-full max-w-xs">
-                    <Button
-                        variant="outline"
-                        className="w-full flex items-center justify-center gap-2 h-12"
-                        onClick={() => {
-                            if (completedSessionId) {
-                                navigate(`/session/${completedSessionId}/report`);
-                            }
-                        }}
-                    >
-                        <FileText className="w-4 h-4" /> View/ Print Session Report
-                    </Button>
-                    <Button
-                        className="w-full flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                        onClick={() => setShowQRModal(true)}
-                    >
-                        <QrCode className="w-4 h-4" /> Show Session QR
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        className="w-full flex items-center justify-center gap-2 h-12 text-zinc-500"
-                        onClick={() => navigate("/dashboard")}
-                    >
-                        <Home className="w-4 h-4" /> Return to Dashboard
-                    </Button>
-                </div>
+                    <div className="flex flex-col gap-4 w-full max-w-xs">
+                        <Button
+                            variant="outline"
+                            className="w-full flex items-center justify-center gap-2 h-12"
+                            onClick={() => {
+                                if (completedSessionId) {
+                                    navigate(`/session/${completedSessionId}/report`);
+                                }
+                            }}
+                        >
+                            <FileText className="w-4 h-4" /> View/ Print Session Report
+                        </Button>
+                        <Button
+                            className="w-full flex items-center justify-center gap-2 h-12 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                            onClick={() => setShowQRModal(true)}
+                        >
+                            <QrCode className="w-4 h-4" /> Show Session QR
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            className="w-full flex items-center justify-center gap-2 h-12 text-zinc-500"
+                            onClick={() => navigate("/dashboard")}
+                        >
+                            <Home className="w-4 h-4" /> Return to Dashboard
+                        </Button>
+                    </div>
 
-                <SessionCompletionQRModal
-                    isOpen={showQRModal}
-                    onClose={() => setShowQRModal(false)}
-                    sessionData={completedSessionData}
-                />
+                    <SessionCompletionQRModal
+                        isOpen={showQRModal}
+                        onClose={() => setShowQRModal(false)}
+                        sessionData={completedSessionData}
+                    />
+                </div>
             </div>
         );
     }
 
     return (
-        <SessionEditor
-            initialData={resumedSessionData || undefined}
-            intakeData={currentIntake}
-            clientProfile={user}
-            defaultPractitionerName={activePractitioner?.name}
-            onSave={handleSave}
-            onExit={handleExit}
-        />
+        <div className="dark min-h-screen bg-zinc-950 text-zinc-50">
+            <SessionEditor
+                initialData={resumedSessionData || undefined}
+                intakeData={currentIntake}
+                clientProfile={user}
+                defaultPractitionerName={activePractitioner?.name}
+                onSave={handleSave}
+                onExit={handleExit}
+            />
+        </div>
     );
 }
