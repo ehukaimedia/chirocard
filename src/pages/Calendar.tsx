@@ -674,7 +674,12 @@ export default function Calendar() {
                         )}
                         <div className="grid grid-cols-2 gap-2">
                             <Input type="date" value={editApptDate} onChange={e => setEditApptDate(e.target.value)} />
-                            <Input type="time" value={editApptTime} onChange={e => setEditApptTime(e.target.value)} />
+                            <Input
+                                type="time"
+                                value={editApptTime}
+                                onChange={e => setEditApptTime(e.target.value)}
+                                step={routineTimeInterval === 1 ? "60" : "900"}
+                            />
                         </div>
                     </div>
 
@@ -713,7 +718,12 @@ export default function Calendar() {
                     )}
                     <div className="grid grid-cols-2 gap-2">
                         <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
-                        <Input type="time" value={apptTime} onChange={e => setApptTime(e.target.value)} />
+                        <Input
+                            type="time"
+                            value={apptTime}
+                            onChange={e => setApptTime(e.target.value)}
+                            step={routineTimeInterval === 1 ? "60" : "900"}
+                        />
                     </div>
                 </div>
             </Modal>

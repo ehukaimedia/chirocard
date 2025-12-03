@@ -39,7 +39,7 @@ export default function Dashboard() {
         []
     ) || [];
 
-    const appointments = useLiveQuery(() => db.appointments.orderBy("date").limit(1).toArray());
+    const appointments = useLiveQuery(() => db.appointments.where("date").aboveOrEqual(Date.now()).limit(1).toArray());
     const { currentSession, endSession, viewMode } = useAppStore();
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
