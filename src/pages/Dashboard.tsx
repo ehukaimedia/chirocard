@@ -6,9 +6,10 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { StatusUpdateModal } from "../components/Dashboard/StatusUpdateModal";
-import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight, Pencil } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight, Pencil, Bell } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
+import { RoutineVerificationModal } from "../components/Dashboard/RoutineVerificationModal";
 
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
@@ -21,28 +22,22 @@ export default function Dashboard() {
     const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
 
     // Get active routines for today
-    const activeRoutines = useLiveQuery(
-        async () => {
-            const dayOfWeek = new Date().getDay();
+    const allRoutines = useLiveQuery(() => db.routines.toArray()) || [];
 
-            // Get all routines
-            const allRoutines = await db.routines.toArray();
-
-            // Filter for active routines for today
-            return allRoutines.filter(r => {
-                // Check if active for today (based on daysOfWeek)
-                const days = r.daysOfWeek || [];
-                const isDayMatch = days.length === 0 || days.includes(dayOfWeek);
-                return isDayMatch;
-            });
-        },
-        []
-    ) || [];
+    const activeRoutines = allRoutines.filter(r => {
+        const dayOfWeek = new Date().getDay();
+        const days = r.daysOfWeek || [];
+        return days.length === 0 || days.includes(dayOfWeek);
+    });
 
     const appointments = useLiveQuery(() => db.appointments.where("date").aboveOrEqual(Date.now()).limit(1).toArray());
     const { currentSession, endSession, viewMode } = useAppStore();
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
+    const [showRoutineModal, setShowRoutineModal] = useState(false);
+
+    const pendingRoutines = activeRoutines.filter(r => !r.isCompletedToday);
+    const hasPendingRoutines = pendingRoutines.length > 0;
 
     const nextAppointment = appointments?.[0];
 
@@ -84,6 +79,18 @@ export default function Dashboard() {
                     </div>
                 </div>
                 <div className="hidden md:flex gap-3">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={`border-zinc-800 text-zinc-400 hover:text-zinc-100 relative ${hasPendingRoutines ? 'text-emerald-500 border-emerald-500/50' : ''}`}
+                        title="Notifications"
+                        onClick={() => hasPendingRoutines && setShowRoutineModal(true)}
+                    >
+                        <Bell className={`w-5 h-5 ${hasPendingRoutines ? 'animate-pulse' : ''}`} />
+                        {hasPendingRoutines && (
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-zinc-950"></span>
+                        )}
+                    </Button>
                     <Link to="/team">
                         <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="My Team">
                             <Users className="w-5 h-5" />
@@ -195,12 +202,24 @@ export default function Dashboard() {
                             </p>
                         </div>
                         <div
-                            onClick={() => navigate("/calendar")}
+                            onClick={() => {
+                                if (hasPendingRoutines) {
+                                    setShowRoutineModal(true);
+                                } else {
+                                    navigate("/calendar");
+                                }
+                            }}
                             className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50 cursor-pointer hover:border-emerald-500/50 transition-colors"
                         >
                             <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Bodywork Routine</p>
                             <p className="text-zinc-900 dark:text-zinc-200 font-semibold">
-                                {activeRoutines.filter(r => !r.isCompletedToday).length > 0 ? `${activeRoutines.filter(r => !r.isCompletedToday).length} remaining` : "All done!"}
+                                {allRoutines.length === 0
+                                    ? "Start a Routine"
+                                    : activeRoutines.length === 0
+                                        ? "Rest Day"
+                                        : activeRoutines.filter(r => !r.isCompletedToday).length > 0
+                                            ? `${activeRoutines.filter(r => !r.isCompletedToday).length} remaining`
+                                            : "All done!"}
                             </p>
                         </div>
                     </div>
@@ -381,6 +400,11 @@ export default function Dashboard() {
             <StatusUpdateModal
                 isOpen={showStatusModal}
                 onClose={() => setShowStatusModal(false)}
+            />
+            <RoutineVerificationModal
+                isOpen={showRoutineModal}
+                onClose={() => setShowRoutineModal(false)}
+                routines={pendingRoutines}
             />
         </div>
     );
