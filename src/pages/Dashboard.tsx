@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, type BodyworkRoutine, type Session } from "../db/db";
+import { db, type Session } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
 import { StatusUpdateModal } from "../components/Dashboard/StatusUpdateModal";
-import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, Users, Settings, History, CheckCircle, ChevronRight, Pencil, Bell } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, CheckCircle, ChevronRight, Pencil, Bell } from "lucide-react";
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { RoutineVerificationModal } from "../components/Dashboard/RoutineVerificationModal";
@@ -61,319 +61,229 @@ export default function Dashboard() {
         ? user.primaryComplaints.join(", ")
         : "Maintenance & Prevention";
 
-    const statusLabel = user?.primaryComplaints && user.primaryComplaints.length > 0
-        ? "Active Focus"
-        : "Current Status";
+
 
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 space-y-8 pb-24">
-            {/* Header */}
-            <header className="flex justify-between items-center mb-10">
-                <div className="flex items-center gap-3 md:gap-4">
-                    <img src="/chirocard-icon.png" alt="ChiroCard" className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl shadow-lg shadow-emerald-500/20" />
+        <div className="min-h-screen bg-light-bg dark:bg-dark-bg pb-32">
+            {/* Mobile Header - Sticky */}
+            <header className="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50 px-6 py-4 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <img src="/chirocard-icon.png" alt="ChiroCard" className="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/20" />
                     <div>
-                        <h1 className="text-2xl md:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter mb-0 leading-none">
-                            <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card<span className="text-emerald-600 dark:text-emerald-500">.</span>
+                        <h1 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter leading-none">
+                            <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card
                         </h1>
-                        <p className="text-zinc-500 dark:text-zinc-400 font-bold tracking-wide uppercase text-[9px] md:text-xs leading-tight hidden md:block">Your Digital Body Work Passport</p>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest uppercase">My Passport</p>
                     </div>
                 </div>
-                <div className="hidden md:flex gap-3">
+
+                <div className="flex gap-2">
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
-                        className={`border-zinc-800 text-zinc-400 hover:text-zinc-100 relative ${hasPendingRoutines ? 'text-emerald-500 border-emerald-500/50' : ''}`}
-                        title="Notifications"
+                        className={`relative text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 ${hasPendingRoutines ? 'text-emerald-500' : ''}`}
                         onClick={() => hasPendingRoutines && setShowRoutineModal(true)}
                     >
-                        <Bell className={`w-5 h-5 ${hasPendingRoutines ? 'animate-pulse' : ''}`} />
+                        <Bell className={`w-6 h-6 ${hasPendingRoutines ? '' : ''}`} />
                         {hasPendingRoutines && (
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-zinc-950"></span>
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-zinc-900"></span>
                         )}
                     </Button>
-                    <Link to="/team">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="My Team">
-                            <Users className="w-5 h-5" />
-                        </Button>
-                    </Link>
-                    <Link to="/calendar">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Calendar">
-                            <CalendarIcon className="w-5 h-5" />
-                        </Button>
-                    </Link>
-                    <Link to="/journal">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Bodywork Journal">
-                            <History className="w-5 h-5" />
-                        </Button>
-                    </Link>
                     <Link to="/profile">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Profile">
-                            <User className="w-5 h-5" />
-                        </Button>
-                    </Link>
-                    <Link to="/settings">
-                        <Button variant="outline" size="icon" className="border-zinc-800 text-zinc-400 hover:text-zinc-100" title="Settings">
-                            <Settings className="w-5 h-5" />
-                        </Button>
+                        <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
+                            <User className="w-5 h-5 text-zinc-400" />
+                        </div>
                     </Link>
                 </div>
             </header>
 
-            {/* Intuitive Insights - Simplified & Clean */}
-            <section className="mb-8">
-                <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-6">
-                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                        <div className="space-y-2 max-w-2xl">
-                            <div className="flex items-center gap-2 text-emerald-500 font-medium text-sm uppercase tracking-wider">
-                                <Info className="w-4 h-4" />
-                                <span>Did you know?</span>
+            <main className="px-6 pt-6 space-y-8">
+                {/* 1. Primary Hero Action */}
+                <section>
+                    {currentSession ? (
+                        <div className="bg-emerald-600 dark:bg-emerald-600 rounded-3xl p-6 text-white shadow-xl shadow-emerald-500/20 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-6 opacity-20">
+                                <Timer className="w-24 h-24 rotate-12" />
                             </div>
-                            <h2 className="text-xl md:text-2xl font-bold text-zinc-100">
-                                "Chiro" means <span className="text-emerald-400">Hand</span>.
-                            </h2>
-                            <p className="text-zinc-400 max-w-2xl mx-auto text-lg leading-relaxed">
-                                ChiroCard is your digital passport for holistic hands-on therapies—chiropractic, massage, physical therapy, cupping, and acupuncture, giving you full control of your holistic body-work data.
+
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider">
+                                        <ScanLine className="w-3 h-3 animate-pulse" />
+                                        <span>Active Session</span>
+                                    </div>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowClearConfirm(true); }}
+                                        className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-white/80" />
+                                    </button>
+                                </div>
+
+                                <h2 className="text-2xl font-bold mb-1">Session in Progress</h2>
+                                <p className="text-emerald-100 mb-6 text-sm font-medium">
+                                    Started {currentSession.startTime ? new Date(currentSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'just now'}
+                                </p>
+
+                                <Button
+                                    className="w-full bg-white text-emerald-700 hover:bg-emerald-50 border-none font-bold h-12 rounded-xl"
+                                    onClick={() => navigate(viewMode === 'session' ? "/session-active" : "/intake")}
+                                >
+                                    {viewMode === 'session' ? 'Continue Session' : 'Resume Check-In'}
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? (
+                            <div
+                                onClick={() => navigate("/intake", { state: { appointmentId: nextAppointment.id } })}
+                                className="group bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 rounded-3xl p-1 pb-1 shadow-lg cursor-pointer transform transition-all active:scale-[0.98]"
+                            >
+                                <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[22px] p-6 h-full border border-zinc-800 relative overflow-hidden">
+                                    <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
+
+                                    <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-500">
+                                            <CalendarIcon className="w-8 h-8 text-emerald-500" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-1">Check In Now</h2>
+                                            <p className="text-zinc-400 text-sm">
+                                                For your {new Date(nextAppointment.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} Appointment
+                                            </p>
+                                        </div>
+                                        <div className="w-full flex items-center justify-center gap-2 text-emerald-500 font-bold text-sm uppercase tracking-wider pt-2">
+                                            <span>Tap to Start</span>
+                                            <ChevronRight className="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div
+                                onClick={() => navigate("/intake")}
+                                className="group bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 shadow-xl shadow-emerald-500/20 cursor-pointer text-center relative overflow-hidden transform transition-all active:scale-[0.98]"
+                            >
+                                <div className="absolute top-0 right-0 p-8 opacity-10">
+                                    <Plus className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
+                                </div>
+                                <div className="relative z-10 flex flex-col items-center">
+                                    <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 group-active:scale-95 transition-transform">
+                                        <Plus className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-white mb-1">New Session</h2>
+                                    <p className="text-emerald-100 text-sm font-medium mb-0">Record a new bodywork visit</p>
+                                </div>
+                            </div>
+                        )
+                    )}
+                </section>
+
+                {/* 2. Status & Routine Mini-Cards */}
+                <section className="grid grid-cols-2 gap-4">
+                    {/* Status Card */}
+                    <Card
+                        onClick={() => setShowStatusModal(true)}
+                        className="p-4 flex flex-col justify-between h-32 cursor-pointer border-none bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div className="p-2 bg-blue-500/10 rounded-lg">
+                                <Info className="w-5 h-5 text-blue-500" />
+                            </div>
+                            <button className="text-zinc-300">
+                                <Pencil className="w-3 h-3" />
+                            </button>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 mb-1">Current Focus</p>
+                            <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm leading-tight line-clamp-2">
+                                {activeFocus}
                             </p>
                         </div>
+                    </Card>
 
-                        <div className="flex gap-3 flex-wrap">
-                            {['Chiropractic', 'Massage', 'PT', 'Cupping', 'Acupuncture'].map(tag => (
-                                <span key={tag} className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-xs font-medium border border-zinc-700">
+                    {/* Routine Card */}
+                    <Card
+                        onClick={() => navigate("/calendar")}
+                        className={`p-4 flex flex-col justify-between h-32 cursor-pointer border-none transition-colors ${hasPendingRoutines
+                            ? 'bg-orange-500/5 hover:bg-orange-500/10'
+                            : 'bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                            }`}
+                    >
+                        <div className="flex justify-between items-start">
+                            <div className={`p-2 rounded-lg ${hasPendingRoutines ? 'bg-orange-500/10' : 'bg-emerald-500/10'}`}>
+                                {hasPendingRoutines ? (
+                                    <Bell className={`w-5 h-5 ${hasPendingRoutines ? 'text-orange-500' : 'text-emerald-500'}`} />
+                                ) : (
+                                    <CheckCircle className="w-5 h-5 text-emerald-500" />
+                                )}
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 mb-1">Daily Routine</p>
+                            <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm leading-tight">
+                                {allRoutines.length === 0 ? "No routines set" :
+                                    (hasPendingRoutines ? `${pendingRoutines.length} tasks todo` : "All complete!")}
+                            </p>
+                        </div>
+                    </Card>
+                </section>
+
+                {/* 3. Recent Activity */}
+                <section>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Recent Sessions</h3>
+                        <Link to="/journal" className="text-xs font-medium text-emerald-600 dark:text-emerald-500">View All</Link>
+                    </div>
+
+                    <div className="space-y-3">
+                        {sessions?.map((session: Session) => (
+                            <SessionCard
+                                key={session.id}
+                                session={session}
+                                onDelete={handleDeleteClick}
+                            />
+                        ))}
+                        {(!sessions || sessions.length === 0) && (
+                            <div className="text-center py-8 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                                <p className="text-zinc-400 text-sm">No recent sessions found.</p>
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                {/* 4. Did You Know? (Moved to bottom) */}
+                <section className="bg-zinc-900 rounded-2xl p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-wider mb-2">
+                            <Info className="w-4 h-4" />
+                            <span>Did you know?</span>
+                        </div>
+                        <p className="text-zinc-100 font-medium text-sm leading-relaxed mb-4">
+                            "Chiro" means <span className="text-emerald-400">Hand</span>. ChiroCard is your digital passport for all hands-on therapies.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            {['Chiropractic', 'Massage', 'PT'].map(tag => (
+                                <span key={tag} className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-[10px] border border-zinc-700">
                                     {tag}
                                 </span>
                             ))}
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* Holistic Health Passport (Quick View) */}
-            <section>
-                <div className="flex justify-between items-end mb-4">
-                    <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Current Status</h2>
-                    <Link to="/profile">
-                        <Button variant="ghost" size="sm" className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
-                            View Full Passport
-                        </Button>
-                    </Link>
-                </div>
-
-                <Card className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-6 relative overflow-hidden shadow-sm">
-                    {/* Status Indicator */}
-                    <div className="flex justify-between items-start mb-6 relative z-10">
-                        <div>
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-emerald-600 dark:text-emerald-500 text-xs font-bold tracking-wider uppercase">{statusLabel}</span>
-                                <button
-                                    onClick={() => setShowStatusModal(true)}
-                                    className="text-zinc-400 hover:text-emerald-500 transition-colors p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                                    title="Update Status"
-                                >
-                                    <Pencil className="w-3 h-3" />
-                                </button>
-                            </div>
-                            <h3 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 leading-tight" title={activeFocus}>{activeFocus}</h3>
-                        </div>
-                        <div className="h-3 w-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
+                {/* Compliance Footer */}
+                <footer className="pt-4 pb-8 text-center opacity-50">
+                    <div className="flex items-center justify-center gap-1 text-zinc-500 mb-2">
+                        <ShieldCheck className="w-3 h-3" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Local-First Privacy</span>
                     </div>
+                </footer>
+            </main>
 
-                    {/* Quick Stats Grid */}
-                    <div className="grid grid-cols-2 gap-4 relative z-10">
-                        <div
-                            onClick={() => {
-                                if (nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString()) {
-                                    navigate("/intake", { state: { appointmentId: nextAppointment.id } });
-                                } else {
-                                    navigate("/calendar");
-                                }
-                            }}
-                            className={`
-                                bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50 cursor-pointer transition-colors
-                                ${nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString()
-                                    ? 'border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10'
-                                    : 'hover:border-emerald-500/50'}
-                            `}
-                        >
-                            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">
-                                {nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? "Today's Session" : "Next Session"}
-                            </p>
-                            <p className="text-zinc-900 dark:text-zinc-200 font-semibold truncate">
-                                {nextAppointment ? new Date(nextAppointment.date).toLocaleDateString() : "None scheduled"}
-                            </p>
-                        </div>
-                        <div
-                            onClick={() => {
-                                if (hasPendingRoutines) {
-                                    setShowRoutineModal(true);
-                                } else {
-                                    navigate("/calendar");
-                                }
-                            }}
-                            className="bg-zinc-50 dark:bg-zinc-950/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800/50 cursor-pointer hover:border-emerald-500/50 transition-colors"
-                        >
-                            <p className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-1">Bodywork Routine</p>
-                            <p className="text-zinc-900 dark:text-zinc-200 font-semibold">
-                                {allRoutines.length === 0
-                                    ? "Start a Routine"
-                                    : activeRoutines.length === 0
-                                        ? "Rest Day"
-                                        : activeRoutines.filter(r => !r.isCompletedToday).length > 0
-                                            ? `${activeRoutines.filter(r => !r.isCompletedToday).length} remaining`
-                                            : "All done!"}
-                            </p>
-                        </div>
-                    </div>
-                </Card>
-            </section>
-            {/* Quick Actions Grid */}
-            <div className={`grid ${currentSession ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'} gap-4`}>
-                {currentSession ? (
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-4 relative">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/40 rounded-full animate-pulse">
-                                <Timer className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Session in Progress</h3>
-                                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                                    Started {currentSession.startTime ? new Date(currentSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'just now'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 absolute top-4 right-4"
-                            onClick={() => setShowClearConfirm(true)}
-                            title="Discard Session"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </Button>
-
-                        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                            {viewMode === 'session' ? (
-                                <Button
-                                    className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                                    onClick={() => navigate("/session-active")}
-                                >
-                                    <ScanLine className="w-4 h-4 mr-2" />
-                                    Return to Session
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="outline"
-                                    className="flex-1 md:flex-none border-emerald-200 hover:bg-emerald-100 dark:border-emerald-800 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
-                                    onClick={() => navigate("/intake")}
-                                >
-                                    Resume Check-In
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        {/* 1. Start Session / Check In (Primary) */}
-                        {nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? (
-                            <Button
-                                variant="outline"
-                                className="h-auto py-6 flex flex-col gap-3 border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all group relative overflow-hidden"
-                                onClick={() => navigate("/intake", { state: { appointmentId: nextAppointment.id } })}
-                            >
-                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                    <CalendarIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                                <div className="text-center">
-                                    <span className="block font-bold text-zinc-900 dark:text-zinc-100">Check In</span>
-                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                                        {new Date(nextAppointment.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} Appointment
-                                    </span>
-                                </div>
-                            </Button>
-                        ) : (
-                            <Button
-                                variant="outline"
-                                className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group"
-                                onClick={() => navigate("/intake")}
-                            >
-                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                    <Plus className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                                <span className="font-medium text-zinc-700 dark:text-zinc-300">Start Session</span>
-                            </Button>
-                        )}
-
-                        {/* 2. Profile (Always Visible) */}
-                        <Button
-                            variant="outline"
-                            className="h-auto py-6 flex flex-col gap-3 border-zinc-200 dark:border-zinc-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all group"
-                            onClick={() => navigate("/profile")}
-                        >
-                            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full group-hover:scale-110 transition-transform">
-                                <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <span className="font-medium text-zinc-700 dark:text-zinc-300">Profile</span>
-                        </Button>
-
-                        {/* 3. Bodywork Routine (Conditional) */}
-                        {activeRoutines.length > 0 && (
-                            <div
-                                onClick={() => navigate("/calendar")}
-                                className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800 flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                        <CheckCircle className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <span className="block font-medium text-zinc-700 dark:text-zinc-300">Bodywork Routine</span>
-                                        <span className="text-xs text-zinc-500">
-                                            {activeRoutines.filter((r: BodyworkRoutine) => r.isCompletedToday).length}/{activeRoutines.length} completed
-                                        </span>
-                                    </div>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-zinc-400" />
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-
-
-
-
-
+            {/* Modals */}
             <WelcomeModal />
-
-            {/* Recent Activity */}
-            <section>
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 mb-4">Recent Activity</h2>
-                <div className="space-y-4">
-                    {sessions?.map((session: Session) => (
-                        <SessionCard
-                            key={session.id}
-                            session={session}
-                            onDelete={handleDeleteClick}
-                        />
-                    ))}
-                    {sessions?.length === 0 && (
-                        <p className="text-center text-zinc-500 py-8">No sessions yet. Start one above!</p>
-                    )}
-                </div>
-            </section>
-            {/* Compliance Footer */}
-            <footer className="pt-8 pb-4 border-t border-zinc-800/50">
-                <div className="flex items-center justify-center gap-2 text-zinc-500 mb-2">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-widest">Global Privacy Standards</span>
-                </div>
-                <p className="text-center text-[10px] text-zinc-600 max-w-xs mx-auto leading-relaxed">
-                    Local-First Architecture designed for <strong>HIPAA, GDPR, & CCPA</strong> compliance.
-                    <br />
-                    We do not collect any user data. Your data is safely kept on your device or the cloud provider of your choosing.
-                </p>
-            </footer>
-
             <Modal
                 isOpen={!!deleteSessionId}
                 onClose={() => setDeleteSessionId(null)}
