@@ -11,6 +11,7 @@ import { db } from "../db/db";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { SERVICE_TAGS, FINDING_TAGS } from "../db/db";
 import { useLiveQuery } from "dexie-react-hooks";
+import { trackEvent } from "../utils/analytics";
 
 
 
@@ -180,6 +181,7 @@ export default function SessionActive() {
             });
 
             toast("Session saved successfully!", "success");
+            trackEvent('complete_session', { id: currentSession.id, practitioner: currentSession.practitionerName });
             endSession();
             navigate("/");
         } catch (error) {

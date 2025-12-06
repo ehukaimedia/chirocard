@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Practitioner } from "../../db/db";
+import { trackEvent } from "../../utils/analytics";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/Input";
@@ -44,25 +45,28 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
     const handleSave = async () => {
         if (!formData.name) return;
 
+        const practitionerData = {
+            name: formData.name,
+            role: formData.role as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other",
+            clinicName: formData.clinicName || "",
+            email: formData.email || "",
+            phone: formData.phone || "",
+            address: formData.address || "",
+            website: formData.website || "",
+        };
+
         try {
             if (editingId) {
-                await db.practitioners.update(editingId, {
-                    ...formData,
-                    role: formData.role as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other"
-                });
+                await db.practitioners.update(editingId, practitionerData);
+                toast("Practitioner updated successfully", "success");
             } else {
                 const count = await db.practitioners.count();
                 await db.practitioners.add({
+                    ...practitionerData,
                     id: crypto.randomUUID(),
-                    name: formData.name,
-                    role: formData.role as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other",
-                    clinicName: formData.clinicName || "",
-                    email: formData.email || "",
-                    phone: formData.phone || "",
-                    address: formData.address || "",
-                    website: formData.website || "",
                     order: count // Add to end
                 });
+                trackEvent('add_practitioner', { name: practitionerData.name, category: practitionerData.role });
             }
 
             setIsEditing(false);

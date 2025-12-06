@@ -9,6 +9,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useNavigate } from "react-router-dom";
 import { BodyworkRoutineModal, type BodyworkRoutineData } from "../components/Shared/BodyworkRoutineModal";
 import type { PostSessionEntry, BodyworkRoutine } from "../db/db";
+import { trackEvent } from "../utils/analytics";
 
 export default function SessionReport() {
     const { id } = useParams();
@@ -119,6 +120,8 @@ export default function SessionReport() {
                 createdAt: Date.now()
             });
 
+            trackEvent('add_routine_to_calendar', { title: data.title, category: data.category });
+
             setAddedRecs(prev => {
                 const next = new Set(prev);
                 next.add(editingRecIndex);
@@ -197,7 +200,10 @@ export default function SessionReport() {
                     </button>
 
                     <button
-                        onClick={() => window.print()}
+                        onClick={() => {
+                            trackEvent('print_report', { session_id: session.id });
+                            window.print();
+                        }}
                         className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 shadow-sm shadow-emerald-900/10"
                     >
                         <Printer className="w-4 h-4" />

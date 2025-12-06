@@ -3,6 +3,7 @@ import { Button } from "../ui/Button";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { type BodyworkRoutine, db } from "../../db/db";
 import { useState } from "react";
+import { trackEvent } from "../../utils/analytics";
 
 interface RoutineVerificationModalProps {
     isOpen: boolean;
@@ -44,6 +45,9 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
                     isCompletedToday: true,
                     lastCompletedAt: timestamp
                 });
+                if (currentIndex === 0) {
+                    trackEvent('complete_routine', { routine_id: currentRoutine.id, title: currentRoutine.title });
+                }
 
                 // Log completion
                 await db.routineCompletions.add({

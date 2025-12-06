@@ -16,6 +16,7 @@ import { HelpModal } from "../components/Help/HelpModal";
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { Trash2 } from "lucide-react";
+import { trackEvent } from "../utils/analytics";
 
 
 export default function Dashboard() {
@@ -129,7 +130,10 @@ export default function Dashboard() {
                     ) : (
                         nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? (
                             <div
-                                onClick={() => navigate("/intake", { state: { appointmentId: nextAppointment.id } })}
+                                onClick={() => {
+                                    trackEvent('begin_session', { type: 'appointment', id: nextAppointment.id });
+                                    navigate("/intake", { state: { appointmentId: nextAppointment.id } });
+                                }}
                                 className="group bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 rounded-3xl p-1 pb-1 shadow-lg cursor-pointer transform transition-all active:scale-[0.98]"
                             >
                                 <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[22px] p-6 h-full border border-zinc-800 relative overflow-hidden">
@@ -154,7 +158,10 @@ export default function Dashboard() {
                             </div>
                         ) : (
                             <div
-                                onClick={() => navigate("/intake")}
+                                onClick={() => {
+                                    trackEvent('begin_session', { type: 'new' });
+                                    navigate("/intake");
+                                }}
                                 className="group bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 shadow-xl shadow-emerald-500/20 cursor-pointer text-center relative overflow-hidden transform transition-all active:scale-[0.98]"
                             >
                                 <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -247,7 +254,10 @@ export default function Dashboard() {
 
                 {/* 4. Did You Know? (Moved to bottom) */}
                 <section
-                    onClick={() => setShowHelpModal(true)}
+                    onClick={() => {
+                        trackEvent('view_promotion', { creative_name: 'did_you_know' });
+                        setShowHelpModal(true);
+                    }}
                     className="bg-zinc-900 rounded-2xl p-6 relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
                 >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16"></div>

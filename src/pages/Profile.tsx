@@ -10,6 +10,7 @@ import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info
 import { TagInput } from "../components/ui/TagInput";
 import { PlacesAutocomplete } from "../components/ui/PlacesAutocomplete";
 import { useToast } from "../components/ui/Toast";
+import { trackEvent } from "../utils/analytics";
 
 
 export default function Profile() {
@@ -135,6 +136,7 @@ export default function Profile() {
             });
             setIsEditing(false);
             toast("Profile updated successfully", "success");
+            trackEvent('update_profile');
         } catch (error) {
             console.error("Failed to update profile:", error);
             toast("Failed to update profile", "error");
