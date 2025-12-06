@@ -89,10 +89,7 @@ export default function Profile() {
         // Validation
         const requiredFields = [
             { key: 'name', label: 'Name' },
-            { key: 'dateOfBirth', label: 'Date of Birth' },
-            { key: 'height', label: 'Height' },
-            { key: 'weight', label: 'Weight' },
-            { key: 'phone', label: 'Phone' }
+            { key: 'dateOfBirth', label: 'Age' }
         ];
 
         const missingFieldsList = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
@@ -589,6 +586,25 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                 autoComplete="name"
             />
 
+            <Input
+                type="number"
+                label="Age"
+                value={formData.dateOfBirth ? new Date().getFullYear() - new Date(formData.dateOfBirth).getFullYear() : ""}
+                onChange={e => {
+                    const age = parseInt(e.target.value);
+                    if (!isNaN(age) && age > 0 && age < 120) {
+                        const birthYear = new Date().getFullYear() - age;
+                        setFormData((prev: FormData) => ({ ...prev, dateOfBirth: `${birthYear}-01-01` }));
+                    } else if (e.target.value === "") {
+                        setFormData((prev: FormData) => ({ ...prev, dateOfBirth: "" }));
+                    }
+                }}
+                placeholder="30"
+                required
+                error={missingFields.includes('dateOfBirth')}
+                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+            />
+
             <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Profile Photo</label>
                 <div className="flex items-center gap-4">
@@ -657,7 +673,6 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                         setFormData((prev: FormData) => ({ ...prev, phone: formatted }));
                     }}
                     placeholder="(555) 123-4567"
-                    required
                     error={missingFields.includes('phone')}
                     className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
                     autoComplete="tel"
@@ -708,7 +723,6 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                     value={formData.height}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
                     placeholder={unitSystem === 'imperial' ? "5'10" : "178"}
-                    required
                     error={missingFields.includes('height')}
                     className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
                 />
@@ -717,23 +731,12 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                     value={formData.weight}
                     onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
                     placeholder={unitSystem === 'imperial' ? "165" : "75"}
-                    required
                     error={missingFields.includes('weight')}
                     className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
                 />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-                <Input
-                    type="date"
-                    label="Date of Birth"
-                    value={formData.dateOfBirth}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
-                    required
-                    error={missingFields.includes('dateOfBirth')}
-                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                    autoComplete="bday"
-                />
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activity Level</label>
                     <select
@@ -746,16 +749,17 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                         ))}
                     </select>
                 </div>
+                <Input
+                    label="Occupation"
+                    value={formData.occupation}
+                    onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
+                    placeholder="e.g. Desk Worker"
+                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
+                    autoComplete="organization-title"
+                />
             </div>
 
-            <Input
-                label="Occupation (Affects posture/stress)"
-                value={formData.occupation}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
-                placeholder="e.g. Desk Worker, Nurse, Construction"
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                autoComplete="organization-title"
-            />
+
 
             <TagInput
                 label="Physical Activities"

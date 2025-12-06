@@ -43,12 +43,12 @@ export default function Dashboard() {
     useEffect(() => {
         const dismissed = localStorage.getItem("welcome_dismissed");
         const timer = setTimeout(() => {
-            if (!dismissed) {
+            if (!dismissed || (user && !user.name)) {
                 setShowWelcomeModal(true);
             }
         }, 500);
         return () => clearTimeout(timer);
-    }, []);
+    }, [user]);
 
     const pendingRoutines = activeRoutines.filter(r => !r.isCompletedToday);
     const hasPendingRoutines = pendingRoutines.length > 0;

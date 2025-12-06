@@ -58,10 +58,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
         // Validation
         const requiredFields = [
             { key: 'name', label: 'Name' },
-            { key: 'dateOfBirth', label: 'Date of Birth' },
-            { key: 'height', label: 'Height' },
-            { key: 'weight', label: 'Weight' },
-            { key: 'phone', label: 'Phone' }
+            { key: 'dateOfBirth', label: 'Age' }
         ];
 
         const missing = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
@@ -119,16 +116,19 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
         onClose();
     };
 
+    const isProfileIncomplete = !user?.name;
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={handleDismiss}
-            title={showForm ? "Complete Your Profile" : "Holistic User Guide"}
-            description={showForm ? "Please provide your details to ensure the best session experience." : "Master your Digital Bodywork Passport & Journal."}
+            title={showForm || isProfileIncomplete ? "Complete Your Profile" : "Holistic User Guide"}
+            description={showForm || isProfileIncomplete ? "Please provide your details to ensure the best session experience." : "Master your Digital Bodywork Passport & Journal."}
             variant="default"
-            className={showForm ? "sm:max-w-2xl" : "sm:max-w-lg"}
+            className={showForm || isProfileIncomplete ? "sm:max-w-2xl" : "sm:max-w-lg"}
+            hideCloseButton={isProfileIncomplete}
         >
-            {showForm ? (
+            {showForm || isProfileIncomplete ? (
                 <div className="max-h-[70vh] overflow-y-auto pr-2 -mx-2 px-2 mt-4">
                     <EditView
                         formData={formData}
@@ -244,14 +244,16 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                             >
                                 Complete BodyWork Passport <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleDismiss}
-                                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 w-full"
-                            >
-                                Enter App
-                            </Button>
+                            {!isProfileIncomplete && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleDismiss}
+                                    className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 w-full"
+                                >
+                                    Enter App
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>

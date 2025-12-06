@@ -17,6 +17,7 @@ interface ModalProps {
     variant?: "default" | "danger";
     className?: string;
     hideFooter?: boolean;
+    hideCloseButton?: boolean;
 }
 
 export function Modal({
@@ -32,11 +33,12 @@ export function Modal({
     confirmDisabled = false,
     variant = "default",
     className,
-    hideFooter = false
+    hideFooter = false,
+    hideCloseButton = false
 }: ModalProps) {
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape" && !hideCloseButton) onClose();
         };
 
         if (isOpen) {
@@ -48,7 +50,7 @@ export function Modal({
             document.removeEventListener("keydown", handleEscape);
             document.body.style.overflow = "unset";
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, hideCloseButton]);
 
     if (!isOpen) return null;
 
@@ -64,12 +66,14 @@ export function Modal({
                     <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                         {title}
                     </h3>
-                    <button
-                        onClick={onClose}
-                        className="p-1 text-zinc-400 hover:text-zinc-500 dark:hover:text-zinc-300 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+                    {!hideCloseButton && (
+                        <button
+                            onClick={onClose}
+                            className="p-1 text-zinc-400 hover:text-zinc-500 dark:hover:text-zinc-300 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
                 </div>
 
                 {/* Content */}
