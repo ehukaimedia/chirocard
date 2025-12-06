@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, type Session } from "../db/db";
@@ -11,7 +11,6 @@ import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { RoutineVerificationModal } from "../components/Dashboard/RoutineVerificationModal";
 import { NotificationCenter } from "../components/Dashboard/NotificationCenter";
-import { HelpModal } from "../components/Help/HelpModal";
 
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
@@ -38,7 +37,18 @@ export default function Dashboard() {
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showRoutineModal, setShowRoutineModal] = useState(false);
-    const [showHelpModal, setShowHelpModal] = useState(false);
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+    // Initial check for welcome modal
+    useEffect(() => {
+        const dismissed = localStorage.getItem("welcome_dismissed");
+        const timer = setTimeout(() => {
+            if (!dismissed) {
+                setShowWelcomeModal(true);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, []);
 
     const pendingRoutines = activeRoutines.filter(r => !r.isCompletedToday);
     const hasPendingRoutines = pendingRoutines.length > 0;
@@ -256,7 +266,7 @@ export default function Dashboard() {
                 <section
                     onClick={() => {
                         trackEvent('view_promotion', { creative_name: 'did_you_know' });
-                        setShowHelpModal(true);
+                        setShowWelcomeModal(true);
                     }}
                     className="bg-zinc-900 rounded-2xl p-6 relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
                 >
@@ -293,7 +303,10 @@ export default function Dashboard() {
             </main>
 
             {/* Modals */}
-            <WelcomeModal />
+            <WelcomeModal
+                isOpen={showWelcomeModal}
+                onClose={() => setShowWelcomeModal(false)}
+            />
             <Modal
                 isOpen={!!deleteSessionId}
                 onClose={() => setDeleteSessionId(null)}
@@ -326,10 +339,7 @@ export default function Dashboard() {
                 onClose={() => setShowRoutineModal(false)}
                 routines={pendingRoutines}
             />
-            <HelpModal
-                isOpen={showHelpModal}
-                onClose={() => setShowHelpModal(false)}
-            />
+
         </div>
     );
 }

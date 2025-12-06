@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
-import { ArrowLeft, Users, User, Calendar, History, Trash2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Users, User, Calendar, History, AlertTriangle, Trash2 } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
 import { db } from "../db/db";
 import { Modal } from "../components/ui/Modal";
-import { HelpModal } from "../components/Help/HelpModal";
+import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
+import { useLiveQuery } from "dexie-react-hooks";
 
 export default function Settings() {
     const navigate = useNavigate();
+    const user = useLiveQuery(() => db.users.get("me"));
     const {
         calendarViewSpan,
         setCalendarViewSpan,
@@ -24,7 +26,7 @@ export default function Settings() {
         setRoutineBadges
     } = useAppStore();
     const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
-    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const { toast } = useToast();
 
     const handleFreshStart = async () => {
@@ -121,7 +123,7 @@ export default function Settings() {
 
 
                     <div
-                        onClick={() => setIsHelpModalOpen(true)}
+                        onClick={() => setShowWelcomeModal(true)}
                         className="bg-white p-4 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100 cursor-pointer hover:border-emerald-500/50 transition-colors flex flex-col items-center text-center gap-3"
                     >
                         <div className="p-3 bg-teal-50 rounded-full">
@@ -325,9 +327,9 @@ export default function Settings() {
                 onConfirm={handleFreshStart}
             />
 
-            <HelpModal
-                isOpen={isHelpModalOpen}
-                onClose={() => setIsHelpModalOpen(false)}
+            <WelcomeModal
+                isOpen={showWelcomeModal}
+                onClose={() => setShowWelcomeModal(false)}
             />
         </div >
     );

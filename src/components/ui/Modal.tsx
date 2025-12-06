@@ -55,12 +55,12 @@ export function Modal({
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 duration-200 ${className || ''}`}
+                className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 ${className || ''}`}
                 role="dialog"
                 aria-modal="true"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between p-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
                     <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                         {title}
                     </h3>
@@ -73,7 +73,7 @@ export function Modal({
                 </div>
 
                 {/* Content */}
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-4 overflow-y-auto flex-1">
                     {description && (
                         <p className="text-zinc-600 dark:text-zinc-400">
                             {description}
