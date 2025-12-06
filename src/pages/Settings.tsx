@@ -9,11 +9,11 @@ import { Modal } from "../components/ui/Modal";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
-import { useLiveQuery } from "dexie-react-hooks";
+// import { useLiveQuery } from "dexie-react-hooks";
 
 export default function Settings() {
     const navigate = useNavigate();
-    const user = useLiveQuery(() => db.users.get("me"));
+    // const user = useLiveQuery(() => db.users.get("me"));
     const {
         calendarViewSpan,
         setCalendarViewSpan,

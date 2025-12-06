@@ -124,7 +124,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
             isOpen={isOpen}
             onClose={handleDismiss}
             title={showForm ? "Complete Your Profile" : "Holistic User Guide"}
-            description={showForm ? "Please provide your details to ensure the best session experience." : "Master your Digital Bodywork Passport."}
+            description={showForm ? "Please provide your details to ensure the best session experience." : "Master your Digital Bodywork Passport & Journal."}
             variant="default"
             className={showForm ? "sm:max-w-2xl" : "sm:max-w-lg"}
         >
