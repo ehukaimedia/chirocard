@@ -217,7 +217,7 @@ export default function SessionReport() {
                                 <span className="text-emerald-600">Chiro</span>Card<span className="text-emerald-600">.</span>
                             </h1>
                         </div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] ml-1">The Digital Body Work Passport</p>
+                        <p className="text-[.65rem] text-zinc-400 tracking-[0.2em] font-medium uppercase mt-0.5">The Bodywork Journal</p>
                     </div>
                     <div className="text-right">
                         <p className="text-sm text-zinc-500 mb-1">Session Date</p>
@@ -466,35 +466,47 @@ export default function SessionReport() {
                 {/* Signatures */}
                 <section className="pt-8 break-inside-avoid">
                     <div className="flex items-center gap-4 mb-8">
-                        <h2 className="text-lg font-bold text-zinc-900">Authorization</h2>
+                        <h2 className="text-lg font-bold text-zinc-900">Verification</h2>
                         <div className="h-px bg-zinc-200 flex-1"></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-12">
                         {/* Patient Sig */}
                         <div>
-                            <div className="h-24 border-b border-zinc-300 mb-2 flex items-end pb-2">
+                            <div className="min-h-[6rem] border-b border-zinc-300 mb-2 flex items-end pb-2">
                                 {session.userSignature ? (
-                                    <img src={session.userSignature} alt="Client Signature" className="max-h-20 max-w-full object-contain" />
+                                    session.userSignature.startsWith('data:image') ? (
+                                        <img src={session.userSignature} alt="Client Signature" className="max-h-20 max-w-full object-contain" />
+                                    ) : (
+                                        <div className="font-serif italic text-lg text-zinc-700 leading-tight pb-1">
+                                            {session.userSignature}
+                                        </div>
+                                    )
                                 ) : (
-                                    <span className="text-zinc-300 text-sm italic">Signed digitally</span>
+                                    <span className="text-zinc-300 text-sm italic">Pending Agreement</span>
                                 )}
                             </div>
                             <p className="text-sm font-bold text-zinc-900">{user?.name || "Client"}</p>
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Client Signature</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Client Agreement</p>
                         </div>
 
                         {/* Practitioner Sig */}
                         <div>
-                            <div className="h-24 border-b border-zinc-300 mb-2 flex items-end pb-2">
+                            <div className="min-h-[6rem] border-b border-zinc-300 mb-2 flex items-end pb-2">
                                 {session.signatureBase64 ? (
-                                    <img src={session.signatureBase64} alt="Practitioner Signature" className="max-h-20 max-w-full object-contain" />
+                                    session.signatureBase64.startsWith('data:image') ? (
+                                        <img src={session.signatureBase64} alt="Practitioner Signature" className="max-h-20 max-w-full object-contain" />
+                                    ) : (
+                                        <div className="font-serif italic text-lg text-zinc-700 leading-tight pb-1">
+                                            {session.signatureBase64}
+                                        </div>
+                                    )
                                 ) : (
-                                    <span className="text-zinc-300 text-sm italic">Signed digitally</span>
+                                    <span className="text-zinc-300 text-sm italic">Pending Verification</span>
                                 )}
                             </div>
                             <p className="text-sm font-bold text-zinc-900">{session.practitionerName}</p>
-                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Practitioner Signature</p>
+                            <p className="text-xs text-zinc-500 uppercase tracking-wider">Practitioner Verification</p>
                         </div>
                     </div>
                 </section>

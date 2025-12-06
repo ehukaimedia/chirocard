@@ -9,7 +9,6 @@ import { useState, useMemo } from "react";
 import { useToast } from "../components/ui/Toast";
 import { db } from "../db/db";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
-import { SignaturePad } from "../components/Shared/SignaturePad";
 import { SERVICE_TAGS, FINDING_TAGS } from "../db/db";
 import { useLiveQuery } from "dexie-react-hooks";
 
@@ -21,7 +20,7 @@ export default function SessionActive() {
     const { toast } = useToast();
     const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
     const [showReview, setShowReview] = useState(false);
-    const [practitionerSignature, setPractitionerSignature] = useState<string | null>(null);
+    const [practitionerVerification, setPractitionerVerification] = useState<string | null>(null);
 
     const user = useLiveQuery(() => db.users.get("me"));
     const practitioner = useLiveQuery(
@@ -149,8 +148,8 @@ export default function SessionActive() {
     };
 
     const handleFinishSession = async () => {
-        if (!practitionerSignature) {
-            toast("Please sign to finalize the session.", "error");
+        if (!practitionerVerification) {
+            toast("Please verify to finalize the session.", "error");
             return;
         }
 
@@ -162,7 +161,7 @@ export default function SessionActive() {
                 practitionerName: currentSession.practitionerName || "Dr. Chiro",
                 practitionerClass: currentSession.practitionerClass || "Chiropractor",
                 notes: currentSession.practitionerNotes, // Main notes
-                signatureBase64: practitionerSignature, // Save practitioner signature
+                signatureBase64: practitionerVerification, // Save practitioner verification as signatureBase64 for compatibility
                 userSignature: currentSession.userSignature || undefined,
                 bodyMap: currentSession.bodyMap,
                 bodyNotes: currentSession.bodyNotes,
@@ -200,7 +199,7 @@ export default function SessionActive() {
                         <ArrowLeft className="w-6 h-6" />
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold">Review & Sign</h1>
+                        <h1 className="text-xl font-bold">Review & Verify</h1>
                         <p className="text-xs text-zinc-400">Finalize Session</p>
                     </div>
                 </header>
@@ -410,28 +409,57 @@ export default function SessionActive() {
                     {/* Signatures */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                         <div className="space-y-2">
-                            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Client Authorization</h3>
+                            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Client Agreement</h3>
                             <div className="bg-zinc-950 p-4 rounded border border-zinc-800 h-24 flex items-center justify-center">
                                 {currentSession.userSignature ? (
-                                    <img src={currentSession.userSignature} alt="Client Signature" className="max-h-full max-w-full object-contain invert" />
+                                    currentSession.userSignature.startsWith('data:image') ? (
+                                        <img src={currentSession.userSignature} alt="Client Signature" className="max-h-full max-w-full object-contain invert" />
+                                    ) : (
+                                        <div className="text-center">
+                                            <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                                            <span className="text-emerald-500 font-bold text-sm block">DIGITALLY AGREED</span>
+                                            <span className="text-zinc-500 text-[10px]">{currentSession.userSignature}</span>
+                                        </div>
+                                    )
                                 ) : (
-                                    <span className="text-zinc-600 text-xs italic">No signature recorded</span>
+                                    <span className="text-zinc-600 text-xs italic">No agreement recorded</span>
                                 )}
                             </div>
                             <p className="text-xs text-zinc-500">
-                                Signed by: <span className="font-medium text-zinc-300">{user?.name || "Guest"}</span>
+                                Agreed by: <span className="font-medium text-zinc-300">{user?.name || "Guest"}</span>
                             </p>
                         </div>
 
                         <div className="space-y-2">
                             <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
-                                Practitioner Signature ({currentSession.practitionerName || "Practitioner"})
+                                Practitioner Verification
                             </h3>
-                            <div className="bg-white rounded h-24 overflow-hidden">
-                                <SignaturePad onChange={setPractitionerSignature} />
+                            <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-4">
+                                <Button
+                                    variant={practitionerVerification ? "primary" : "outline"}
+                                    className={`w-full py-8 text-lg font-medium transition-all flex flex-col gap-2 h-auto ${practitionerVerification ? 'bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-500/20' : 'border-dashed border-2'}`}
+                                    onClick={() => setPractitionerVerification(prev => prev ? null : `Digitally Verified • ${new Date().toLocaleString()}`)}
+                                >
+                                    {practitionerVerification ? (
+                                        <>
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle className="w-6 h-6" />
+                                                <span>Session Verified</span>
+                                            </div>
+                                            <span className="text-xs font-normal opacity-80">Tap to undo</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Tap to Verify</span>
+                                            <span className="text-xs font-normal text-zinc-500">
+                                                I certify that I have performed the services as described.
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
                             </div>
                             <p className="text-xs text-zinc-500">
-                                Signed by: <span className="font-medium text-zinc-300">{practitioner?.name || currentSession.practitionerName || "Practitioner"}</span>
+                                Verified by: <span className="font-medium text-zinc-300">{practitioner?.name || currentSession.practitionerName || "Practitioner"}</span>
                                 {practitioner?.clinicName && (
                                     <span className="block text-zinc-500 mt-0.5">{practitioner.clinicName}</span>
                                 )}
@@ -446,7 +474,7 @@ export default function SessionActive() {
                         size="lg"
                         className="w-full max-w-3xl mx-auto shadow-xl shadow-emerald-500/20 text-lg h-14 bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleFinishSession}
-                        disabled={!practitionerSignature}
+                        disabled={!practitionerVerification}
                     >
                         Finalize Session <CheckCircle className="ml-2 w-5 h-5" />
                     </Button>

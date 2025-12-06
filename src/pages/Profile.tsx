@@ -254,7 +254,7 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
                 <div className="relative z-10 flex justify-between items-start">
                     <div>
-                        <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">DIGITAL BODYWORK PASSPORT</p>
+                        <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">BODYWORK PASSPORT</p>
                         <div className="flex items-center gap-4 mb-4">
                             <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
                                 {user?.photo ? (
@@ -445,7 +445,7 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                         <div className="p-2 bg-zinc-100 dark:bg-zinc-700/20 rounded-lg">
                             <Activity className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-200">My Body Journal</h3>
+                        <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-200">MY BODY</h3>
                     </div>
 
                     <div className="space-y-4">

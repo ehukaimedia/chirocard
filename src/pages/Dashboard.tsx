@@ -73,7 +73,7 @@ export default function Dashboard() {
                         <h1 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter leading-none">
                             <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card
                         </h1>
-                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest uppercase">My Passport</p>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest uppercase">BODYWORK JOURNAL</p>
                     </div>
                 </div>
 

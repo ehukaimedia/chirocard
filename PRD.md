@@ -3,15 +3,17 @@
 **Status:** Web App Complete / Ready for Mobile Wrapping
 
 ## 1. Product Overview
-**ChiroCard** is your **Bodywork Journal & Digital Passport** — a privacy-first, local-first application that empowers you to track your holistic health journey and seamlessly share data with any hands-on practitioner (Chiropractors, Massage Therapists, PTs, Osteopaths).
+**ChiroCard** is your **Bodywork Journal & Digital Passport** — a privacy-first, local-first application designed to be the ultimate companion for your holistic health journey. The core goal is to enable users to **journal all bodywork** and seamlessly **share this data with other practitioners** to ensure intelligent, continuity of care.
 
-**Core Concept:** Think of it as a "Digital Health Passport" for your body. You own the data, and you "check in" with practitioners to add new stamps (sessions) to your journal.
+**Core Concept:**
+*   **Bodywork Journal:** A comprehensive log of your body's history, mobility, and sessions. Owned by you ("My Journal").
+*   **Bodywork Passport:** Your portable identity ("My Passport") containing your health context, which you "carry" to every practitioner to check in.
 
 **Brand Identity:** The logo features stylized **Hawaiian Lomi Lomi Hands**, symbolizing the healing touch and connection between practitioner and user.
 > [!IMPORTANT]
 > **Asset Protection:** The existing logo file at `/public/icon.svg` is the definitive brand asset. **Do not redesign, alter, or replace this file.**
 
-**Vision:** To create the ultimate **Bodywork Journal** that empowers individuals to own their holistic wellness data and facilitates seamless, data-driven communication with their care providers.
+**Vision:** To facilitate **Intelligent Care** by empowering individuals to own their holistic wellness data and simplifying the communication loop between patients and providers.
 
 **Key Differentiator:** "Local-First" architecture ensuring zero-knowledge privacy. This is a **User-Owned** journal, distinct from medical records held by clinics.
 
@@ -22,7 +24,7 @@
 
 ## 3. Goals & Objectives
 *   **Build a Modern Bodywork Journal:** Create a beautiful, high-performance web application that makes tracking bodywork sessions as intuitive as a daily diary.
-*   **Establish the Digital Passport:** Standardize the "Check-In" workflow so users can easily share their health context with any practitioner via a simple QR scan.
+*   **Establish the Bodywork Passport:** Standardize the "Check-In" workflow so users can easily share their health context ("My Passport") with any practitioner via a simple QR scan.
 *   **Visualize Wellness:** Move beyond text logs to intuitive button-style body maps and calendar views that show progress over time.
 *   **Ship Native Apps:** Deploy to Apple App Store and Google Play Store using Capacitor to ensure the passport is always in the user's pocket.
 
@@ -68,7 +70,7 @@
 *   **Session Report:** Detailed view of a completed session.
 *   **PDF Export:** Generate professional PDF reports for insurance or personal records.
 
-### 6.6. Profile ("The Passport")
+### 6.6. Profile ("Bodywork Passport")
 *   **Inline Creation:** Profile creation is integrated directly into the onboarding "Welcome Modal". Users must complete their profile before accessing the app.
 *   **Validation:** Critical fields (Name, DOB, Height, Weight, Phone) are strictly enforced with visual cues (red highlights, asterisks) to ensure data validity.
 *   **User Details:** Name, biometrics, and preferences. Address auto-fill via Google Places.
@@ -84,14 +86,14 @@
 *   **Philosophy:** "Collaborative Journaling" — A simple, physical hand-off of the device from User to Practitioner. No complex syncing or QR codes required.
 
 *   **User Journey (The Traveler):**
-    1.  **Passport Creation:** User creates their profile (Passport) on first launch.
+    1.  **Passport Creation:** User creates their profile ("Bodywork Passport") on first launch.
     2.  **Journal Entry (Intake):** Before a session, the user creates a "Draft Entry" in their journal, mapping current issues and notes.
     3.  **Hand-Off:** The user clicks "Start Session" and hands their unlocked device to the practitioner.
 
 *   **Practitioner Journey (The Guide):**
     1.  **Review:** Practitioner reviews the user's journal entry on the user's device.
     2.  **Treat & Log:** Practitioner performs the bodywork session and logs SOAP notes directly on the device.
-    3.  **Stamp (Sign):** Practitioner signs off and hands the device back to the user.
+    3.  **Verify & Stamp:** Practitioner verifies the session ("Digitally Verified") and hands the device back to the user.
     4.  **Completion:** The session is saved locally.
 
 *   **Compliance:** All data remains on the user's device. No external transmission occurs.

@@ -9,7 +9,6 @@ import { useAppStore } from "../store/useAppStore";
 import { useToast } from "../components/ui/Toast";
 import { IntakeProfileSection } from "../components/Intake/IntakeProfileSection";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
-import { SignaturePad } from "../components/Shared/SignaturePad";
 import { GuardModal } from "../components/Session/GuardModal";
 import { Modal } from "../components/ui/Modal";
 
@@ -22,7 +21,7 @@ export default function Intake() {
     const [showReview, setShowReview] = useState(false);
     const [showGuard, setShowGuard] = useState(false);
     const [showProfileWarning, setShowProfileWarning] = useState(false);
-    const [signature, setSignature] = useState<string | null>(null);
+    const [agreement, setAgreement] = useState<string | null>(null);
 
     // Remove practitioner selection from session intake
     // Enforce completed profile requirement for session intake
@@ -63,13 +62,13 @@ export default function Intake() {
     };
 
     const handleStartSession = async () => {
-        if (!signature) {
-            toast("Please sign to start the session.", "error");
+        if (!agreement) {
+            toast("Please agree to start the session.", "error");
             return;
         }
 
         updateSession({
-            userSignature: signature
+            userSignature: agreement
         });
 
         setShowGuard(true);
@@ -93,7 +92,7 @@ export default function Intake() {
                         <ArrowLeft className="w-6 h-6" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Review & Sign</h1>
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Review & Confirm</h1>
                     </div>
                 </div>
 
@@ -154,14 +153,30 @@ export default function Intake() {
                     </div>
 
                     <div className="space-y-4 border-t border-zinc-100 dark:border-zinc-800 pt-6">
-                        <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">Sign to Start Session</h3>
-                        <SignaturePad onChange={setSignature} />
-                        <div className="flex justify-between items-center text-xs text-zinc-400 mt-2">
-                            <span>Signed by: <strong className="text-zinc-700 dark:text-zinc-300 uppercase">{user?.name || "GUEST"}</strong></span>
+                        <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">Review & Confirmation</h3>
+                        <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-xl border border-zinc-100 dark:border-zinc-800 text-center space-y-4">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                I confirm that the information provided is accurate and I understand that this session will be recorded in my personal health log.
+                            </p>
+
+                            <Button
+                                variant={agreement ? "primary" : "outline"}
+                                className={`w-full py-6 text-lg font-medium transition-all ${agreement ? 'bg-emerald-600 hover:bg-emerald-700 ring-4 ring-emerald-500/20' : ''}`}
+                                onClick={() => setAgreement(prev => prev ? null : `Digitally Agreed • ${new Date().toLocaleString()}`)}
+                            >
+                                {agreement ? (
+                                    <>
+                                        <CheckCircle className="w-5 h-5 mr-2" />
+                                        Agreed & Confirmed
+                                    </>
+                                ) : (
+                                    "Tap to Agree"
+                                )}
+                            </Button>
+                            <div className="flex justify-center items-center text-xs text-zinc-400 mt-2">
+                                <span>Agreed by: <strong className="text-zinc-700 dark:text-zinc-300 uppercase">{user?.name || "GUEST"}</strong></span>
+                            </div>
                         </div>
-                        <p className="text-[10px] text-center text-zinc-400 mt-4">
-                            By signing, you confirm that the information provided is accurate.
-                        </p>
                     </div>
                 </div>
 
@@ -171,7 +186,7 @@ export default function Intake() {
                         size="lg"
                         className="w-full max-w-xl mx-auto shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
                         onClick={handleStartSession}
-                        disabled={!signature}
+                        disabled={!agreement}
                     >
                         Start Session <Play className="ml-2 w-5 h-5 flex-shrink-0" />
                     </Button>
@@ -274,7 +289,7 @@ export default function Intake() {
                     className="w-full max-w-xl mx-auto shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
                     onClick={handleReview}
                 >
-                    Review & Sign <CheckCircle className="ml-2 w-5 h-5 flex-shrink-0" />
+                    Review & Confirm <CheckCircle className="ml-2 w-5 h-5 flex-shrink-0" />
                 </Button>
             </div>
 
