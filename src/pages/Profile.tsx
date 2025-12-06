@@ -148,6 +148,7 @@ export default function Profile() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
             {/* Top Navigation Bar */}
+            {/* Top Navigation Bar */}
             <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50 print:hidden">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
@@ -158,34 +159,16 @@ export default function Profile() {
             {/* Header Content */}
             <div className="md:mt-16 mb-8 pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
                 <div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Bodywork Profile</h1>
-                    <p className="text-sm text-zinc-500 mt-1">Manage your personal health data and preferences.</p>
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">My Bodywork Profile</h1>
+                    <p className="text-zinc-500 dark:text-zinc-400 mt-1">Manage your personal health data and preferences.</p>
                 </div>
-
-                <div className="flex gap-3 items-center flex-wrap sm:flex-nowrap">
-                    {!isEditing && (
-                        <>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => window.print()}
-                                className="whitespace-nowrap border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors px-4"
-                            >
-                                <Printer className="w-4 h-4 mr-2" />
-                                Print / PDF
-                            </Button>
-                        </>
-                    )}
-                    <Button
-                        variant={isEditing ? "ghost" : "outline"}
-                        size="sm"
-                        onClick={() => setIsEditing(!isEditing)}
-                        className={isEditing
-                            ? "whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                            : "whitespace-nowrap border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900/50 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors px-4"}
-                    >
-                        {isEditing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4 mr-2" />}
+                <div className="flex gap-3 items-center">
+                    <Button variant="outline" onClick={() => window.print()}>
+                        <Printer className="w-4 h-4 mr-2" />
+                        Print / PDF
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
+                        {isEditing ? <X className="w-4 h-4 mr-2" /> : <Edit2 className="w-4 h-4 mr-2" />}
                         {isEditing ? "Cancel" : "Edit"}
                     </Button>
                 </div>
@@ -254,7 +237,7 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
                 <div className="relative z-10 flex justify-between items-start">
                     <div>
-                        <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">BODYWORK PASSPORT</p>
+                        <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">MY BODYWORK PASSPORT</p>
                         <div className="flex items-center gap-4 mb-4">
                             <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
                                 {user?.photo ? (

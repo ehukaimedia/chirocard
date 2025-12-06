@@ -10,6 +10,7 @@ import { Plus, Calendar as CalendarIcon, User, Info, ShieldCheck, CheckCircle, C
 import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { RoutineVerificationModal } from "../components/Dashboard/RoutineVerificationModal";
+import { NotificationCenter } from "../components/Dashboard/NotificationCenter";
 
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
@@ -78,17 +79,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex gap-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`relative text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 ${hasPendingRoutines ? 'text-emerald-500' : ''}`}
-                        onClick={() => hasPendingRoutines && setShowRoutineModal(true)}
-                    >
-                        <Bell className={`w-6 h-6 ${hasPendingRoutines ? '' : ''}`} />
-                        {hasPendingRoutines && (
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-zinc-900"></span>
-                        )}
-                    </Button>
+                    <NotificationCenter />
                     <Link to="/profile">
                         <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
                             <User className="w-5 h-5 text-zinc-400" />
@@ -261,7 +252,7 @@ export default function Dashboard() {
                             <span>Did you know?</span>
                         </div>
                         <p className="text-zinc-100 font-medium text-sm leading-relaxed mb-4">
-                            "Chiro" means <span className="text-emerald-400">Hand</span>. ChiroCard is your digital passport for all hands-on therapies.
+                            "Chiro" means <span className="text-emerald-400">"hand"</span>. ChiroCard is your personalized journal for holistic body care that keeps track of all hands on bodywork.
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {['Chiropractic', 'Massage', 'PT'].map(tag => (

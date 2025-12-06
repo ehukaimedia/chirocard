@@ -14,11 +14,19 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
 
+    // Date/Time Inputs
+    const [completedDate, setCompletedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [completedTime, setCompletedTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+    const [showTimeEdit, setShowTimeEdit] = useState(false);
+    const [notes, setNotes] = useState("");
+
     const currentRoutine = routines[currentIndex];
 
     // Reset index when modal opens/closes or routines change
     if (!isOpen && currentIndex !== 0) {
         setCurrentIndex(0);
+        setShowTimeEdit(false);
+        setNotes("");
     }
 
     const handleAction = async (completed: boolean) => {
@@ -29,20 +37,35 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
         // Wait for animation
         setTimeout(async () => {
             if (completed) {
-                const now = Date.now();
+                // Construct timestamp from inputs
+                const timestamp = new Date(`${completedDate}T${completedTime}`).getTime();
+
                 await db.routines.update(currentRoutine.id, {
                     isCompletedToday: true,
-                    lastCompletedAt: now
+                    lastCompletedAt: timestamp
                 });
 
                 // Log completion
-                const todayStr = new Date().toISOString().split('T')[0];
                 await db.routineCompletions.add({
                     id: crypto.randomUUID(),
                     routineId: currentRoutine.id,
                     routineTitle: currentRoutine.title,
-                    completedAt: now,
-                    date: todayStr
+                    completedAt: timestamp,
+                    date: completedDate
+                });
+
+                // Add to Journal
+                const journalContent = notes
+                    ? `Completed routine: ${currentRoutine.title}\n\nNotes: ${notes}`
+                    : `Completed routine: ${currentRoutine.title}`;
+
+                await db.journal.add({
+                    id: crypto.randomUUID(),
+                    date: timestamp,
+                    content: journalContent,
+                    mood: 'Good',
+                    tags: ['Routine', 'Wellness', currentRoutine.category],
+                    createdAt: Date.now()
                 });
             }
 
@@ -50,10 +73,17 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
             if (currentIndex < routines.length - 1) {
                 setCurrentIndex(prev => prev + 1);
                 setIsAnimating(false);
+                // Reset time for next item
+                setCompletedDate(new Date().toISOString().split('T')[0]);
+                setCompletedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+                setShowTimeEdit(false);
+                setNotes("");
             } else {
                 onClose();
                 setIsAnimating(false);
                 setCurrentIndex(0);
+                setShowTimeEdit(false);
+                setNotes("");
             }
         }, 300);
     };
@@ -87,20 +117,54 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-center gap-2 text-xs text-zinc-400 uppercase tracking-wider">
-                        <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">
-                            {currentRoutine.category}
-                        </span>
-                        {currentRoutine.reminderTimes && currentRoutine.reminderTimes.length > 0 && (
-                            <span>• {currentRoutine.reminderTimes[0]}</span>
+                    {/* Time Verification */}
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="flex items-center justify-center gap-2 text-xs text-zinc-400 uppercase tracking-wider">
+                            <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">
+                                {currentRoutine.category}
+                            </span>
+                            {currentRoutine.reminderTimes && currentRoutine.reminderTimes.length > 0 && (
+                                <span>• {currentRoutine.reminderTimes[0]}</span>
+                            )}
+                        </div>
+
+                        {!showTimeEdit ? (
+                            <button
+                                onClick={() => setShowTimeEdit(true)}
+                                className="text-xs text-emerald-600 dark:text-emerald-500 font-medium hover:underline mt-1"
+                            >
+                                Edit Completion Time
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2 mt-2 bg-white dark:bg-zinc-800 p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 animate-in fade-in slide-in-from-top-1">
+                                <input
+                                    type="date"
+                                    value={completedDate}
+                                    onChange={(e) => setCompletedDate(e.target.value)}
+                                    className="bg-transparent text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none"
+                                />
+                                <input
+                                    type="time"
+                                    value={completedTime}
+                                    onChange={(e) => setCompletedTime(e.target.value)}
+                                    className="bg-transparent text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none"
+                                />
+                            </div>
                         )}
                     </div>
                 </div>
 
                 <div className="space-y-3">
                     <p className="text-center text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                        Did you complete this routine today?
+                        Did you complete this routine?
                     </p>
+
+                    <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Add notes (optional)..."
+                        className="w-full text-sm p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none min-h-[80px]"
+                    />
 
                     <div className="grid grid-cols-2 gap-3">
                         <Button

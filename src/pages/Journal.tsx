@@ -63,7 +63,7 @@ export default function Journal() {
             <div className="md:mt-16 mb-8 pt-6 max-w-2xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">Bodywork Journal</h1>
+                        <h1 className="text-3xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight">MY BODYWORK JOURNAL</h1>
                         <p className="text-zinc-500 dark:text-zinc-400 mt-2">Track your sessions, routines, and progress.</p>
                     </div>
                     <Button onClick={() => setIsAddModalOpen(true)}>
