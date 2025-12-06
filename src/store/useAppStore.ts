@@ -62,6 +62,8 @@ interface AppState {
     setDefaultRoutineTime: (time: string) => void;
     routineTimeInterval: number;
     setRoutineTimeInterval: (interval: number) => void;
+    routineBadges: Record<string, string[]>;
+    setRoutineBadges: (badges: Record<string, string[]>) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -79,6 +81,12 @@ export const useAppStore = create<AppState>()(
             calendarViewSpan: 30,
             defaultRoutineTime: "07:00",
             routineTimeInterval: 15,
+            routineBadges: {
+                relief: ["Ice Bath", "Sauna", "Red Light", "Heat", "Stretch", "Foam Roll"],
+                movement: ["Walk", "Run", "Yoga", "Mobility", "Swim", "Gym"],
+                lifestyle: ["Breathwork", "Meditate", "Journal", "Hydrate", "Sleep", "Nature"],
+                custom: ["Surfing", "Golfing", "Bowling", "Tennis", "Hiking", "Cycling", "Swimming", "Workout", "Pilates", "Dance"]
+            },
 
             setViewMode: (mode) => set({ viewMode: mode }),
             setMode: (mode) => set({ viewMode: mode }), // Alias
@@ -144,6 +152,7 @@ export const useAppStore = create<AppState>()(
             setCalendarViewSpan: (days) => set({ calendarViewSpan: days }),
             setDefaultRoutineTime: (time) => set({ defaultRoutineTime: time }),
             setRoutineTimeInterval: (interval) => set({ routineTimeInterval: interval }),
+            setRoutineBadges: (badges) => set({ routineBadges: badges }),
 
             reset: () => set({
                 viewMode: 'personal',
@@ -151,6 +160,12 @@ export const useAppStore = create<AppState>()(
                 calendarViewSpan: 30,
                 defaultRoutineTime: "07:00",
                 routineTimeInterval: 15,
+                routineBadges: {
+                    relief: ["Ice Bath", "Sauna", "Red Light", "Heat", "Stretch", "Foam Roll"],
+                    movement: ["Walk", "Run", "Yoga", "Mobility", "Swim", "Gym"],
+                    lifestyle: ["Breathwork", "Meditate", "Journal", "Hydrate", "Sleep", "Nature"],
+                    custom: ["Surfing", "Golfing", "Bowling", "Tennis", "Hiking", "Cycling", "Swimming", "Workout", "Pilates", "Dance"]
+                },
             })
         }),
         {
@@ -160,7 +175,8 @@ export const useAppStore = create<AppState>()(
                 currentSession: state.currentSession,
                 calendarViewSpan: state.calendarViewSpan,
                 defaultRoutineTime: state.defaultRoutineTime,
-                routineTimeInterval: state.routineTimeInterval
+                routineTimeInterval: state.routineTimeInterval,
+                routineBadges: state.routineBadges
             })
         }
     )

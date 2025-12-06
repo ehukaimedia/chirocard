@@ -1,8 +1,8 @@
 # ChiroCard Lite
 
-**Your Digital Body Work Passport.**
+**Your Personalized Bodywork Journal.**
 
-ChiroCard is a privacy-first, local-first web application that empowers patients to own their health data. It serves as a bridge between patients and holistic practitioners (Chiropractors, Massage Therapists, PTs, etc.), enabling seamless data sharing without centralized servers or accounts.
+"Chiro" means "hand". ChiroCard is your personalized journal for holistic body care that keeps track of all hands-on bodywork. It serves as a bridge between patients and holistic practitioners (Chiropractors, Massage Therapists, PTs, etc.), enabling seamless data sharing without centralized servers or accounts.
 
 ## Core Philosophy
 
@@ -13,7 +13,7 @@ ChiroCard is a privacy-first, local-first web application that empowers patients
 ## Key Features
 
 ### For Patients
-*   **Digital Passport**: Carry your MRI results, body history, and preferences in your pocket.
+*   **Bodywork Passport (Profile)**: Carry your MRI results, body history, and preferences in your pocket.
 *   **One-Tap Check-In**: Start a session and generate a QR code to instantly share your status with your practitioner.
 *   **Session History**: Keep a permanent record of every adjustment, massage, and therapy session.
 *   **Care Team**: Automatically build a list of your trusted practitioners just by scanning their session records.

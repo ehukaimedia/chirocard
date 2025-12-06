@@ -3,11 +3,11 @@
 **Status:** Web App Complete / Ready for Mobile Wrapping
 
 ## 1. Product Overview
-**ChiroCard** is your **Bodywork Journal & Digital Passport** — a privacy-first, local-first application designed to be the ultimate companion for your holistic health journey. The core goal is to enable users to **journal all bodywork** and seamlessly **share this data with other practitioners** to ensure intelligent, continuity of care.
+**ChiroCard** is your **Bodywork Journal** — a privacy-first, local-first application designed to be the ultimate companion for your holistic health journey. "Chiro" means "hand". ChiroCard is your personalized journal for holistic body care that keeps track of all hands-on bodywork.
 
 **Core Concept:**
-*   **Bodywork Journal:** A comprehensive log of your body's history, mobility, and sessions. Owned by you ("My Journal").
-*   **Bodywork Passport:** Your portable identity ("My Passport") containing your health context, which you "carry" to every practitioner to check in.
+*   **Bodywork Journal (The App):** This entire app is your Journal. It tracks your complete history: **Practitioner Sessions**, **Personal Routines**, and **Notes**.
+*   **Bodywork Passport (Your Profile):** Your portable identity containing your health context, which you "carry" to every practitioner to check in.
 
 **Brand Identity:** The logo features stylized **Hawaiian Lomi Lomi Hands**, symbolizing the healing touch and connection between practitioner and user.
 > [!IMPORTANT]
@@ -78,7 +78,7 @@
 
 ### 6.7. Settings & Data Management
 *   **Dedicated Settings Page:** Central location for app configuration.
-*   **ChiroCard Brain:** "Smart AI Export" feature that processes raw data into a clean, human-readable, and AI-contextualized JSON format for intelligent insights.
+*   **ChiroCard Brain:** "Dual-Purpose Data". Your data backup primarily secures your personal records. Additionally, it provides a structured format that you can optionally use with AI models to gain intelligent insights, spot patterns, and better understand your health journey.
 *   **Data Backup & Restore:** Export full database to JSON and restore from backup.
 *   **Persistent Storage Request:** Automatically requests browser persistence to prevent data eviction.
 

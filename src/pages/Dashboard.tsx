@@ -11,6 +11,7 @@ import { SessionCard } from "../components/Dashboard/SessionCard";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { RoutineVerificationModal } from "../components/Dashboard/RoutineVerificationModal";
 import { NotificationCenter } from "../components/Dashboard/NotificationCenter";
+import { HelpModal } from "../components/Help/HelpModal";
 
 import { ScanLine, Timer } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
@@ -36,6 +37,7 @@ export default function Dashboard() {
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showRoutineModal, setShowRoutineModal] = useState(false);
+    const [showHelpModal, setShowHelpModal] = useState(false);
 
     const pendingRoutines = activeRoutines.filter(r => !r.isCompletedToday);
     const hasPendingRoutines = pendingRoutines.length > 0;
@@ -244,18 +246,25 @@ export default function Dashboard() {
                 </section>
 
                 {/* 4. Did You Know? (Moved to bottom) */}
-                <section className="bg-zinc-900 rounded-2xl p-6 relative overflow-hidden">
+                <section
+                    onClick={() => setShowHelpModal(true)}
+                    className="bg-zinc-900 rounded-2xl p-6 relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
+                >
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
                     <div className="relative z-10">
-                        <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-wider mb-2">
-                            <Info className="w-4 h-4" />
-                            <span>Did you know?</span>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-wider">
+                                <Info className="w-4 h-4" />
+                                <span>Did you know?</span>
+                            </div>
+                            <span className="text-[10px] text-zinc-500 font-medium bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-700/50">Tap to learn more</span>
                         </div>
+
                         <p className="text-zinc-100 font-medium text-sm leading-relaxed mb-4">
                             "Chiro" means <span className="text-emerald-400">"hand"</span>. ChiroCard is your personalized journal for holistic body care that keeps track of all hands on bodywork.
                         </p>
                         <div className="flex flex-wrap gap-2">
-                            {['Chiropractic', 'Massage', 'PT'].map(tag => (
+                            {['Chiropractic', 'Massage', 'PT', 'Cupping', 'Acupuncture'].map(tag => (
                                 <span key={tag} className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-[10px] border border-zinc-700">
                                     {tag}
                                 </span>
@@ -306,6 +315,10 @@ export default function Dashboard() {
                 isOpen={showRoutineModal}
                 onClose={() => setShowRoutineModal(false)}
                 routines={pendingRoutines}
+            />
+            <HelpModal
+                isOpen={showHelpModal}
+                onClose={() => setShowHelpModal(false)}
             />
         </div>
     );

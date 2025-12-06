@@ -32,7 +32,7 @@ export function BodyworkRoutineModal({
     description = "Add a routine activity.",
     confirmLabel = "Add Routine"
 }: BodyworkRoutineModalProps) {
-    const { routineTimeInterval } = useAppStore();
+    const { routineTimeInterval, routineBadges } = useAppStore();
 
     const [routineTitle, setRoutineTitle] = useState("");
     const [routineDesc, setRoutineDesc] = useState("");
@@ -85,12 +85,7 @@ export function BodyworkRoutineModal({
         onClose();
     };
 
-    const SUGGESTIONS = {
-        relief: ["Ice Bath", "Sauna", "Red Light", "Heat", "Stretch", "Foam Roll"],
-        movement: ["Walk", "Run", "Yoga", "Mobility", "Swim", "Gym"],
-        lifestyle: ["Breathwork", "Meditate", "Journal", "Hydrate", "Sleep", "Nature"],
-        custom: ["Ice Bath", "Sauna", "Walk", "Journal", "Stretch", "Breathwork"]
-    };
+
 
     return (
         <Modal
@@ -123,17 +118,19 @@ export function BodyworkRoutineModal({
                         value={routineTitle}
                         onChange={e => setRoutineTitle(e.target.value)}
                     />
-                    {/* Smart Autofill Chips */}
-                    <div className="flex flex-wrap gap-2">
-                        {SUGGESTIONS[routineCategory].map(suggestion => (
-                            <button
-                                key={suggestion}
-                                onClick={() => setRoutineTitle(suggestion)}
-                                className="text-xs px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-zinc-200 dark:border-zinc-700"
-                            >
-                                {suggestion}
-                            </button>
-                        ))}
+                    <div>
+                        <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Categories</label>
+                        <div className="flex flex-wrap gap-2">
+                            {routineBadges[routineCategory]?.map(suggestion => (
+                                <button
+                                    key={suggestion}
+                                    onClick={() => setRoutineTitle(suggestion)}
+                                    className="text-xs px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-zinc-200 dark:border-zinc-700"
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

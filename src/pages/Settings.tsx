@@ -7,6 +7,7 @@ import { useAppStore } from "../store/useAppStore";
 import { db } from "../db/db";
 import { Modal } from "../components/ui/Modal";
 import { HelpModal } from "../components/Help/HelpModal";
+import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
 
 export default function Settings() {
@@ -18,7 +19,9 @@ export default function Settings() {
         defaultRoutineTime,
         setDefaultRoutineTime,
         routineTimeInterval,
-        setRoutineTimeInterval
+        setRoutineTimeInterval,
+        routineBadges,
+        setRoutineBadges
     } = useAppStore();
     const [isFreshStartModalOpen, setIsFreshStartModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -232,6 +235,55 @@ export default function Settings() {
                     </div>
                 </section>
 
+
+
+                {/* Routine Badges Customization */}
+                <section className="bg-white p-6 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-zinc-100">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2.5 bg-sky-50 rounded-xl">
+                            <svg className="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-semibold text-zinc-900">Routine Badges</h2>
+                            <p className="text-sm text-zinc-500">Customize available activities for each category</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-sky-50 border border-sky-100 rounded-xl p-4 mb-6">
+                        <div className="flex gap-3">
+                            <div className="mt-0.5">
+                                <svg className="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div className="text-sm text-sky-900">
+                                <p className="font-medium mb-1">How to customize:</p>
+                                <ul className="list-disc list-inside space-y-1 text-sky-800">
+                                    <li>Type a new activity name and press <span className="font-bold">Enter</span> to add it.</li>
+                                    <li>Click the <span className="font-bold">×</span> icon on any badge to remove it.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        {routineBadges && Object.entries(routineBadges).map(([category, badges]) => (
+                            <TagInput
+                                key={category}
+                                label={category.charAt(0).toUpperCase() + category.slice(1)}
+                                value={badges}
+                                onChange={(newBadges) => setRoutineBadges({
+                                    ...routineBadges,
+                                    [category]: newBadges
+                                })}
+                                placeholder={`Add ${category} activity...`}
+                            />
+                        ))}
+                    </div>
+                </section>
+
                 <DataManagement />
 
                 {/* Danger Zone */}
@@ -277,6 +329,6 @@ export default function Settings() {
                 isOpen={isHelpModalOpen}
                 onClose={() => setIsHelpModalOpen(false)}
             />
-        </div>
+        </div >
     );
 }
