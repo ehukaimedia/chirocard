@@ -89,7 +89,7 @@ export default function Profile() {
         // Validation
         const requiredFields = [
             { key: 'name', label: 'Name' },
-            { key: 'dateOfBirth', label: 'Age' }
+            { key: 'dateOfBirth', label: 'Date of Birth' }
         ];
 
         const missingFieldsList = requiredFields.filter(field => !formData[field.key as keyof typeof formData]);
@@ -267,7 +267,12 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                             <div>
                                 <p className="text-zinc-500 text-xs uppercase">Age</p>
                                 <p className="text-zinc-200 font-medium">
-                                    {user?.dateOfBirth ? new Date().getFullYear() - new Date(user.dateOfBirth).getFullYear() : "--"}
+                                    {user?.dateOfBirth ? (() => {
+                                        const birthDate = new Date(user.dateOfBirth);
+                                        const ageDifMs = Date.now() - birthDate.getTime();
+                                        const ageDate = new Date(ageDifMs); // miliseconds from epoch
+                                        return Math.abs(ageDate.getUTCFullYear() - 1970);
+                                    })() : "--"}
                                 </p>
                             </div>
                         </div>
@@ -590,21 +595,14 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
             />
 
             <Input
-                type="number"
-                label="Age"
-                value={formData.dateOfBirth ? new Date().getFullYear() - parseInt(formData.dateOfBirth.split('-')[0]) : ""}
-                onChange={e => {
-                    const age = parseInt(e.target.value);
-                    if (!isNaN(age) && age > 0 && age < 120) {
-                        const birthYear = new Date().getFullYear() - age;
-                        setFormData((prev: FormData) => ({ ...prev, dateOfBirth: `${birthYear}-01-01` }));
-                    } else if (e.target.value === "") {
-                        setFormData((prev: FormData) => ({ ...prev, dateOfBirth: "" }));
-                    }
-                }}
-                placeholder="30"
+                type="date"
+                label="Date of Birth"
+                value={formData.dateOfBirth}
+                onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
+                placeholder="YYYY-MM-DD"
                 required
                 error={missingFields.includes('dateOfBirth')}
+                errorMessage={missingFields.includes('dateOfBirth') ? "Date of Birth is required" : undefined}
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />
 
