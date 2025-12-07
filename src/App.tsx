@@ -12,11 +12,11 @@ import { MainLayout } from "./components/Layout/MainLayout";
 import SessionActive from "./pages/SessionActive";
 
 
-import { useReminders } from "./hooks/useReminders";
+import { useNotifications } from "./hooks/useNotifications";
 import { usePersistence } from "./hooks/usePersistence";
 
 function App() {
-  useReminders();
+  useNotifications();
   usePersistence();
   return (
     <BrowserRouter>

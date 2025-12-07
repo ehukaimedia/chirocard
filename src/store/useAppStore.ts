@@ -64,6 +64,15 @@ interface AppState {
     setRoutineTimeInterval: (interval: number) => void;
     routineBadges: Record<string, string[]>;
     setRoutineBadges: (badges: Record<string, string[]>) => void;
+
+    // Notification Settings
+    notificationSettings: {
+        enabled: boolean;
+        journalReminderEnabled: boolean;
+        journalReminderTime: string;
+        routineRemindersEnabled: boolean;
+    };
+    updateNotificationSettings: (settings: Partial<AppState['notificationSettings']>) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -86,6 +95,12 @@ export const useAppStore = create<AppState>()(
                 movement: ["Walk", "Run", "Yoga", "Mobility", "Swim", "Gym"],
                 lifestyle: ["Breathwork", "Meditate", "Journal", "Hydrate", "Sleep", "Nature"],
                 custom: ["Surfing", "Golfing", "Bowling", "Tennis", "Hiking", "Cycling", "Swimming", "Workout", "Pilates", "Dance"]
+            },
+            notificationSettings: {
+                enabled: true,
+                journalReminderEnabled: true,
+                journalReminderTime: "20:00",
+                routineRemindersEnabled: true
             },
 
             setViewMode: (mode) => set({ viewMode: mode }),
@@ -153,6 +168,9 @@ export const useAppStore = create<AppState>()(
             setDefaultRoutineTime: (time) => set({ defaultRoutineTime: time }),
             setRoutineTimeInterval: (interval) => set({ routineTimeInterval: interval }),
             setRoutineBadges: (badges) => set({ routineBadges: badges }),
+            updateNotificationSettings: (settings) => set((state) => ({
+                notificationSettings: { ...state.notificationSettings, ...settings }
+            })),
 
             reset: () => set({
                 viewMode: 'personal',
@@ -166,6 +184,12 @@ export const useAppStore = create<AppState>()(
                     lifestyle: ["Breathwork", "Meditate", "Journal", "Hydrate", "Sleep", "Nature"],
                     custom: ["Surfing", "Golfing", "Bowling", "Tennis", "Hiking", "Cycling", "Swimming", "Workout", "Pilates", "Dance"]
                 },
+                notificationSettings: {
+                    enabled: true,
+                    journalReminderEnabled: true,
+                    journalReminderTime: "20:00",
+                    routineRemindersEnabled: true
+                }
             })
         }),
         {
@@ -176,7 +200,8 @@ export const useAppStore = create<AppState>()(
                 calendarViewSpan: state.calendarViewSpan,
                 defaultRoutineTime: state.defaultRoutineTime,
                 routineTimeInterval: state.routineTimeInterval,
-                routineBadges: state.routineBadges
+                routineBadges: state.routineBadges,
+                notificationSettings: state.notificationSettings
             })
         }
     )

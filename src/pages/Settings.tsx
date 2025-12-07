@@ -9,6 +9,7 @@ import { Modal } from "../components/ui/Modal";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
+import { NotificationSettings } from "../components/Settings/NotificationSettings";
 // import { useLiveQuery } from "dexie-react-hooks";
 
 export default function Settings() {
@@ -285,6 +286,9 @@ export default function Settings() {
                         ))}
                     </div>
                 </section>
+
+                {/* Notification Settings */}
+                <NotificationSettings />
 
                 <DataManagement />
 
