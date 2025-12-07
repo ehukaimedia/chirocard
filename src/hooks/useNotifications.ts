@@ -15,7 +15,6 @@ export function useNotifications() {
 
     // Use refs to prevent interval closure staleness and duplicate notifications
     const lastCheckRef = useRef<number>(Date.now());
-    const notifiedJournalRef = useRef<boolean>(false);
 
     // Reset journal notification state at midnight (or just rely on date check)
     // Simple way: Track the date string of the last journal notification
