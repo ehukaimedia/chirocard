@@ -76,19 +76,34 @@ export function NotificationSettings() {
                         <div className="bg-zinc-50 rounded-xl p-4 flex items-center justify-between">
                             <div className="text-sm">
                                 <span className="text-zinc-500">Browser Permission: </span>
-                                <span className={`font-medium ${('Notification' in window) && Notification.permission === 'granted' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                    {('Notification' in window) && Notification.permission === 'granted' ? 'Active' : 'Required'}
-                                </span>
+                                {'Notification' in window ? (
+                                    <span className={`font-medium ${Notification.permission === 'granted' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                        {Notification.permission === 'granted' ? 'Active' : 'Required'}
+                                    </span>
+                                ) : (
+                                    <span className="font-medium text-zinc-400">Not Supported</span>
+                                )}
                             </div>
-                            {(!('Notification' in window) || Notification.permission !== 'granted') && (
+
+                            {/* Enable Button - Only show if supported and not granted */}
+                            {('Notification' in window) && Notification.permission !== 'granted' && (
                                 <Button size="sm" variant="secondary" onClick={requestPermission}>
                                     Enable Now
                                 </Button>
                             )}
+
+                            {/* Test Button - Only show if supported and granted */}
                             {('Notification' in window) && Notification.permission === 'granted' && (
                                 <Button size="sm" variant="ghost" onClick={testNotification}>
                                     Test
                                 </Button>
+                            )}
+
+                            {/* Not Supported / PWA Hint */}
+                            {!('Notification' in window) && (
+                                <div className="text-xs text-zinc-400 italic">
+                                    Install to Home Screen for support
+                                </div>
                             )}
                         </div>
 
