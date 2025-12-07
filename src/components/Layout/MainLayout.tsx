@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
-import { InstallBanner } from "../PWA/InstallBanner";
+
 
 export function MainLayout() {
     return (
@@ -26,7 +26,6 @@ export function MainLayout() {
                     </p>
                 </footer>
             </div>
-            <InstallBanner />
             <BottomNav />
         </div>
     );

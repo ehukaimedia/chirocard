@@ -10,7 +10,7 @@ import { useToast } from "../components/ui/Toast";
 import { IntakeProfileSection } from "../components/Intake/IntakeProfileSection";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { GuardModal } from "../components/Session/GuardModal";
-import { Modal } from "../components/ui/Modal";
+
 
 export default function Intake() {
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function Intake() {
     const user = useLiveQuery(() => db.users.get("me"));
     const [showReview, setShowReview] = useState(false);
     const [showGuard, setShowGuard] = useState(false);
-    const [showProfileWarning, setShowProfileWarning] = useState(false);
+
     const [agreement, setAgreement] = useState<string | null>(null);
 
     // Remove practitioner selection from session intake
@@ -40,12 +40,16 @@ export default function Intake() {
         if (user) {
             const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
             // @ts-expect-error
-            const isComplete = requiredFields.every(field => user[field]);
-            if (!isComplete) {
-                setShowProfileWarning(true);
+            const missing = requiredFields.filter(field => !user[field]);
+
+            if (missing.length > 0) {
+                console.log("Profile incomplete, missing:", missing);
+                toast("Please complete your profile to start a session.", "error");
+                // Pass state to Profile to auto-enable edit mode
+                navigate("/profile", { state: { editMode: true, missingFields: missing } });
             }
         }
-    }, [user]);
+    }, [user, navigate, toast]);
 
     const handleReview = () => {
         if (!currentSession) return;
@@ -294,16 +298,7 @@ export default function Intake() {
             </div>
 
 
-            <Modal
-                isOpen={showProfileWarning}
-                onClose={() => navigate("/")}
-                title="Complete Profile Required"
-                description="To ensure your safety and the best possible care, we need a few more details about you before starting a session."
-                confirmLabel="Complete Profile"
-                cancelLabel="Return to Dashboard"
-                onConfirm={() => navigate("/profile", { state: { editMode: true } })}
-                onCancel={() => navigate("/")}
-            />
+
         </div >
     );
 }

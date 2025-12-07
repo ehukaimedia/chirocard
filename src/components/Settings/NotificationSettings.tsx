@@ -76,16 +76,16 @@ export function NotificationSettings() {
                         <div className="bg-zinc-50 rounded-xl p-4 flex items-center justify-between">
                             <div className="text-sm">
                                 <span className="text-zinc-500">Browser Permission: </span>
-                                <span className={`font-medium ${Notification.permission === 'granted' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                    {Notification.permission === 'granted' ? 'Active' : 'Required'}
+                                <span className={`font-medium ${('Notification' in window) && Notification.permission === 'granted' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                    {('Notification' in window) && Notification.permission === 'granted' ? 'Active' : 'Required'}
                                 </span>
                             </div>
-                            {Notification.permission !== 'granted' && (
+                            {(!('Notification' in window) || Notification.permission !== 'granted') && (
                                 <Button size="sm" variant="secondary" onClick={requestPermission}>
                                     Enable Now
                                 </Button>
                             )}
-                            {Notification.permission === 'granted' && (
+                            {('Notification' in window) && Notification.permission === 'granted' && (
                                 <Button size="sm" variant="ghost" onClick={testNotification}>
                                     Test
                                 </Button>
