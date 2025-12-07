@@ -96,7 +96,9 @@ export default function Profile() {
 
         if (missingFieldsList.length > 0) {
             setMissingFields(missingFieldsList.map(f => f.key));
+            console.log("Validation failed. Missing:", missingFieldsList);
             toast(`Please fill in required fields: ${missingFieldsList.map(f => f.label).join(', ')}`, "error");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
@@ -582,6 +584,7 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                 placeholder="Jane Doe"
                 required
                 error={missingFields.includes('name')}
+                errorMessage={missingFields.includes('name') ? "Name is required" : undefined}
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
                 autoComplete="name"
             />
@@ -850,7 +853,7 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                 suggestions={commonPreferences}
             />
 
-            <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white" onClick={handleSave}>
+            <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white" onClick={handleSave} type="button">
                 <Save className="w-4 h-4 mr-2" /> Save Profile
             </Button>
         </Card>
