@@ -592,7 +592,7 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
             <Input
                 type="number"
                 label="Age"
-                value={formData.dateOfBirth ? new Date().getFullYear() - new Date(formData.dateOfBirth).getFullYear() : ""}
+                value={formData.dateOfBirth ? new Date().getFullYear() - parseInt(formData.dateOfBirth.split('-')[0]) : ""}
                 onChange={e => {
                     const age = parseInt(e.target.value);
                     if (!isNaN(age) && age > 0 && age < 120) {
