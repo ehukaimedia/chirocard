@@ -9,6 +9,7 @@
 *   **Patient is the Database**: All health records, history, and preferences live on the patient's device (indexedDB).
 *   **Zero-Knowledge Cloud**: We do not store user data. Syncing is optional and user-controlled.
 *   **Frictionless Practitioner Experience**: Practitioners use a stateless "Kiosk Mode" to view and chart sessions. No accounts, no login, no installation required.
+*   **Installable App (PWA)**: Works offline and can be installed to the home screen of any device (iOS, Android, Desktop) without an app store.
 
 ## Key Features
 

@@ -114,6 +114,11 @@
     *   Requires Android Studio.
     *   Target: Android Phones.
 
+### 7.3. Progressive Web App (PWA)
+*   **Installable:** Users can install the app directly from the browser (Chrome, Safari, etc.) to their home screen.
+*   **Offline Capable:** Service worker ensures the app loads instantly and works offline.
+*   **Smart Install Prompt:** Custom "Install App" banner detects eligibility and guides users (including iOS-specific instructions).
+
 ### 7.2. Development Workflow
 *   **"Mac-Only" Approach:** The solo developer will use a Mac to build and sign apps for both platforms.
 *   **Build Process:**

@@ -1,0 +1,9 @@
+# Rules for Cloudflare Pages
+
+# Do not cache the service worker so updates are detected immediately
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Ensure correct content type for manifest (optional but good practice)
+/manifest.webmanifest
+  Content-Type: application/manifest+json
