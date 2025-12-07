@@ -10,6 +10,8 @@ import SessionReport from "./pages/SessionReport";
 import Settings from "./pages/Settings";
 import { MainLayout } from "./components/Layout/MainLayout";
 import SessionActive from "./pages/SessionActive";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 
 import { useNotifications } from "./hooks/useNotifications";
@@ -34,6 +36,8 @@ function App() {
 
         <Route path="/intake" element={<Intake />} />
         <Route path="/session-active" element={<SessionActive />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
