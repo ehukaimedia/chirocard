@@ -290,7 +290,7 @@ export default function Intake() {
                 <Button
                     variant="primary"
                     size="lg"
-                    className="w-full max-w-xl mx-auto shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
+                    className="flex w-full max-w-xl mx-auto shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
                     onClick={handleReview}
                 >
                     Review & Confirm <CheckCircle className="ml-2 w-5 h-5 flex-shrink-0" />

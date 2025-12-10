@@ -71,7 +71,7 @@ export default function Privacy() {
                         We use minimal third-party services to enhance functionality:
                     </p>
                     <ul>
-                        <li><strong>Google Places API:</strong> Used solely to help you find and auto-complete addresses for your profile and practitioner list.</li>
+
                         <li><strong>Google Analytics / Vercel Analytics:</strong> We may use anonymous, aggregate telemetry to understand general usage patterns (e.g., "how many users visited the settings page"). This data is anonymized and contains no health information.</li>
                     </ul>
 

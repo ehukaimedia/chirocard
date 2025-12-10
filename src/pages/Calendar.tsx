@@ -616,15 +616,10 @@ export default function Calendar() {
 
                             <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                 {practitionerDetails.address && (
-                                    <a
-                                        href={`https://maps.google.com/?q=${encodeURIComponent(practitionerDetails.address)}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-blue-500 transition-colors"
-                                    >
+                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                                         <MapPin className="w-4 h-4 shrink-0" />
                                         <span className="truncate">{practitionerDetails.address}</span>
-                                    </a>
+                                    </div>
                                 )}
                                 {practitionerDetails.phone && (
                                     <a

@@ -6,15 +6,14 @@ import { Info, AlertTriangle, ChevronLeft, History, Printer, Calendar, Check, Cl
 import { useState } from "react";
 import { Modal } from "../components/ui/Modal";
 import { useAppStore } from "../store/useAppStore";
-import { useNavigate } from "react-router-dom";
+
 import { BodyworkRoutineModal, type BodyworkRoutineData } from "../components/Shared/BodyworkRoutineModal";
 import type { PostSessionEntry, BodyworkRoutine } from "../db/db";
 import { trackEvent } from "../utils/analytics";
 
 export default function SessionReport() {
     const { id } = useParams();
-    const navigate = useNavigate();
-    const { resumeSession } = useAppStore();
+
     const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
     const user = useLiveQuery(() => db.users.get("me"));
     const [addedRecs, setAddedRecs] = useState<Set<number>>(new Set());
@@ -186,18 +185,7 @@ export default function SessionReport() {
             <div className="mb-8 flex justify-between items-center print:hidden mt-16">
                 <h1 className="text-2xl font-bold">Session Report</h1>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => {
-                            if (session) {
-                                resumeSession(session);
-                                navigate("/guest-session");
-                            }
-                        }}
-                        className="bg-white border border-zinc-200 text-zinc-600 px-4 py-2 rounded-lg hover:bg-zinc-50 hover:text-zinc-900 transition-colors font-medium flex items-center gap-2 shadow-sm"
-                    >
-                        <Edit className="w-4 h-4" />
-                        Edit Session
-                    </button>
+
 
                     <button
                         onClick={() => {

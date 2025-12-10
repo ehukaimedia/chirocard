@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { db, type Practitioner } from "../../db/db";
 import { Input } from "../ui/Input";
-import { PlacesAutocomplete } from "../ui/PlacesAutocomplete";
 import { Modal } from "../ui/Modal";
 import { useToast } from "../ui/Toast";
 
@@ -58,39 +57,10 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
             onCancel={onClose}
         >
             <div className="space-y-4 py-2">
-                <PlacesAutocomplete
-                    label="Name / Search Google Maps"
-                    placeholder="Search for a practitioner or clinic..."
-                    defaultValue={formData.name || ""}
-                    onSelect={(place) => {
-                        const address = place.formatted_address || "";
-                        const phone = place.formatted_phone_number || "";
-                        const website = place.website || "";
-                        const name = place.name || "";
-                        const types = place.types || [];
-
-                        let role: "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other" = "Other";
-
-                        if (types.includes("chiropractor")) {
-                            role = "Chiropractor";
-                        } else if (types.includes("physiotherapist") || types.includes("physical_therapist")) {
-                            role = "Physical Therapist";
-                        } else if (types.includes("spa") || types.includes("health") || name.toLowerCase().includes("massage")) {
-                            role = "Massage Therapist";
-                        } else if (name.toLowerCase().includes("acupuncture")) {
-                            role = "Acupuncturist";
-                        }
-
-                        setFormData(prev => ({
-                            ...prev,
-                            name: name,
-                            address: address,
-                            phone: phone,
-                            website: website,
-                            clinicName: name,
-                            role: role
-                        }));
-                    }}
+                <Input
+                    label="Practitioner Name"
+                    placeholder="Dr. Smith"
+                    value={formData.name || ""}
                     onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 />
 

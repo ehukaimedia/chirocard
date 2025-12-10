@@ -474,7 +474,7 @@ export default function SessionActive() {
                     <Button
                         variant="primary"
                         size="lg"
-                        className="w-full max-w-3xl mx-auto shadow-xl shadow-emerald-500/20 text-lg h-14 bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex w-full max-w-3xl mx-auto shadow-xl shadow-emerald-500/20 text-lg h-14 bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleFinishSession}
                         disabled={!practitionerVerification}
                     >
@@ -853,7 +853,7 @@ export default function SessionActive() {
                 <Button
                     variant="primary"
                     size="lg"
-                    className="w-full max-w-3xl mx-auto shadow-xl shadow-emerald-500/20 text-lg h-14 bg-emerald-600 hover:bg-emerald-500 text-white"
+                    className="flex w-full max-w-3xl mx-auto shadow-xl shadow-emerald-500/20 text-lg h-14 bg-emerald-600 hover:bg-emerald-500 text-white"
                     onClick={() => setShowReview(true)}
                 >
                     Review & Sign <CheckCircle className="ml-2 w-5 h-5" />
