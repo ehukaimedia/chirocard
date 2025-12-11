@@ -11,6 +11,7 @@ import { UserProfile } from '@/db/types';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button'; // Assuming we have this
 import { TagInput } from '@/components/ui/TagInput';
+import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete';
 import { useLiveQuery } from '@/db/db'; // Custom hook we made
 
 export default function EditProfileScreen() {
@@ -93,6 +94,13 @@ export default function EditProfileScreen() {
                         placeholder="MM-DD-YYYY"
                         keyboardType="numeric"
                         maxLength={10}
+                    />
+
+                    <AddressAutocomplete
+                        label="Home Address"
+                        value={formData.address || ''}
+                        onSelect={(addr) => update('address', addr)}
+                        containerClassName="mb-4"
                     />
 
                     <View className="flex-row gap-4 mb-4">

@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer, Camera, Trash2, User, Shield } from "lucide-react";
 
 import { TagInput } from "../components/ui/TagInput";
+import { AddressAutocomplete } from "../components/ui/AddressAutocomplete";
 
 import { useToast } from "../components/ui/Toast";
 import { trackEvent } from "../utils/analytics";
@@ -679,10 +680,11 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
                     autoComplete="tel"
                 />
             </div>
-            <Input
+            <AddressAutocomplete
                 label="Address"
                 value={formData.address}
-                onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                onSelect={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
+                onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
                 placeholder="123 Wellness Way, Healing City, HC 90210"
                 className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
             />

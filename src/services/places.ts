@@ -3,7 +3,7 @@ export interface PlaceResult {
     lat: string;
     lon: string;
     display_name: string;
-    name?: string; // Nominatim returns this often
+    name?: string;
     address: {
         amenity?: string;
         shop?: string;
@@ -41,7 +41,7 @@ export async function searchPlaces(query: string, location?: { lat: number; lon:
             url,
             {
                 headers: {
-                    'User-Agent': 'ChiroCardMobileApp/1.0'
+                    'User-Agent': 'ChiroCardWebApp/1.0'
                 }
             }
         );

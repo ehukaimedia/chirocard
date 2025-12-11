@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { db, type Practitioner } from "../../db/db";
 import { Input } from "../ui/Input";
+import { AddressAutocomplete } from "../ui/AddressAutocomplete";
 import { Modal } from "../ui/Modal";
 import { useToast } from "../ui/Toast";
 
@@ -101,11 +102,18 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                     />
                 </div>
 
-                <Input
-                    label="Address"
-                    placeholder="123 Healing Way"
+                <AddressAutocomplete
+                    label="Autofill Address (Search Clinic Name)"
+                    placeholder="e.g. Mayo Clinic"
                     value={formData.address || ""}
-                    onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                    onSelect={(addr, place) => {
+                        setFormData(prev => ({
+                            ...prev,
+                            address: addr,
+                            clinicName: place?.name || prev.clinicName
+                        }));
+                    }}
+                    onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
                 />
 
                 <Input

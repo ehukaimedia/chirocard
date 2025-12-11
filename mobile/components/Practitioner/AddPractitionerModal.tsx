@@ -8,6 +8,7 @@ import * as Crypto from 'expo-crypto';
 import * as Location from 'expo-location';
 import { searchPlaces, type PlaceResult } from "../../services/places";
 import { MapPin } from "lucide-react-native";
+import { AddressAutocomplete } from "../ui/AddressAutocomplete";
 
 interface AddPractitionerModalProps {
     isOpen: boolean;
@@ -133,34 +134,18 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
         >
             <View className="space-y-4 py-2">
                 {/* Place Search - Overlay style or inline? Inline is simpler for scrolling */}
-                <View className="z-50 relative">
-                    <Input
-                        label="Autofill from Map (Optional)"
-                        placeholder="Search clinic (e.g. Mayo Clinic)"
-                        value={searchQuery}
-                        onChangeText={handleSearch}
-                    />
-                    {isSearching && (
-                        <ActivityIndicator className="absolute right-3 top-9" size="small" color="#10b981" />
-                    )}
-
-                    {results.length > 0 && (
-                        <View className="absolute top-[70px] left-0 right-0 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-40 overflow-hidden">
-                            {results.map((place) => (
-                                <TouchableOpacity
-                                    key={place.place_id}
-                                    onPress={() => selectPlace(place)}
-                                    className="p-3 border-b border-zinc-100 dark:border-zinc-700 flex-row items-center gap-2"
-                                >
-                                    <MapPin size={14} className="text-emerald-500" />
-                                    <Text className="text-sm text-zinc-900 dark:text-zinc-100 flex-1" numberOfLines={1}>
-                                        {place.display_name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                </View>
+                <AddressAutocomplete
+                    label="Autofill from Map (Optional)"
+                    placeholder="Search clinic (e.g. Mayo Clinic)"
+                    onSelect={(addr, place) => {
+                        setFormData(prev => ({
+                            ...prev,
+                            address: addr,
+                            clinicName: place?.name || prev.clinicName
+                        }));
+                        if (place?.name) toast("Autofilled: " + place.name, "success");
+                    }}
+                />
 
                 <View className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-2" />
 
@@ -174,13 +159,6 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                 <View className="space-y-2">
                     <Text className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Role</Text>
                     <View className="h-12 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 justify-center">
-                        {/* 
-                            NOTE: Picker on iOS is weird in non-native look. 
-                            For MVP we use a simple text input or standard picker if installed. 
-                            For now I'll use a standard TextInput for simplicity or mocked selector 
-                            Actually, let's just use Input for role or assume Picker is not installed yet.
-                            I can use a simple Button list for role selection to make it mobile-friendly.
-                        */}
                         <Input
                             value={formData.role}
                             onChangeText={text => setFormData(p => ({ ...p, role: text as any }))}
@@ -217,6 +195,7 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                     </View>
                 </View>
 
+                {/* Manual Address Input (if user wants to edit after autofill) */}
                 <Input
                     label="Address"
                     placeholder="123 Healing Way"
@@ -230,7 +209,6 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                     value={formData.website || ""}
                     onChangeText={text => setFormData(prev => ({ ...prev, website: text }))}
                 />
-            </View>
         </Modal>
     );
 }

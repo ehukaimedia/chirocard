@@ -5,6 +5,7 @@ import { trackEvent } from "../../utils/analytics";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
 import { Input } from "../ui/Input";
+import { AddressAutocomplete } from "../ui/AddressAutocomplete";
 import { Modal } from "../ui/Modal";
 import { Plus, Trash2, GripVertical, Pencil, X } from "lucide-react";
 import { Reorder } from "framer-motion";
@@ -172,12 +173,21 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                             />
                         </div>
 
-                        <Input
-                            label="Address"
-                            placeholder="123 Healing Way"
-                            value={formData.address || ""}
-                            onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                        />
+                        <div className="pt-2">
+                            <AddressAutocomplete
+                                label="Autofill Address (Search Clinic Name)"
+                                placeholder="e.g. Mayo Clinic"
+                                value={formData.address || ""}
+                                onSelect={(addr, place) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        address: addr,
+                                        clinicName: place?.name || prev.clinicName
+                                    }));
+                                }}
+                                onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
+                            />
+                        </div>
 
                         <Input
                             label="Website"
