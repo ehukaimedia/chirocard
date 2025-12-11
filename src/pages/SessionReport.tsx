@@ -5,7 +5,7 @@ import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
 import { Info, AlertTriangle, ChevronLeft, History, Printer, Calendar, Check, Clock, Trash2, Edit } from "lucide-react";
 import { useState } from "react";
 import { Modal } from "../components/ui/Modal";
-import { useAppStore } from "../store/useAppStore";
+
 
 import { BodyworkRoutineModal, type BodyworkRoutineData } from "../components/Shared/BodyworkRoutineModal";
 import type { PostSessionEntry, BodyworkRoutine } from "../db/db";

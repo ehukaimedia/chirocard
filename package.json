@@ -11,15 +11,6 @@
     "start": "vite preview"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.4",
-    "@capacitor/app": "^7.1.0",
-    "@capacitor/cli": "^7.4.4",
-    "@capacitor/core": "^7.4.4",
-    "@capacitor/haptics": "^7.0.2",
-    "@capacitor/ios": "^7.4.4",
-    "@capacitor/keyboard": "^7.0.3",
-    "@capacitor/preferences": "^7.0.2",
-    "@capacitor/status-bar": "^7.0.3",
     "@types/pako": "^2.0.4",
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",
@@ -39,7 +30,6 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
     "@types/qrcode.react": "^1.0.5",
