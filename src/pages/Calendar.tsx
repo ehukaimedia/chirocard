@@ -535,14 +535,19 @@ export default function Calendar() {
                                 upcomingAppointments.map((appt: Appointment) => (
                                     <Card
                                         key={appt.id}
-                                        className="p-3 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-colors bg-zinc-50 dark:bg-zinc-900/50"
+                                        className="p-4 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-xl"
                                         onClick={() => handleApptClick(appt)}
                                     >
-                                        <div>
-                                            <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
-                                            <p className="text-xs text-zinc-500">
-                                                {new Date(appt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })} • {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-sm shrink-0 border border-emerald-100 dark:border-emerald-800">
+                                                {new Date(appt.date).getDate()}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
+                                                <p className="text-xs text-zinc-500 font-medium">
+                                                    {new Date(appt.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short' })} • {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
                                         </div>
                                     </Card>
                                 ))
@@ -621,7 +626,7 @@ export default function Calendar() {
                 <div className="space-y-6 py-2">
                     {/* Practitioner Details Card */}
                     {practitionerDetails && (
-                        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-4 space-y-3 border border-zinc-100 dark:border-zinc-800">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <div className="flex items-start gap-3">
                                 <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                                     <Building2 className="w-5 h-5" />
@@ -636,9 +641,9 @@ export default function Calendar() {
 
                             <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                 {practitionerDetails.address && (
-                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                                        <MapPin className="w-4 h-4 shrink-0" />
-                                        <span className="truncate">{practitionerDetails.address}</span>
+                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2 rounded-lg">
+                                        <MapPin className="w-4 h-4 shrink-0 text-zinc-400" />
+                                        <span className="truncate font-medium">{practitionerDetails.address}</span>
                                     </div>
                                 )}
                                 {practitionerDetails.phone && (
@@ -678,23 +683,30 @@ export default function Calendar() {
                         <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Edit Details</h4>
                         {!editApptPractitioner ? (
                             <div className="space-y-2">
-                                <label className="text-xs text-zinc-500">Select Practitioner</label>
+                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Select Practitioner</label>
                                 <PractitionerManager onSelect={(p) => setEditApptPractitioner({ id: p.id, name: p.name })} />
                             </div>
                         ) : (
-                            <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
-                                <span className="text-sm font-medium">{editApptPractitioner.name}</span>
-                                <Button size="sm" variant="ghost" onClick={() => setEditApptPractitioner(null)}>Change</Button>
+                            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex justify-between items-center shadow-sm">
+                                <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{editApptPractitioner.name}</span>
+                                <Button size="sm" variant="ghost" onClick={() => setEditApptPractitioner(null)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">Change</Button>
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-2">
-                            <Input type="date" value={editApptDate} onChange={e => setEditApptDate(e.target.value)} />
-                            <Input
-                                type="time"
-                                value={editApptTime}
-                                onChange={e => setEditApptTime(e.target.value)}
-                                step={routineTimeInterval === 1 ? "60" : "900"}
-                            />
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</label>
+                                <Input type="date" value={editApptDate} onChange={e => setEditApptDate(e.target.value)} className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm" />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Time</label>
+                                <Input
+                                    type="time"
+                                    value={editApptTime}
+                                    onChange={e => setEditApptTime(e.target.value)}
+                                    step={routineTimeInterval === 1 ? "60" : "900"}
+                                    className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -722,23 +734,30 @@ export default function Calendar() {
                 <div className="space-y-4 py-2">
                     {!selectedPractitioner ? (
                         <div className="space-y-2">
-                            <label className="text-xs text-zinc-500">Select Practitioner</label>
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Practitioner</label>
                             <PractitionerManager onSelect={(p) => setSelectedPractitioner({ id: p.id, name: p.name })} />
                         </div>
                     ) : (
-                        <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
-                            <span className="text-sm font-medium">{selectedPractitioner.name}</span>
-                            <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)}>Change</Button>
+                        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex justify-between items-center shadow-sm">
+                            <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{selectedPractitioner.name}</span>
+                            <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">Change</Button>
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-2">
-                        <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
-                        <Input
-                            type="time"
-                            value={apptTime}
-                            onChange={e => setApptTime(e.target.value)}
-                            step={routineTimeInterval === 1 ? "60" : "900"}
-                        />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</label>
+                            <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Time</label>
+                            <Input
+                                type="time"
+                                value={apptTime}
+                                onChange={e => setApptTime(e.target.value)}
+                                step={routineTimeInterval === 1 ? "60" : "900"}
+                                className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm"
+                            />
+                        </div>
                     </div>
                 </div>
             </Modal>

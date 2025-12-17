@@ -99,11 +99,11 @@ export function BodyworkRoutineModal({
         >
             <div className="space-y-5 py-2">
                 <div>
-                    <label className="text-xs font-medium text-zinc-500 mb-1 block">Category</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider block">Category</label>
                     <select
                         value={routineCategory}
                         onChange={(e) => setRoutineCategory(e.target.value as 'relief' | 'movement' | 'lifestyle' | 'custom')}
-                        className="w-full h-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 text-base font-medium text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm appearance-none"
                     >
                         <option value="relief">Relief & Recovery</option>
                         <option value="movement">Movement & Mobility</option>
@@ -117,15 +117,16 @@ export function BodyworkRoutineModal({
                         placeholder="Title"
                         value={routineTitle}
                         onChange={e => setRoutineTitle(e.target.value)}
+                        className="h-12 bg-zinc-50 dark:bg-zinc-900 text-base font-medium border border-zinc-200 dark:border-zinc-800 focus:ring-2 rounded-xl shadow-sm"
                     />
                     <div>
-                        <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Categories</label>
+                        <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider block">Quick Select</label>
                         <div className="flex flex-wrap gap-2">
                             {routineBadges[routineCategory]?.map(suggestion => (
                                 <button
                                     key={suggestion}
                                     onClick={() => setRoutineTitle(suggestion)}
-                                    className="text-xs px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-zinc-200 dark:border-zinc-700"
+                                    className="text-sm font-medium px-4 py-2 rounded-full bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all border border-zinc-200 dark:border-zinc-700 active:scale-95 shadow-sm"
                                 >
                                     {suggestion}
                                 </button>
@@ -135,40 +136,41 @@ export function BodyworkRoutineModal({
                 </div>
 
                 <div>
-                    <label className="text-xs font-medium text-zinc-500 mb-1.5 block">Reminder Times</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider block">Reminder Times</label>
                     <div className="space-y-2">
                         <div className="flex flex-wrap gap-2">
                             {routineTimes.map((time, i) => (
-                                <div key={i} className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md text-sm border border-zinc-200 dark:border-zinc-700">
-                                    <Clock className="w-3 h-3 text-zinc-400" />
-                                    <span className="text-zinc-700 dark:text-zinc-300">{time}</span>
+                                <div key={i} className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 rounded-lg text-base border border-emerald-100 dark:border-emerald-800 shadow-sm">
+                                    <Clock className="w-4 h-4 text-emerald-500" />
+                                    <span className="text-emerald-900 dark:text-emerald-100 font-medium">{time}</span>
                                     <button
                                         onClick={() => setRoutineTimes(routineTimes.filter((_, idx) => idx !== i))}
-                                        className="text-zinc-400 hover:text-red-500 ml-1"
+                                        className="text-emerald-400 hover:text-red-500 ml-1 p-1"
                                     >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             ))}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                             <Input
                                 type="time"
                                 value={timeInput}
                                 onChange={e => setTimeInput(e.target.value)}
                                 step={routineTimeInterval === 1 ? "60" : "900"}
-                                className="flex-1"
+                                className="flex-1 h-12 bg-zinc-50 dark:bg-zinc-900 text-lg font-medium border border-zinc-200 dark:border-zinc-800 focus:ring-2 rounded-xl shadow-sm"
                             />
                             <Button
-                                size="sm"
+                                size="lg"
                                 variant="outline"
+                                className="h-12 w-12 p-0 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 rounded-xl shadow-sm"
                                 onClick={() => {
                                     if (timeInput && !routineTimes.includes(timeInput)) {
                                         setRoutineTimes([...routineTimes, timeInput].sort());
                                     }
                                 }}
                             >
-                                Add Time
+                                <span className="text-2xl font-light mb-1">+</span>
                             </Button>
                         </div>
                         <p className="text-[10px] text-zinc-400 mt-1">
@@ -178,7 +180,7 @@ export function BodyworkRoutineModal({
                 </div>
 
                 <div>
-                    <label className="text-xs font-medium text-zinc-500 mb-2 block">Days of Week</label>
+                    <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider block">Days of Week</label>
                     <div className="flex justify-between gap-1">
                         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => {
                             const isSelected = routineDays.length === 0 || routineDays.includes(i);
@@ -202,10 +204,10 @@ export function BodyworkRoutineModal({
                                         }
                                     }}
                                     className={`
-                                        w-9 h-9 rounded-xl text-xs font-medium transition-all
+                                        w-10 h-10 rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center
                                         ${isSelected
-                                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 scale-105'
-                                            : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-100 dark:border-zinc-700'}
+                                            ? 'bg-emerald-500 text-white shadow-emerald-500/20 scale-105 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950'
+                                            : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-400 border border-zinc-200 dark:border-zinc-800'}
                                     `}
                                 >
                                     {day}
@@ -218,11 +220,14 @@ export function BodyworkRoutineModal({
                     </p>
                 </div>
 
-                <Input
-                    placeholder="Notes"
-                    value={routineDesc}
-                    onChange={e => setRoutineDesc(e.target.value)}
-                />
+                <div className="pt-2">
+                    <Input
+                        placeholder="Notes (Optional)"
+                        value={routineDesc}
+                        onChange={e => setRoutineDesc(e.target.value)}
+                        className="h-12 bg-zinc-50 dark:bg-zinc-900 text-base font-medium border border-zinc-200 dark:border-zinc-800 focus:ring-2 rounded-xl shadow-sm"
+                    />
+                </div>
             </div>
         </Modal>
     );
