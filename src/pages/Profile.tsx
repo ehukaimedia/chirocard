@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
-import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
-import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Info, Printer, Camera, Trash2, User, Shield } from "lucide-react";
+import { ArrowLeft, Save, Edit2, AlertTriangle, Target, Heart, X, Activity, Printer, Camera, Trash2, User, Shield } from "lucide-react";
 
 import { TagInput } from "../components/ui/TagInput";
 import { AddressAutocomplete } from "../components/ui/AddressAutocomplete";
@@ -17,7 +16,7 @@ export default function Profile() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, saveUser } = useDataStore();
-    // const user = useLiveQuery(() => db.users.get("me"));
+
     const [isEditing, setIsEditing] = useState(false);
     const [missingFields, setMissingFields] = useState<string[]>([]);
 
@@ -558,298 +557,351 @@ export const EditView = ({ formData, setFormData, handleSave, missingFields = []
     const commonAllergies = ["Latex", "Nuts", "Oils", "Scents", "Lotion", "Dust", "Pollen", "Shellfish", "Dairy", "Gluten"];
 
     return (
-        <Card className="p-6 space-y-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm">
-
-            {/* Advisory Alert */}
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 flex items-start gap-3">
-                <Shield className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                <div className="text-sm text-emerald-700 dark:text-emerald-300">
-                    <p className="font-medium mb-1">Complete Profile Recommended</p>
-                    <p className="mb-2">Please fill out as much information as possible for a more productive session.</p>
-                    <p className="text-xs opacity-80 flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
-                        Your data is stored locally and securely on your device.
-                    </p>
-                </div>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-700 dark:text-blue-300">
-                    <p className="font-medium mb-1">How to add items</p>
-                    <p>Type and press <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Enter</kbd> or <kbd className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 border border-blue-200 dark:border-blue-700 rounded text-xs font-mono">Comma</kbd> to add items.</p>
-                </div>
-            </div>
-            <div className="flex justify-end">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400"><span className="text-red-500">*</span> Required</p>
-            </div>
-            <Input
-                label="Your Name"
-                value={formData.name}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, name: e.target.value }))}
-                placeholder="Jane Doe"
-                required
-                error={missingFields.includes('name')}
-                errorMessage={missingFields.includes('name') ? "Name is required" : undefined}
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                autoComplete="name"
-            />
-
-            <Input
-                type="date"
-                label="Date of Birth"
-                value={formData.dateOfBirth}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
-                placeholder="YYYY-MM-DD"
-                required
-                error={missingFields.includes('dateOfBirth')}
-                errorMessage={missingFields.includes('dateOfBirth') ? "Date of Birth is required" : undefined}
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-
-            <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Profile Photo</label>
-                <div className="flex items-center gap-4">
-                    <div className="h-16 w-16 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
-                        {formData.photo ? (
-                            <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
-                        ) : (
-                            <User className="w-8 h-8 text-zinc-400" />
-                        )}
+        <div className="bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 shadow-sm rounded-none md:rounded-2xl pb-32">
+            <div className="p-5 space-y-6">
+                {/* Advisory Alert */}
+                <div className="bg-white dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5 flex items-start gap-3 shadow-sm">
+                    <Shield className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+                    <div className="text-sm text-zinc-700 dark:text-emerald-300">
+                        <p className="font-bold text-base mb-1 text-emerald-800 dark:text-emerald-400">Complete Profile</p>
+                        <p className="mb-2 leading-relaxed">Fill out your details for better results. Data is stored locally.</p>
+                        <p className="text-xs font-bold opacity-80 flex items-center gap-1.5 uppercase tracking-wide text-emerald-700">
+                            <Shield className="w-3.5 h-3.5" />
+                            Secure & Private
+                        </p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('photo-upload')?.click()}
-                            className="border-zinc-200 dark:border-zinc-700"
-                        >
-                            <Camera className="w-4 h-4 mr-2" />
-                            Upload Photo
-                        </Button>
-                        {formData.photo && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setFormData(prev => ({ ...prev, photo: "" }))}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Remove
-                            </Button>
-                        )}
-                        <input
-                            id="photo-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                        setFormData(prev => ({ ...prev, photo: reader.result as string }));
-                                    };
-                                    reader.readAsDataURL(file);
-                                }
-                            }}
+                </div>
+
+                <div className="flex justify-end">
+                    <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide"><span className="text-red-600 font-black">*</span> Required</p>
+                </div>
+
+                <div className="space-y-5">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Your Name <span className="text-red-600">*</span></label>
+                        <Input
+                            value={formData.name}
+                            onChange={e => setFormData((prev: FormData) => ({ ...prev, name: e.target.value }))}
+                            placeholder="Jane Doe"
+                            required
+                            error={missingFields.includes('name')}
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                            autoComplete="name"
+                        />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Date of Birth <span className="text-red-600">*</span></label>
+                        <Input
+                            type="date"
+                            value={formData.dateOfBirth}
+                            onChange={e => setFormData((prev: FormData) => ({ ...prev, dateOfBirth: e.target.value }))}
+                            required
+                            error={missingFields.includes('dateOfBirth')}
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
                         />
                     </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <Input
-                    label="Email"
-                    value={formData.email}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, email: e.target.value }))}
-                    placeholder="jane@example.com"
-                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                    autoComplete="email"
-                />
-                <Input
-                    label="Phone"
-                    value={formData.phone}
-                    onChange={e => {
-                        const formatted = formatPhoneNumber(e.target.value);
-                        setFormData((prev: FormData) => ({ ...prev, phone: formatted }));
-                    }}
-                    placeholder="(555) 123-4567"
-                    error={missingFields.includes('phone')}
-                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                    autoComplete="tel"
-                />
-            </div>
-            <AddressAutocomplete
-                label="Address"
-                value={formData.address}
-                onSelect={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
-                onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
-                placeholder="123 Wellness Way, Healing City, HC 90210"
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-            <TagInput
-                label="Insurance Provider & Policy #"
-                value={formData.insurance}
-                onChange={(tags) => setFormData(prev => ({ ...prev, insurance: tags }))}
-                placeholder="e.g. Blue Cross #123456789"
-            />
-
-            <div className="flex justify-end mb-1">
-                <div className="inline-flex rounded-lg border border-zinc-200 dark:border-zinc-800 p-1 bg-zinc-50 dark:bg-zinc-900/50">
-                    <button
-                        type="button"
-                        onClick={() => unitSystem !== 'imperial' && toggleUnitSystem()}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${unitSystem === 'imperial' ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
-                    >
-                        Imperial (ft/lbs)
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => unitSystem !== 'metric' && toggleUnitSystem()}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${unitSystem === 'metric' ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
-                    >
-                        Metric (cm/kg)
-                    </button>
+                <div className="space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Profile Photo</label>
+                    <div className="flex items-center gap-4">
+                        <div className="h-20 w-20 rounded-full bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                            {formData.photo ? (
+                                <img src={formData.photo} alt="Preview" className="w-full h-full object-cover" />
+                            ) : (
+                                <User className="w-8 h-8 text-zinc-300" />
+                            )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => document.getElementById('photo-upload')?.click()}
+                                className="bg-white border-zinc-300 dark:border-zinc-600 h-10 text-sm font-bold px-4 text-zinc-700 shadow-sm"
+                            >
+                                <Camera className="w-4 h-4 mr-2" />
+                                Upload
+                            </Button>
+                            {formData.photo && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setFormData(prev => ({ ...prev, photo: "" }))}
+                                    className="text-red-600 hover:text-red-700 font-medium h-8"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                    Remove
+                                </Button>
+                            )}
+                            <input
+                                id="photo-upload"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            setFormData(prev => ({ ...prev, photo: reader.result as string }));
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <Input
-                    label={`Height (${unitSystem === 'imperial' ? 'ft/in' : 'cm'})`}
-                    value={formData.height}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
-                    placeholder={unitSystem === 'imperial' ? "5'10" : "178"}
-                    error={missingFields.includes('height')}
-                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                />
-                <Input
-                    label={`Weight (${unitSystem === 'imperial' ? 'lbs' : 'kg'})`}
-                    value={formData.weight}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
-                    placeholder={unitSystem === 'imperial' ? "165" : "75"}
-                    error={missingFields.includes('weight')}
-                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activity Level</label>
-                    <select
-                        className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        value={formData.activityLevel}
-                        onChange={e => setFormData((prev: FormData) => ({ ...prev, activityLevel: e.target.value }))}
-                    >
-                        {['Sedentary', 'Light', 'Moderate', 'Active', 'Athlete'].map(level => (
-                            <option key={level} value={level}>{level}</option>
-                        ))}
-                    </select>
+                <div className="grid grid-cols-1 gap-5 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Email</label>
+                        <Input
+                            value={formData.email}
+                            onChange={e => setFormData((prev: FormData) => ({ ...prev, email: e.target.value }))}
+                            placeholder="jane@example.com"
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                            autoComplete="email"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Phone</label>
+                        <Input
+                            value={formData.phone}
+                            onChange={e => {
+                                const formatted = formatPhoneNumber(e.target.value);
+                                setFormData((prev: FormData) => ({ ...prev, phone: formatted }));
+                            }}
+                            placeholder="(555) 123-4567"
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                            autoComplete="tel"
+                        />
+                    </div>
                 </div>
-                <Input
-                    label="Occupation"
-                    value={formData.occupation}
-                    onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
-                    placeholder="e.g. Desk Worker"
-                    className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-                    autoComplete="organization-title"
-                />
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Address</label>
+                    <AddressAutocomplete
+                        value={formData.address}
+                        onSelect={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
+                        onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
+                        placeholder="123 Wellness Way..."
+                        className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 shadow-sm"
+                    />
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Insurance</label>
+                    <TagInput
+                        label="Insurance Provider"
+                        value={formData.insurance}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, insurance: tags }))}
+                        placeholder="Add Provider..."
+                    />
+                </div>
+
+                <div className="flex justify-end pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                    <div className="inline-flex rounded-lg border border-zinc-300 dark:border-zinc-700 p-1 bg-white dark:bg-zinc-900/50 shadow-sm">
+                        <button
+                            type="button"
+                            onClick={() => unitSystem !== 'imperial' && toggleUnitSystem()}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${unitSystem === 'imperial' ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm ring-1 ring-black/5' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                        >
+                            Imperial
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => unitSystem !== 'metric' && toggleUnitSystem()}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${unitSystem === 'metric' ? 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm ring-1 ring-black/5' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+                        >
+                            Metric
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Height</label>
+                        <Input
+                            value={formData.height}
+                            onChange={e => setFormData((prev: FormData) => ({ ...prev, height: e.target.value }))}
+                            placeholder={unitSystem === 'imperial' ? "5'10" : "178"}
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Weight</label>
+                        <Input
+                            value={formData.weight}
+                            onChange={e => setFormData((prev: FormData) => ({ ...prev, weight: e.target.value }))}
+                            placeholder={unitSystem === 'imperial' ? "165" : "75"}
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-5 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Activity Level</label>
+                        <div className="relative">
+                            <select
+                                className="w-full h-12 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 text-base font-medium text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 appearance-none shadow-sm"
+                                value={formData.activityLevel}
+                                onChange={e => setFormData((prev: FormData) => ({ ...prev, activityLevel: e.target.value }))}
+                            >
+                                {['Sedentary', 'Light', 'Moderate', 'Active', 'Athlete'].map(level => (
+                                    <option key={level} value={level}>{level}</option>
+                                ))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
+                                <svg className="h-5 w-5 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Occupation</label>
+                        <Input
+                            value={formData.occupation}
+                            onChange={e => setFormData((prev: FormData) => ({ ...prev, occupation: e.target.value }))}
+                            placeholder="e.g. Desk Worker"
+                            className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                            autoComplete="organization-title"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Physical Activities</label>
+                    <TagInput
+                        label="Activities"
+                        value={formData.physicalActivities}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, physicalActivities: tags }))}
+                        placeholder="Add Activity..."
+                        suggestions={commonActivities}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Diet</label>
+                        <TagInput
+                            label="Diet"
+                            value={formData.diet}
+                            onChange={(tags) => setFormData(prev => ({ ...prev, diet: tags }))}
+                            placeholder="Add Diet..."
+                            suggestions={commonDiets}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Supplements</label>
+                        <TagInput
+                            label="Supplements"
+                            value={formData.supplements}
+                            onChange={(tags) => setFormData(prev => ({ ...prev, supplements: tags }))}
+                            placeholder="Add Supplement..."
+                            suggestions={commonSupplements}
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Medications</label>
+                        <TagInput
+                            label="Medications"
+                            value={formData.medications}
+                            onChange={(tags) => setFormData(prev => ({ ...prev, medications: tags }))}
+                            placeholder="e.g. Blood Thinners"
+                            suggestions={commonMedications}
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Allergies</label>
+                        <TagInput
+                            label="Allergies"
+                            value={formData.allergies}
+                            onChange={(tags) => setFormData(prev => ({ ...prev, allergies: tags }))}
+                            placeholder="e.g. Latex, Nuts"
+                            suggestions={commonAllergies}
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Hydration</label>
+                    <Input
+                        value={formData.hydration}
+                        onChange={e => setFormData((prev: FormData) => ({ ...prev, hydration: e.target.value }))}
+                        placeholder="e.g. 2L/day"
+                        className="bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white h-12 text-base font-medium rounded-xl px-4 focus:ring-2 focus:ring-emerald-500/20 shadow-sm"
+                    />
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Body History (Surgeries, Accidents)</label>
+                    <TagInput
+                        label="Body History"
+                        value={formData.bodyHistory}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, bodyHistory: tags }))}
+                        placeholder="Add History..."
+                        suggestions={commonBodyHistory}
+                    />
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Mobility & ROM Status</label>
+                    <TagInput
+                        label="Mobility"
+                        value={formData.mobilityStatus}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, mobilityStatus: tags }))}
+                        placeholder="e.g. Limited Right Shoulder Flexion"
+                        suggestions={commonMobility}
+                    />
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Primary Complaints</label>
+                    <TagInput
+                        label="Complaints"
+                        value={formData.primaryComplaints}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, primaryComplaints: tags }))}
+                        placeholder="e.g. Lower Back Pain, Sciatica"
+                        suggestions={commonComplaints}
+                    />
+                </div>
+
+                <div className="space-y-1.5">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Areas to Avoid (Contraindications)</label>
+                    <TagInput
+                        label="Contraindications"
+                        value={formData.contraindications}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, contraindications: tags }))}
+                        placeholder="e.g. No deep tissue on calves"
+                        suggestions={commonContraindications}
+                    />
+                </div>
+
+                <div className="space-y-1.5 pb-8">
+                    <label className="text-xs font-extrabold text-zinc-700 uppercase tracking-wider ml-1">Preferences</label>
+                    <TagInput
+                        label="Preferences"
+                        value={formData.preferences}
+                        onChange={(tags) => setFormData(prev => ({ ...prev, preferences: tags }))}
+                        placeholder="e.g. Lighter pressure, Scalp massage"
+                        suggestions={commonPreferences}
+                    />
+                </div>
+
+                <Button
+                    size="lg"
+                    onClick={handleSave}
+                    className="w-full h-12 text-lg font-bold shadow-lg shadow-emerald-500/20 rounded-xl bg-emerald-600 hover:bg-emerald-500 mb-8"
+                >
+                    <Save className="w-5 h-5 mr-2" /> Save Changes
+                </Button>
+
             </div>
-
-
-
-            <TagInput
-                label="Physical Activities"
-                value={formData.physicalActivities}
-                onChange={(tags) => setFormData(prev => ({ ...prev, physicalActivities: tags }))}
-                placeholder="e.g. Yoga, Running"
-                suggestions={commonActivities}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-                <TagInput
-                    label="Diet"
-                    value={formData.diet}
-                    onChange={(tags) => setFormData(prev => ({ ...prev, diet: tags }))}
-                    placeholder="e.g. Vegan"
-                    suggestions={commonDiets}
-                />
-                <TagInput
-                    label="Supplements"
-                    value={formData.supplements}
-                    onChange={(tags) => setFormData(prev => ({ ...prev, supplements: tags }))}
-                    placeholder="e.g. Vitamin D"
-                    suggestions={commonSupplements}
-                />
-            </div>
-            <Input
-                label="Hydration"
-                value={formData.hydration}
-                onChange={e => setFormData((prev: FormData) => ({ ...prev, hydration: e.target.value }))}
-                placeholder="e.g. 2L/day"
-                className="bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white"
-            />
-
-            <TagInput
-                label="Body History (Surgeries, Accidents)"
-                value={formData.bodyHistory}
-                onChange={(tags) => setFormData(prev => ({ ...prev, bodyHistory: tags }))}
-                placeholder="e.g. ACL Reconstruction 2018"
-                suggestions={commonBodyHistory}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-                <TagInput
-                    label="Medications"
-                    value={formData.medications}
-                    onChange={(tags) => setFormData(prev => ({ ...prev, medications: tags }))}
-                    placeholder="e.g. Blood Thinners"
-                    suggestions={commonMedications}
-                />
-                <TagInput
-                    label="Allergies"
-                    value={formData.allergies}
-                    onChange={(tags) => setFormData(prev => ({ ...prev, allergies: tags }))}
-                    placeholder="e.g. Latex, Nut Oils"
-                    suggestions={commonAllergies}
-                />
-            </div>
-
-            <TagInput
-                label="Mobility & ROM Status"
-                value={formData.mobilityStatus}
-                onChange={(tags) => setFormData(prev => ({ ...prev, mobilityStatus: tags }))}
-                placeholder="e.g. Limited Right Shoulder Flexion"
-                suggestions={commonMobility}
-            />
-
-            <TagInput
-                label="Primary Complaints"
-                value={formData.primaryComplaints}
-                onChange={(tags) => setFormData(prev => ({ ...prev, primaryComplaints: tags }))}
-                placeholder="e.g. Lower Back Pain, Sciatica"
-                suggestions={commonComplaints}
-            />
-
-            <TagInput
-                label="Areas to Avoid (Contraindications)"
-                value={formData.contraindications}
-                onChange={(tags) => setFormData(prev => ({ ...prev, contraindications: tags }))}
-                placeholder="e.g. No deep tissue on calves"
-                suggestions={commonContraindications}
-            />
-
-            <TagInput
-                label="Preferences"
-                value={formData.preferences}
-                onChange={(tags) => setFormData(prev => ({ ...prev, preferences: tags }))}
-                placeholder="e.g. Lighter pressure, Scalp massage"
-                suggestions={commonPreferences}
-            />
-
-            <Button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white" onClick={handleSave} type="button">
-                <Save className="w-4 h-4 mr-2" /> Save Profile
-            </Button>
-        </Card>
+        </div>
     );
 };

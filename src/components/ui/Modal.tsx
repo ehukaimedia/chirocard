@@ -16,6 +16,7 @@ interface ModalProps {
     confirmDisabled?: boolean;
     variant?: "default" | "danger";
     className?: string;
+    cancelButtonVariant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
     hideFooter?: boolean;
     hideCloseButton?: boolean;
 }
@@ -32,6 +33,7 @@ export function Modal({
     onCancel,
     confirmDisabled = false,
     variant = "default",
+    cancelButtonVariant = "ghost",
     className,
     hideFooter = false,
     hideCloseButton = false
@@ -55,9 +57,9 @@ export function Modal({
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-                className={`bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 ${className || ''}`}
+                className={`bg-white dark:bg-zinc-900 rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md border border-zinc-200 dark:border-zinc-800 flex flex-col max-h-[90vh] sm:h-auto fixed bottom-0 sm:relative sm:bottom-auto animate-in slide-in-from-bottom duration-200 sm:zoom-in-95 ${className || ''}`}
                 role="dialog"
                 aria-modal="true"
             >
@@ -89,7 +91,7 @@ export function Modal({
                 {/* Footer */}
                 {!hideFooter && (
                     <div className="flex justify-end gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800">
-                        <Button variant="ghost" onClick={() => {
+                        <Button variant={cancelButtonVariant} onClick={() => {
                             if (onCancel) onCancel();
                             else onClose();
                         }}>

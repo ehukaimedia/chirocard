@@ -57,27 +57,35 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
             onConfirm={handleSave}
             onCancel={onClose}
         >
-            <div className="space-y-4 py-2">
+            <div className="space-y-6 py-2">
                 <Input
                     label="Practitioner Name"
                     placeholder="Dr. Smith"
                     value={formData.name || ""}
                     onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="text-base h-12"
                 />
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Role</label>
-                    <select
-                        className="w-full h-11 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 text-sm text-zinc-900 dark:text-zinc-100"
-                        value={formData.role}
-                        onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other" }))}
-                    >
-                        <option value="Chiropractor">Chiropractor</option>
-                        <option value="Massage Therapist">Massage Therapist</option>
-                        <option value="Physical Therapist">Physical Therapist</option>
-                        <option value="Acupuncturist">Acupuncturist</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <div className="relative">
+                        <select
+                            className="w-full h-12 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 text-base text-zinc-900 dark:text-zinc-100 appearance-none"
+                            value={formData.role}
+                            onChange={e => setFormData(prev => ({ ...prev, role: e.target.value as "Chiropractor" | "Massage Therapist" | "Physical Therapist" | "Acupuncturist" | "Other" }))}
+                        >
+                            <option value="Chiropractor">Chiropractor</option>
+                            <option value="Massage Therapist">Massage Therapist</option>
+                            <option value="Physical Therapist">Physical Therapist</option>
+                            <option value="Acupuncturist">Acupuncturist</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-500">
+                            <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
                 </div>
 
                 <Input
@@ -85,20 +93,23 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                     placeholder="Wellness Center"
                     value={formData.clinicName || ""}
                     onChange={e => setFormData(prev => ({ ...prev, clinicName: e.target.value }))}
+                    className="text-base h-12"
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
                         label="Phone"
                         placeholder="(555) 123-4567"
                         value={formData.phone || ""}
                         onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                        className="text-base h-12"
                     />
                     <Input
                         label="Email"
                         placeholder="dr@example.com"
                         value={formData.email || ""}
                         onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="text-base h-12"
                     />
                 </div>
 
@@ -114,6 +125,7 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                         }));
                     }}
                     onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}
+                // AddressAutocomplete handles its own inputs, ideally it accepts className but if not, I'll update it later if needed. It usually uses Input.
                 />
 
                 <Input
@@ -121,7 +133,11 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                     placeholder="https://..."
                     value={formData.website || ""}
                     onChange={e => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                    className="text-base h-12"
                 />
+
+                {/* Spacer */}
+                <div className="h-32 sm:hidden" />
             </div>
         </Modal>
     );

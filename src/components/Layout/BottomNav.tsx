@@ -9,51 +9,39 @@ export function BottomNav() {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-t border-zinc-200/50 dark:border-zinc-800/50 pb-safe z-50 transition-all duration-300">
-            <div className="flex justify-around items-center h-16 px-2">
-                <Link
-                    to="/"
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${isActive("/") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-                        }`}
-                >
-                    <Home className={`w-6 h-6 ${isActive("/") ? "fill-current" : ""}`} strokeWidth={isActive("/") ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Home</span>
-                </Link>
-
-                <Link
-                    to="/calendar"
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${isActive("/calendar") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-                        }`}
-                >
-                    <Calendar className={`w-6 h-6 ${isActive("/calendar") ? "fill-current" : ""}`} strokeWidth={isActive("/calendar") ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Calendar</span>
-                </Link>
-
-                <Link
-                    to="/journal"
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${isActive("/journal") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-                        }`}
-                >
-                    <History className={`w-6 h-6 ${isActive("/journal") ? "fill-current" : ""}`} strokeWidth={isActive("/journal") ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Journal</span>
-                </Link>
-
-                <Link
-                    to="/profile"
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${isActive("/profile") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-                        }`}
-                >
-                    <User className={`w-6 h-6 ${isActive("/profile") ? "fill-current" : ""}`} strokeWidth={isActive("/profile") ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Profile</span>
-                </Link>
-
-                <Link
-                    to="/settings"
-                    className={`flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95 ${isActive("/settings") ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-                        }`}
-                >
-                    <SettingsIcon className={`w-6 h-6 ${isActive("/settings") ? "fill-current" : ""}`} strokeWidth={isActive("/settings") ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Settings</span>
-                </Link>
+            <div className="flex justify-around items-center h-16 px-1">
+                {[
+                    { path: "/", label: "Home", Icon: Home },
+                    { path: "/calendar", label: "Calendar", Icon: Calendar },
+                    { path: "/journal", label: "Journal", Icon: History },
+                    { path: "/profile", label: "Profile", Icon: User },
+                    { path: "/settings", label: "Settings", Icon: SettingsIcon },
+                ].map(({ path, label, Icon }) => {
+                    const active = isActive(path);
+                    return (
+                        <Link
+                            key={path}
+                            to={path}
+                            className={`group flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:scale-95`}
+                        >
+                            <div className={`p-2 rounded-xl transition-all duration-300 ${active
+                                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 translate-y-[-4px]"
+                                : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200"
+                                }`}>
+                                <Icon
+                                    className={`w-6 h-6 transition-transform duration-300 ${active ? "scale-110" : "scale-100"}`}
+                                    strokeWidth={active ? 2.5 : 2}
+                                />
+                            </div>
+                            <span className={`text-[10px] font-bold transition-all duration-300 ${active
+                                ? "text-emerald-600 dark:text-emerald-400 opacity-100 translate-y-[-2px]"
+                                : "text-zinc-400 opacity-70"
+                                }`}>
+                                {label}
+                            </span>
+                        </Link>
+                    );
+                })}
             </div>
         </div>
     );

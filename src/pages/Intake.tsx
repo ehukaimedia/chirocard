@@ -7,7 +7,6 @@ import { ArrowLeft, Play, CheckCircle } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { useToast } from "../components/ui/Toast";
 import { IntakeProfileSection } from "../components/Intake/IntakeProfileSection";
-import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { GuardModal } from "../components/Session/GuardModal";
 
 
@@ -86,8 +85,13 @@ export default function Intake() {
 
     if (!currentSession) return null; // Loading...
 
-    const issueAreas = Object.entries(currentSession.bodyMap)
-        .filter(([, status]) => status === 'issue');
+    const selectedAreas = Object.entries(currentSession.bodyMap)
+        .filter(([part, status]) => {
+            const hasPain = (currentSession.bodyLevels[part] || 0) > 0;
+            const hasNotes = !!currentSession.bodyNotes[part];
+            return status !== 'normal' || hasPain || hasNotes;
+        });
+
     if (showReview) {
         return (
             <div className="min-h-screen bg-light-bg dark:bg-dark-bg px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-24 flex flex-col">
@@ -118,11 +122,11 @@ export default function Intake() {
 
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Areas of Concern</h3>
-                        {issueAreas.length === 0 ? (
+                        {selectedAreas.length === 0 ? (
                             <p className="text-sm text-zinc-500 italic">No specific areas selected.</p>
                         ) : (
                             <div className="space-y-4">
-                                {issueAreas.map(([part]) => (
+                                {selectedAreas.map(([part]) => (
                                     <div key={part} className="space-y-1">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -188,11 +192,11 @@ export default function Intake() {
                     <Button
                         variant="primary"
                         size="lg"
-                        className="w-full max-w-xl mx-auto shadow-xl shadow-primary/20 text-lg h-auto min-h-[3.5rem] py-3"
+                        className="w-full max-w-xl mx-auto shadow-xl shadow-emerald-500/20 text-xl font-bold h-16 rounded-2xl"
                         onClick={handleStartSession}
                         disabled={!agreement}
                     >
-                        Start Session <Play className="ml-2 w-5 h-5 flex-shrink-0" />
+                        Start Session <Play className="ml-3 w-6 h-6 flex-shrink-0 fill-current" />
                     </Button>
                 </div>
 
@@ -236,38 +240,45 @@ export default function Intake() {
                     <BodyRegionSelector
                         value={currentSession.bodyMap}
                         levels={currentSession.bodyLevels}
-                        onChange={(part, status) => updateSession({
-                            bodyMap: { ...currentSession.bodyMap, [part]: status }
-                        })}
-                        onLevelChange={(part, level) => updateSession({
-                            bodyLevels: { ...currentSession.bodyLevels, [part]: level }
-                        })}
-                        mode="simple"
+                        notes={currentSession.bodyNotes}
+                        onSave={(part, data) => {
+                            updateSession({
+                                bodyMap: { ...currentSession.bodyMap, [part]: data.status },
+                                bodyLevels: { ...currentSession.bodyLevels, [part]: data.level },
+                                bodyNotes: { ...currentSession.bodyNotes, [part]: data.note }
+                            });
+                        }}
                     />
                 </section>
 
-                {/* 4. Details */}
-                {issueAreas.length > 0 && (
+                {/* 4. Details Summary */}
+                {selectedAreas.length > 0 && (
                     <section className="space-y-4">
                         <h2 className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
-                            4. Details for Selected Areas
+                            4. Selected Areas Summary
                         </h2>
-                        <div className="space-y-4">
-                            {issueAreas.map(([part]) => (
-                                <BodyRegionDetails
-                                    key={part}
-                                    bodyPart={part}
-                                    data={{
-                                        level: currentSession.bodyLevels[part] || 0,
-                                        notes: currentSession.bodyNotes[part] || ""
-                                    }}
-                                    onChange={(data) => updateSession({
-                                        bodyLevels: { ...currentSession.bodyLevels, [part]: data.level },
-                                        bodyNotes: { ...currentSession.bodyNotes, [part]: data.notes }
-                                    })}
-                                />
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 space-y-3">
+                            {selectedAreas.map(([part]) => (
+                                <div key={part} className="flex items-start justify-between bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-medium text-zinc-900 dark:text-zinc-100 capitalize text-base">{part.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                            {currentSession.bodyLevels[part] > 0 && (
+                                                <span className="text-xs px-2 py-1 rounded-full font-bold bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300">
+                                                    Pain: {currentSession.bodyLevels[part]}/10
+                                                </span>
+                                            )}
+                                        </div>
+                                        {currentSession.bodyNotes[part] ? (
+                                            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">"{currentSession.bodyNotes[part]}"</p>
+                                        ) : (
+                                            <p className="text-xs text-zinc-400 italic mt-1">No notes added</p>
+                                        )}
+                                    </div>
+                                </div>
                             ))}
                         </div>
+                        <p className="text-xs font-medium text-zinc-400 text-center uppercase tracking-wide">Tap any body part above to edit details.</p>
                     </section>
                 )}
 
@@ -280,7 +291,7 @@ export default function Intake() {
                         value={currentSession.clientNotes}
                         onChange={(e) => updateSession({ clientNotes: e.target.value })}
                         placeholder="Type or dictate notes here..."
-                        className="w-full h-32 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                        className="w-full h-40 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 text-base text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none shadow-sm"
                     />
                 </section>
             </div>
