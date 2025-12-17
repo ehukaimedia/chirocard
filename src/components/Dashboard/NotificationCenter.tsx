@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Bell, Calendar, CheckCircle, Clock, ChevronRight } from "lucide-react";
 import { Button } from "../ui/Button";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type BodyworkRoutine } from "../../db/db";
+import { type BodyworkRoutine } from "../../db/db";
+import { useDataStore } from "../../store/useDataStore";
 import { useNavigate } from "react-router-dom";
 import { RoutineVerificationModal } from "./RoutineVerificationModal";
 
@@ -11,27 +11,29 @@ export function NotificationCenter() {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedRoutine, setSelectedRoutine] = useState<BodyworkRoutine | null>(null);
+    const { appointments: allAppointments, routines: allRoutines } = useDataStore();
 
     // Queries
-    const appointments = useLiveQuery(() =>
-        db.appointments
-            .where("date")
-            .aboveOrEqual(Date.now())
-            .limit(3)
-            .toArray()
-    ) || [];
+    const appointments = useMemo(() => {
+        const now = Date.now();
+        return allAppointments
+            .filter(a => a.date >= now)
+            .sort((a, b) => a.date - b.date)
+            .slice(0, 3);
+    }, [allAppointments]);
+
 
     const now = new Date();
     const dayOfWeek = now.getDay();
     // Get all routines that match today's day of week or are daily (empty days array)
     // Then filter by not completed today
-    const routines = useLiveQuery(async () => {
-        const all = await db.routines.where("status").equals("active").toArray();
-        return all.filter(r => {
+    const routines = useMemo(() => {
+        return allRoutines.filter(r => {
+            if (r.status !== 'active') return false;
             const matchesDay = r.daysOfWeek?.length === 0 || r.daysOfWeek?.includes(dayOfWeek);
             return matchesDay && !r.isCompletedToday;
         });
-    }) || [];
+    }, [allRoutines, dayOfWeek]);
 
     const hasNotifications = appointments.length > 0 || routines.length > 0;
     const notificationCount = routines.length + appointments.length;

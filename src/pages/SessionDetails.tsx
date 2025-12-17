@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db/db";
+import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowLeft, User, Activity, FileText, CheckCircle } from "lucide-react";
@@ -9,7 +8,9 @@ import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
 export default function SessionDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
+    const { sessions } = useDataStore();
+    const session = sessions.find(s => s.id === id);
+    // const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
 
     if (!session) {
         return (
@@ -31,7 +32,7 @@ export default function SessionDetails() {
         : [];
 
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
+        <div className="min-h-screen bg-light-bg dark:bg-dark-bg px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-24">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8 justify-between">
                 <div className="flex items-center gap-4">

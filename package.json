@@ -8,14 +8,21 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite preview"
+    "start": "vite preview",
+    "mobile:build": "npm run build && npx cap sync",
+    "mobile:open:ios": "npx cap open ios",
+    "mobile:open:android": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.2",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@types/pako": "^2.0.4",
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",
     "dexie-export-import": "^4.1.4",
-    "dexie-react-hooks": "^4.2.0",
     "framer-motion": "^12.23.24",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.555.0",

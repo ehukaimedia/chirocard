@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../../db/db";
+import { useDataStore } from "../../store/useDataStore";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 
@@ -10,7 +9,8 @@ interface StatusUpdateModalProps {
 }
 
 export function StatusUpdateModal({ isOpen, onClose }: StatusUpdateModalProps) {
-    const user = useLiveQuery(() => db.users.get("me"));
+    const { user, saveUser } = useDataStore();
+    // const user = useLiveQuery(() => db.users.get("me"));
     const [statusText, setStatusText] = useState("");
 
     useEffect(() => {
@@ -28,7 +28,8 @@ export function StatusUpdateModal({ isOpen, onClose }: StatusUpdateModalProps) {
             .map(s => s.trim())
             .filter(s => s.length > 0);
 
-        await db.users.update("me", {
+        await saveUser({
+            ...user,
             primaryComplaints: newComplaints
         });
 

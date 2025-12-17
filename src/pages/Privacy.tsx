@@ -8,7 +8,7 @@ export default function Privacy() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-6 pb-24">
             {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
+            <nav className="fixed top-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-6 z-50">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
                     Back to App
@@ -16,7 +16,7 @@ export default function Privacy() {
             </nav>
 
             {/* Header */}
-            <div className="mt-16 mb-12 pt-6 max-w-3xl mx-auto">
+            <div className="mt-[calc(4rem+env(safe-area-inset-top))] mb-12 pt-6 max-w-3xl mx-auto">
                 <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight mb-2">Privacy Policy</h1>
                 <p className="text-zinc-500 dark:text-zinc-400">Last updated: December 6, 2025</p>
                 <p className="text-lg text-zinc-600 dark:text-zinc-300 mt-6 leading-relaxed">

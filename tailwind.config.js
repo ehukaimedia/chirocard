@@ -31,5 +31,29 @@ export default {
             }
         },
     },
-    plugins: [],
+    plugins: [
+        function ({ addUtilities }) {
+            const newUtilities = {
+                ".pb-safe": {
+                    paddingBottom: "env(safe-area-inset-bottom)",
+                },
+                ".pt-safe": {
+                    paddingTop: "env(safe-area-inset-top)",
+                },
+                ".pl-safe": {
+                    paddingLeft: "env(safe-area-inset-left)",
+                },
+                ".pr-safe": {
+                    paddingRight: "env(safe-area-inset-right)",
+                },
+                ".mb-safe": {
+                    marginBottom: "env(safe-area-inset-bottom)",
+                },
+                ".mt-safe": {
+                    marginTop: "env(safe-area-inset-top)",
+                },
+            };
+            addUtilities(newUtilities);
+        },
+    ],
 }

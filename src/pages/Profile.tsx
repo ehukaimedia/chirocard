@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db/db";
+import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -17,7 +16,8 @@ import { trackEvent } from "../utils/analytics";
 export default function Profile() {
     const navigate = useNavigate();
     const location = useLocation();
-    const user = useLiveQuery(() => db.users.get("me"));
+    const { user, saveUser } = useDataStore();
+    // const user = useLiveQuery(() => db.users.get("me"));
     const [isEditing, setIsEditing] = useState(false);
     const [missingFields, setMissingFields] = useState<string[]>([]);
 
@@ -106,7 +106,7 @@ export default function Profile() {
         setMissingFields([]);
 
         try {
-            await db.users.put({
+            await saveUser({
                 id: "me",
                 name: formData.name,
                 photo: formData.photo,
@@ -148,10 +148,10 @@ export default function Profile() {
 
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-24">
             {/* Top Navigation Bar */}
             {/* Top Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50 print:hidden">
+            <nav className="fixed top-0 left-0 right-0 min-h-[64px] h-auto bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-4 z-50 print:hidden">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
                     Return to Dashboard
@@ -194,7 +194,7 @@ export default function Profile() {
                         missingFields={missingFields}
                     />
                 ) : (
-                    <PassportView user={user} />
+                    <PassportView user={user || undefined} />
                 )}
             </div>
 

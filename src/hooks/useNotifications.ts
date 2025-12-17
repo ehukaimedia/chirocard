@@ -1,17 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type BodyworkRoutine } from '../db/db';
+import { useEffect, useRef, useMemo } from 'react';
+import { type BodyworkRoutine } from '../db/db';
 import { useAppStore } from '../store/useAppStore';
+import { useDataStore } from '../store/useDataStore';
 
 export function useNotifications() {
     const { notificationSettings } = useAppStore();
-    const routines = useLiveQuery(() => db.routines.where('status').equals('active').toArray()) || [];
-    const journalEntries = useLiveQuery(async () => {
+    const { routines: allRoutines, journalEntries: allJournalEntries } = useDataStore();
+
+    const routines = useMemo(() => allRoutines.filter(r => r.status === 'active'), [allRoutines]);
+
+    const journalEntries = useMemo(() => {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
-        return db.journal.where('date').aboveOrEqual(todayStart.getTime()).toArray();
-    }) || [];
+        const todayTime = todayStart.getTime();
+        return allJournalEntries.filter(j => j.date >= todayTime);
+    }, [allJournalEntries]);
 
     // Use refs to prevent interval closure staleness and duplicate notifications
     const lastCheckRef = useRef<number>(Date.now());

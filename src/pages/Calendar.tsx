@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Appointment, type BodyworkRoutine, type Practitioner } from "../db/db";
+import { type Appointment, type BodyworkRoutine, type Practitioner } from "../db/db";
+import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -20,8 +20,19 @@ import { useAppStore } from "../store/useAppStore";
 export default function Calendar() {
     const navigate = useNavigate();
     const { calendarViewSpan, routineTimeInterval } = useAppStore();
-    const appointments = useLiveQuery(() => db.appointments.orderBy("date").toArray());
-    const allRoutines = useLiveQuery(() => db.routines.toArray());
+
+    const {
+        appointments,
+        routines: allRoutines,
+        routineCompletions,
+        saveAppointment,
+        deleteAppointment,
+        saveRoutine,
+        deleteRoutine,
+        saveRoutineCompletion,
+        deleteRoutineCompletion,
+        practitioners
+    } = useDataStore();
 
     const activeRoutines = allRoutines?.filter(h => h.status === 'active' || !h.status) || [];
     const pendingRoutines = allRoutines?.filter(h => h.status === 'pending') || [];
@@ -90,12 +101,15 @@ export default function Calendar() {
 
         const dateObj = new Date(`${apptDate}T${apptTime}`);
 
-        await db.appointments.add({
+        await saveAppointment({
             id: crypto.randomUUID(),
             practitionerId: selectedPractitioner.id,
             practitionerName: selectedPractitioner.name,
-            date: dateObj.getTime()
-        });
+            practitionerClass: 'Chiropractor', // Default or fetch from practitioner?
+            date: dateObj.getTime(),
+            notes: "",
+            status: 'scheduled'
+        } as Appointment);
 
         setIsAddingAppt(false);
         setApptDate("");
@@ -104,7 +118,7 @@ export default function Calendar() {
     };
 
     const handleAddRoutine = async (data: BodyworkRoutineData) => {
-        await db.routines.add({
+        await saveRoutine({
             id: crypto.randomUUID(),
             title: data.title,
             description: data.description,
@@ -122,20 +136,24 @@ export default function Calendar() {
 
     const toggleRoutine = async (id: string, currentStatus: boolean, title: string) => {
         const now = Date.now();
-        await db.routines.update(id, {
-            isCompletedToday: !currentStatus,
-            // eslint-disable-next-line react-hooks/purity
-            lastCompletedAt: !currentStatus ? now : undefined
-        });
+        // Update Routine Status
+        // We need to find the routine first to update it fully, but for simple toggle we use helper
+        // Ideally saveRoutine merges, but our implementation replaces.
+        // So we should find it first.
+        const routine = allRoutines.find(r => r.id === id);
+        if (routine) {
+            await saveRoutine({
+                ...routine,
+                isCompletedToday: !currentStatus,
+                lastCompletedAt: !currentStatus ? now : undefined
+            });
+        }
 
-        // Log completion to history if marking as done
+        const todayStr = new Date().toISOString().split('T')[0];
+
         if (!currentStatus) {
-            // Check if already logged for today to avoid duplicates?
-            // Simple approach: just add a log.
-            // Better: Check if a completion exists for this routine on this date?
-            // For now, let's just add it.
-            const todayStr = new Date().toISOString().split('T')[0];
-            await db.routineCompletions.add({
+            // Mark as done -> Add completion log
+            await saveRoutineCompletion({
                 id: crypto.randomUUID(),
                 routineId: id,
                 routineTitle: title,
@@ -143,16 +161,13 @@ export default function Calendar() {
                 date: todayStr
             });
         } else {
-            // If unchecking, maybe remove the log from today?
-            // This is tricky if there are multiple completions.
-            // Let's find the most recent completion for this routine today and delete it.
-            const todayStr = new Date().toISOString().split('T')[0];
-            const recent = await db.routineCompletions
-                .where({ routineId: id, date: todayStr })
-                .last();
+            // Mark as not done -> Remove completion log for today
+            const recent = routineCompletions
+                .filter(rc => rc.routineId === id && rc.date === todayStr)
+                .sort((a, b) => b.completedAt - a.completedAt)[0]; // Last one
 
             if (recent) {
-                await db.routineCompletions.delete(recent.id);
+                await deleteRoutineCompletion(recent.id);
             }
         }
     };
@@ -166,15 +181,13 @@ export default function Calendar() {
         if (!deleteId || !deleteType) return;
 
         if (deleteType === 'appointment') {
-            await db.appointments.delete(deleteId);
-            // If we are editing this appointment, close the modal
+            await deleteAppointment(deleteId);
             if (editingAppt?.id === deleteId) {
                 setEditingAppt(null);
                 setPractitionerDetails(null);
             }
         } else {
-            await db.routines.delete(deleteId);
-            // If we are editing this routine, close the modal
+            await deleteRoutine(deleteId);
             if (editingRoutine?.id === deleteId) {
                 setEditingRoutine(null);
             }
@@ -185,10 +198,14 @@ export default function Calendar() {
     };
 
     const activateRoutine = async (id: string, time?: string) => {
-        await db.routines.update(id, {
-            status: 'active',
-            reminderTimes: time ? [time] : []
-        });
+        const routine = allRoutines.find(r => r.id === id);
+        if (routine) {
+            await saveRoutine({
+                ...routine,
+                status: 'active',
+                reminderTimes: time ? [time] : []
+            });
+        }
     };
 
     const handleEditClick = (hw: BodyworkRoutine, e: React.MouseEvent) => {
@@ -206,13 +223,14 @@ export default function Calendar() {
     const handleSaveEdit = async (data: BodyworkRoutineData) => {
         if (!editingRoutine) return;
 
-        await db.routines.update(editingRoutine.id, {
+        await saveRoutine({
+            ...editingRoutine,
             title: data.title,
             description: data.description,
             reminderTimes: data.reminderTimes,
             frequency: data.daysOfWeek.length === 7 ? "daily" : "custom",
             daysOfWeek: data.daysOfWeek,
-            category: data.category
+            category: data.category || 'custom'
         });
 
         setEditingRoutine(null);
@@ -233,8 +251,8 @@ export default function Calendar() {
 
         setEditApptPractitioner({ id: appt.practitionerId, name: appt.practitionerName });
 
-        // Fetch full practitioner details
-        const practitioner = await db.practitioners.get(appt.practitionerId);
+        // Fetch full practitioner details from store
+        const practitioner = practitioners.find(p => p.id === appt.practitionerId);
         setPractitionerDetails(practitioner || null);
     };
 
@@ -243,7 +261,8 @@ export default function Calendar() {
 
         const dateObj = new Date(`${editApptDate}T${editApptTime}`);
 
-        await db.appointments.update(editingAppt.id, {
+        await saveAppointment({
+            ...editingAppt,
             practitionerId: editApptPractitioner.id,
             practitionerName: editApptPractitioner.name,
             date: dateObj.getTime()
@@ -251,7 +270,7 @@ export default function Calendar() {
 
         // Update local details if practitioner changed
         if (editApptPractitioner.id !== practitionerDetails?.id) {
-            const practitioner = await db.practitioners.get(editApptPractitioner.id);
+            const practitioner = practitioners.find(p => p.id === editApptPractitioner.id);
             setPractitionerDetails(practitioner || null);
         }
 
@@ -270,9 +289,10 @@ export default function Calendar() {
 
         const dateStr = date.toDateString();
         const hasAppt = appointments?.some(a => new Date(a.date).toDateString() === dateStr);
+        // Also check for sessions? In the previous code there was a comment about it.
+        // Let's assume we want to show sessions too.
+        // const hasSession = sessions.some(s => new Date(s.date).toDateString() === dateStr);
 
-        // In a real app, we'd check historical completion data here.
-        // For now, we'll just show a dot for today if habits are done.
         const isToday = dateStr === new Date().toDateString();
         const allHabitsDone = activeRoutines.length > 0 && activeRoutines.every(h => h.isCompletedToday);
         const hasCompletedHabits = isToday && allHabitsDone;
@@ -286,9 +306,9 @@ export default function Calendar() {
     };
 
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
+        <div className="min-h-screen bg-light-bg dark:bg-dark-bg px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-24" >
             {/* ... Navigation ... */}
-            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50">
+            < nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50" >
                 <button
                     onClick={() => navigate("/")}
                     className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium text-sm flex items-center gap-2 transition-colors"
@@ -296,7 +316,7 @@ export default function Calendar() {
                     <ChevronLeft className="w-4 h-4" />
                     Return to Dashboard
                 </button>
-            </nav>
+            </nav >
 
             <div className="md:mt-16 mb-6 pt-6 flex items-center gap-4">
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Calendar</h1>
@@ -743,6 +763,6 @@ export default function Calendar() {
                 onConfirm={confirmDelete}
                 variant="danger"
             />
-        </div>
+        </div >
     );
 }

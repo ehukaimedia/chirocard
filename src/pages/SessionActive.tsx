@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { BodyRegionSelector } from "../components/BodyMap/BodyRegionSelector";
 import { ArrowLeft, CheckCircle, Copy, ChevronDown, ChevronUp, FileText, Wand2, Plus, Trash2 } from "lucide-react";
@@ -7,10 +8,8 @@ import { Input } from "../components/ui/Input";
 import { Card } from "../components/ui/Card";
 import { useState, useMemo } from "react";
 import { useToast } from "../components/ui/Toast";
-import { db } from "../db/db";
 import { BodyRegionDetails } from "../components/Intake/BodyRegionDetails";
 import { SERVICE_TAGS, FINDING_TAGS } from "../db/db";
-import { useLiveQuery } from "dexie-react-hooks";
 import { trackEvent } from "../utils/analytics";
 
 
@@ -18,21 +17,19 @@ import { trackEvent } from "../utils/analytics";
 export default function SessionActive() {
     const navigate = useNavigate();
     const { currentSession, updateSession, endSession } = useAppStore();
+    const { user, practitioners, saveSession } = useDataStore();
     const { toast } = useToast();
     const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
     const [showReview, setShowReview] = useState(false);
     const [practitionerVerification, setPractitionerVerification] = useState<string | null>(null);
 
-    const user = useLiveQuery(() => db.users.get("me"));
-    const practitioner = useLiveQuery(
-        async () => {
-            if (currentSession?.practitionerId) {
-                return await db.practitioners.get(currentSession.practitionerId);
-            }
-            return undefined;
-        },
-        [currentSession?.practitionerId]
-    );
+    // const user = useLiveQuery(() => db.users.get("me"));
+    const practitioner = useMemo(() => {
+        if (currentSession?.practitionerId && practitioners) {
+            return practitioners.find(p => p.id === currentSession.practitionerId);
+        }
+        return undefined;
+    }, [currentSession?.practitionerId, practitioners]);
 
     // Recommendations State
     const [newRecTitle, setNewRecTitle] = useState("");
@@ -155,7 +152,7 @@ export default function SessionActive() {
         }
 
         try {
-            await db.sessions.add({
+            await saveSession({
                 id: currentSession.id,
                 date: currentSession.startTime, // Use start time as session date
                 practitionerId: currentSession.practitionerId || "me",
@@ -196,7 +193,7 @@ export default function SessionActive() {
     if (showReview) {
         return (
             <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col pb-24">
-                <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 p-4 flex items-center gap-4">
+                <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => setShowReview(false)} className="text-zinc-400 hover:text-zinc-100">
                         <ArrowLeft className="w-6 h-6" />
                     </Button>
@@ -489,7 +486,7 @@ export default function SessionActive() {
     return (
         <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col pb-24">
             {/* Header */}
-            <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 p-4 flex items-center justify-between">
+            <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-zinc-400 hover:text-zinc-100">
                         <ArrowLeft className="w-6 h-6" />

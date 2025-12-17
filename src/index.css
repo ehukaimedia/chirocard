@@ -20,6 +20,14 @@
 @layer base {
   body {
     @apply antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  
+  /* Disable text selection on interactive elements for native feel */
+  button, a, .clickable {
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 

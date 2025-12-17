@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Practitioner } from "../../db/db";
+import { type Practitioner } from "../../db/db";
+import { useDataStore } from "../../store/useDataStore";
 import { trackEvent } from "../../utils/analytics";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -13,7 +13,8 @@ import { useToast } from "../ui/Toast";
 
 export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner) => void }) {
     // Fetch and sort by order
-    const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
+    const { practitioners, savePractitioner, deletePractitioner } = useDataStore();
+    // const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
     const [items, setItems] = useState<Practitioner[]>([]);
     const [isEditing, setIsEditing] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -31,15 +32,12 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
 
     const handleReorder = (newOrder: Practitioner[]) => {
         setItems(newOrder);
-        // Update order in DB using a transaction for consistency
-        db.transaction('rw', db.practitioners, async () => {
-            for (let i = 0; i < newOrder.length; i++) {
-                const item = newOrder[i];
-                if (item.order !== i) {
-                    await db.practitioners.update(item.id, { order: i });
-                }
+        // Update order in DB
+        newOrder.forEach((item, i) => {
+            if (item.order !== i) {
+                savePractitioner({ ...item, order: i }).catch(console.error);
             }
-        }).catch(console.error);
+        });
     };
 
     const handleSave = async () => {
@@ -57,15 +55,22 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
 
         try {
             if (editingId) {
-                await db.practitioners.update(editingId, practitionerData);
+                await savePractitioner({ ...practitionerData, id: editingId } as Practitioner); // Merge with existing assumed? No, explicit props.
+                // Wait, practitionerData lacks ID and Order. We need to find the existing one or pass it fully.
+                // Re-find the item to get its current order
+                const existing = practitioners.find(p => p.id === editingId);
+                if (existing) {
+                    await savePractitioner({ ...existing, ...practitionerData });
+                }
                 toast("Practitioner updated successfully", "success");
             } else {
-                const count = await db.practitioners.count();
-                await db.practitioners.add({
+                // Add new
+                const count = practitioners.length;
+                await savePractitioner({
                     ...practitionerData,
                     id: crypto.randomUUID(),
-                    order: count // Add to end
-                });
+                    order: count
+                } as Practitioner);
                 trackEvent('add_practitioner', { name: practitionerData.name, category: practitionerData.role });
             }
 
@@ -95,7 +100,7 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
 
     const confirmDelete = async () => {
         if (deleteId) {
-            await db.practitioners.delete(deleteId);
+            await deletePractitioner(deleteId);
             setDeleteId(null);
         }
     };

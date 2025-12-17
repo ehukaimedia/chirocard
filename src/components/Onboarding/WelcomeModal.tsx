@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../../db/db";
+import { useDataStore } from "../../store/useDataStore";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { ArrowRight, Smartphone, BookOpen, Activity, ShieldCheck, Hand, Brain } from "lucide-react";
@@ -15,7 +14,8 @@ interface WelcomeModalProps {
 
 export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
     const navigate = useNavigate();
-    const user = useLiveQuery(() => db.users.get("me"));
+    const { user, saveUser } = useDataStore();
+    // const user = useLiveQuery(() => db.users.get("me"));
     const [showForm, setShowForm] = useState(false);
     const [missingFields, setMissingFields] = useState<string[]>([]);
     const { toast } = useToast();
@@ -72,7 +72,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
         setMissingFields([]);
 
         try {
-            await db.users.put({
+            await saveUser({
                 id: "me",
                 name: formData.name,
                 photo: formData.photo,

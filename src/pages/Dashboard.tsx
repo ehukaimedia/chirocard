@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Session } from "../db/db";
+import { type Session } from "../db/db";
+import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Modal } from "../components/ui/Modal";
@@ -20,11 +20,15 @@ import { trackEvent } from "../utils/analytics";
 
 export default function Dashboard() {
     const navigate = useNavigate();
-    const user = useLiveQuery(() => db.users.get("me"));
-    const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
+    const { user, sessions, routines, appointments, deleteSession } = useDataStore();
+    // const user = useLiveQuery(() => db.users.get("me"));
+    // const sessions = useLiveQuery(() => db.sessions.orderBy("date").reverse().limit(5).toArray());
+
+    const recentSessions = sessions.slice(0, 5); // sessions is already sorted by date desc in store
 
     // Get active routines for today
-    const allRoutines = useLiveQuery(() => db.routines.toArray()) || [];
+    const allRoutines = routines || [];
+    // const allRoutines = useLiveQuery(() => db.routines.toArray()) || [];
 
     const activeRoutines = allRoutines.filter(r => {
         const dayOfWeek = new Date().getDay();
@@ -32,7 +36,9 @@ export default function Dashboard() {
         return days.length === 0 || days.includes(dayOfWeek);
     });
 
-    const appointments = useLiveQuery(() => db.appointments.where("date").aboveOrEqual(Date.now()).limit(1).toArray());
+    const nextAppointment = appointments.find(a => a.date >= Date.now());
+    // const appointments = useLiveQuery(() => db.appointments.where("date").aboveOrEqual(Date.now()).limit(1).toArray());
+
     const { currentSession, endSession, viewMode } = useAppStore();
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
@@ -53,7 +59,8 @@ export default function Dashboard() {
     const pendingRoutines = activeRoutines.filter(r => !r.isCompletedToday);
     const hasPendingRoutines = pendingRoutines.length > 0;
 
-    const nextAppointment = appointments?.[0];
+
+    // const nextAppointment = appointments?.[0]; // Replaced by logic above
 
     const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
 
@@ -66,7 +73,7 @@ export default function Dashboard() {
 
     const confirmDelete = async () => {
         if (deleteSessionId) {
-            await db.sessions.delete(deleteSessionId);
+            await deleteSession(deleteSessionId);
             setDeleteSessionId(null);
         }
     };
@@ -80,7 +87,7 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-light-bg dark:bg-dark-bg pb-32">
             {/* Mobile Header - Sticky */}
-            <header className="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50 px-6 py-4 flex justify-between items-center">
+            <header className="sticky top-0 z-40 bg-light-bg/80 dark:bg-dark-bg/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+16px)] flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <img src="/chirocard-icon.png" alt="ChiroCard" className="w-10 h-10 rounded-xl shadow-lg shadow-emerald-500/20" />
                     <div>
@@ -247,14 +254,14 @@ export default function Dashboard() {
                     </div>
 
                     <div className="space-y-3">
-                        {sessions?.map((session: Session) => (
+                        {recentSessions?.map((session: Session) => (
                             <SessionCard
                                 key={session.id}
                                 session={session}
                                 onDelete={handleDeleteClick}
                             />
                         ))}
-                        {(!sessions || sessions.length === 0) && (
+                        {(!recentSessions || recentSessions.length === 0) && (
                             <div className="text-center py-8 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
                                 <p className="text-zinc-400 text-sm">No recent sessions found.</p>
                             </div>

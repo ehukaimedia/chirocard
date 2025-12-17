@@ -16,10 +16,17 @@ import Terms from "./pages/Terms";
 
 import { useNotifications } from "./hooks/useNotifications";
 import { usePersistence } from "./hooks/usePersistence";
+import { useDataStore } from "./store/useDataStore";
+import { useEffect } from "react";
 
 function App() {
   useNotifications();
   usePersistence();
+
+  // Initialize Data Layer (SQLite/Dexie)
+  useEffect(() => {
+    useDataStore.getState().initialize();
+  }, []);
   return (
     <BrowserRouter>
       <Routes>

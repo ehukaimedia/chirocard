@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Modal } from "../ui/Modal";
 import { UserPlus, Users, Check, ChevronLeft, Stethoscope } from "lucide-react";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Practitioner } from "../../db/db";
+import { type Practitioner } from "../../db/db";
+import { useDataStore } from "../../store/useDataStore";
 import { useAppStore } from "../../store/useAppStore";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -15,7 +15,8 @@ interface GuardModalProps {
 
 export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
     const { updateSession } = useAppStore();
-    const practitioners = useLiveQuery(() => db.practitioners.toArray());
+    const { practitioners, savePractitioner } = useDataStore();
+    // const practitioners = useLiveQuery(() => db.practitioners.toArray());
     const [view, setView] = useState<'select' | 'add'>('select');
 
     // New Practitioner Form State
@@ -35,7 +36,7 @@ export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
     const handleAddPractitioner = async () => {
         if (!formData.name?.trim()) return;
 
-        const count = await db.practitioners.count();
+        const count = practitioners.length;
         const id = crypto.randomUUID();
         const newPractitioner: Practitioner = {
             id,
@@ -49,7 +50,7 @@ export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
             order: count + 1
         };
 
-        await db.practitioners.add(newPractitioner);
+        await savePractitioner(newPractitioner);
 
         handleSelectPractitioner(newPractitioner);
 

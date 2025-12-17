@@ -13,15 +13,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             <button
                 ref={ref}
                 className={cn(
-                    "inline-flex items-center justify-center rounded-full font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50 active:scale-95",
+                    "inline-flex items-center justify-center rounded-full font-medium transition-all duration-300 active:scale-95 disabled:pointer-events-none disabled:opacity-50",
                     {
-                        "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20": variant === "primary",
-                        "bg-secondary text-white hover:bg-secondary/90": variant === "secondary",
-                        "border-2 border-primary text-primary hover:bg-primary/10": variant === "outline",
-                        "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100": variant === "ghost",
-                        "bg-red-500 text-white hover:bg-red-600": variant === "danger",
+                        "bg-primary/80 backdrop-blur-md text-white shadow-lg shadow-primary/20 border border-white/20 hover:bg-primary/90": variant === "primary",
+                        "bg-secondary/80 backdrop-blur-md text-white shadow-lg shadow-secondary/20 border border-white/20 hover:bg-secondary/90": variant === "secondary",
+                        "bg-transparent border-2 border-primary/50 text-primary backdrop-blur-sm hover:bg-primary/10": variant === "outline",
+                        "hover:bg-zinc-100/50 dark:hover:bg-zinc-800/50 text-zinc-900 dark:text-zinc-100 backdrop-blur-sm": variant === "ghost",
+                        "bg-red-500/80 backdrop-blur-md text-white shadow-lg shadow-red-500/20 border border-white/20 hover:bg-red-600/90": variant === "danger",
                         "h-9 px-4 text-sm": size === "sm",
-                        "h-11 px-6 text-base": size === "md",
+                        "h-12 px-6 text-base": size === "md",
                         "h-14 px-8 text-lg": size === "lg",
                         "h-10 w-10 p-0": size === "icon",
                     },

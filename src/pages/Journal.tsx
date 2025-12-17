@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db, type Session, type RoutineCompletion, type JournalEntry } from "../db/db";
+import { type Session, type RoutineCompletion, type JournalEntry } from "../db/db";
+import { useDataStore } from "../store/useDataStore";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { AddJournalModal } from "../components/Journal/AddJournalModal";
@@ -19,10 +19,12 @@ export default function Journal() {
     const [activeTab, setActiveTab] = useState<'all' | 'sessions' | 'routines' | 'notes'>('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    const sessions = useLiveQuery(() => db.sessions.orderBy('date').reverse().toArray());
-    // We need to fetch routine completions and journal entries too
-    const routineCompletions = useLiveQuery(() => db.routineCompletions.orderBy('completedAt').reverse().toArray());
-    const journalEntries = useLiveQuery(() => db.journal.orderBy('date').reverse().toArray());
+    // const sessions = useLiveQuery(() => db.sessions.orderBy('date').reverse().toArray());
+    // // We need to fetch routine completions and journal entries too
+    // const routineCompletions = useLiveQuery(() => db.routineCompletions.orderBy('completedAt').reverse().toArray());
+    // const journalEntries = useLiveQuery(() => db.journal.orderBy('date').reverse().toArray());
+
+    const { sessions, routineCompletions, journalEntries } = useDataStore();
 
     // Combine and sort all items for the "All" view
     const allItems: JournalItem[] = [
@@ -51,7 +53,7 @@ export default function Journal() {
     });
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 pb-24">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-24">
             {/* Top Navigation Bar */}
             <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-2 pl-0 hover:bg-transparent">

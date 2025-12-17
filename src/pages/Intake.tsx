@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "../db/db";
+import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { BodyRegionSelector } from "../components/BodyMap/BodyRegionSelector";
 import { ArrowLeft, Play, CheckCircle } from "lucide-react";
@@ -17,7 +16,8 @@ export default function Intake() {
     const { currentSession, startSession, updateSession } = useAppStore();
     const { toast } = useToast();
 
-    const user = useLiveQuery(() => db.users.get("me"));
+    const { user } = useDataStore();
+    // const user = useLiveQuery(() => db.users.get("me"));
     const [showReview, setShowReview] = useState(false);
     const [showGuard, setShowGuard] = useState(false);
 
@@ -90,7 +90,7 @@ export default function Intake() {
         .filter(([, status]) => status === 'issue');
     if (showReview) {
         return (
-            <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24 flex flex-col">
+            <div className="min-h-screen bg-light-bg dark:bg-dark-bg px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-24 flex flex-col">
                 <div className="flex items-center gap-4 mb-8">
                     <Button variant="ghost" size="icon" onClick={() => setShowReview(false)}>
                         <ArrowLeft className="w-6 h-6" />
@@ -206,7 +206,7 @@ export default function Intake() {
     }
 
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24 flex flex-col">
+        <div className="min-h-screen bg-light-bg dark:bg-dark-bg px-6 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-24 flex flex-col">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
                 <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
