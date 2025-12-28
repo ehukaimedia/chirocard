@@ -103,7 +103,7 @@ export function BodyRegionSelector({
 
     return (
         <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
                 {REGIONS.map((region) => {
                     const status = value[region.id] || 'normal';
                     const level = levels[region.id] || 0;

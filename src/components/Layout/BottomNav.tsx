@@ -8,8 +8,8 @@ export function BottomNav() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-t border-zinc-200/50 dark:border-zinc-800/50 pb-safe z-50 transition-all duration-300">
-            <div className="flex justify-around items-center h-16 px-1">
+        <div className="fixed bottom-0 left-0 right-0 bg-glass-card/90 backdrop-blur-xl border-t border-glass-border pb-safe z-50">
+            <div className="flex justify-around items-center h-16 px-2">
                 {[
                     { path: "/", label: "Home", Icon: Home },
                     { path: "/calendar", label: "Calendar", Icon: Calendar },
@@ -24,18 +24,19 @@ export function BottomNav() {
                             to={path}
                             className={`group flex flex-col items-center justify-center w-full h-full space-y-1 transition-all active:scale-95`}
                         >
-                            <div className={`p-2 rounded-xl transition-all duration-300 ${active
-                                ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 translate-y-[-4px]"
-                                : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200"
+                            <div className={`p-2 rounded-2xl transition-all duration-300 ${active
+                                ? "bg-primary text-white shadow-glass-sm translate-y-[-4px]"
+                                : "text-glass-text-secondary hover:bg-glass-100"
                                 }`}>
                                 <Icon
-                                    className={`w-6 h-6 transition-transform duration-300 ${active ? "scale-110" : "scale-100"}`}
+                                    className={`w-6 h-6 transition-transform duration-300 ${active ? "scale-105" : "scale-100"}`}
                                     strokeWidth={active ? 2.5 : 2}
                                 />
                             </div>
+                            {/* Label - visible but small, or could be hidden for cleaner look. keeping for usability */}
                             <span className={`text-[10px] font-bold transition-all duration-300 ${active
-                                ? "text-emerald-600 dark:text-emerald-400 opacity-100 translate-y-[-2px]"
-                                : "text-zinc-400 opacity-70"
+                                ? "text-primary opacity-100 translate-y-[-2px]"
+                                : "text-glass-text-secondary opacity-60"
                                 }`}>
                                 {label}
                             </span>

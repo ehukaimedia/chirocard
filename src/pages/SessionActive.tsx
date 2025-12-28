@@ -123,18 +123,23 @@ export default function SessionActive() {
     // --- Review Screen ---
     if (showReview) {
         return (
-            <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col pb-32">
-                <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] flex items-center gap-4 transition-all duration-300">
-                    <Button variant="ghost" size="icon" onClick={() => setShowReview(false)} className="text-zinc-400 hover:text-zinc-100">
-                        <ArrowLeft className="w-6 h-6" />
-                    </Button>
-                    <div>
-                        <h1 className="text-xl font-bold">Review & Verify</h1>
-                        <p className="text-xs text-zinc-400">Finalize Session</p>
+            <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
+                <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] flex items-center justify-between transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={() => setShowReview(false)} className="text-zinc-400 hover:text-zinc-100">
+                            <ArrowLeft className="w-6 h-6" />
+                        </Button>
+                        <div>
+                            <h1 className="text-xl font-bold">Review & Verify</h1>
+                            <p className="text-xs text-zinc-400">Finalize Session</p>
+                        </div>
                     </div>
+                    <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="text-emerald-500 hover:text-emerald-400 font-medium">
+                        Home
+                    </Button>
                 </header>
 
-                <main className="flex-1 p-4 space-y-6 max-w-3xl mx-auto w-full">
+                <main className="flex-1 p-4 space-y-6 max-w-3xl mx-auto w-full pb-48">
 
                     {/* 1. Intake Overview (Client Data) */}
                     <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
@@ -398,7 +403,7 @@ export default function SessionActive() {
                     </div>
                 </main>
 
-                <div className="fixed bottom-0 left-0 right-0 p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-zinc-950 via-zinc-950 to-transparent z-10 border-t border-zinc-800/50">
+                <div className="fixed bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-zinc-950 via-zinc-950 to-transparent z-30 border-t border-zinc-800/50">
                     <Button
                         variant="primary"
                         size="lg"
@@ -415,9 +420,9 @@ export default function SessionActive() {
 
     // --- Main Active Session Screen ---
     return (
-        <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col pb-24">
+        <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] flex items-center justify-between transition-all duration-300">
+            <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] flex items-center justify-between transition-all duration-300">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-zinc-400 hover:text-zinc-100">
                         <ArrowLeft className="w-6 h-6" />
@@ -429,14 +434,17 @@ export default function SessionActive() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <span className="text-xs font-mono text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded">
                         LIVE
                     </span>
+                    <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="text-emerald-500 hover:text-emerald-400 font-medium">
+                        Home
+                    </Button>
                 </div>
             </header>
 
-            <main className="flex-1 p-4 space-y-8 max-w-3xl mx-auto w-full">
+            <main className="flex-1 p-4 space-y-8 max-w-3xl mx-auto w-full pb-48">
 
                 {/* 1. Unified Findings Cards */}
                 <section className="space-y-4">
@@ -755,7 +763,7 @@ export default function SessionActive() {
             </main>
 
             {/* Footer Action */}
-            <div className="fixed bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-zinc-950 via-zinc-950 to-transparent z-10 border-t border-zinc-800/50">
+            <div className="fixed bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-zinc-950 via-zinc-950 to-transparent z-30 border-t border-zinc-800/50">
                 <Button
                     variant="primary"
                     size="lg"

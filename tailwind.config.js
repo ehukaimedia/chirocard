@@ -8,16 +8,33 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#177D4F', // Emerald
-                secondary: '#8AAB35', // Leaf
+                primary: '#059669', // Emerald-600
+                secondary: '#10b981', // Emerald-500
+                accent: '#34d399', // Emerald-400
+                glass: {
+                    100: 'rgba(255, 255, 255, 0.1)',
+                    200: 'rgba(255, 255, 255, 0.2)',
+                    300: 'rgba(255, 255, 255, 0.3)',
+                    border: 'rgba(255, 255, 255, 0.4)',
+                    text: '#064e3b', // Emerald-900
+                    'text-secondary': '#065f46', // Emerald-800
+                },
                 dark: {
-                    bg: '#18181b', // Zinc-900
-                    card: 'rgba(24, 24, 27, 0.6)',
+                    bg: '#ecfdf5', // Emerald-50
+                    card: 'rgba(255, 255, 255, 0.6)',
                 },
                 light: {
-                    bg: '#fafafa', // Zinc-50
-                    card: 'rgba(255, 255, 255, 0.8)',
+                    bg: '#ecfdf5', // Emerald-50
+                    card: 'rgba(255, 255, 255, 0.6)',
                 }
+            },
+            backgroundImage: {
+                'glass-gradient': 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                'glass-card': 'linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.4) 100%)',
+            },
+            boxShadow: {
+                'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+                'glass-sm': '0 2px 10px rgba(0, 0, 0, 0.05)',
             },
             animation: {
                 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -25,8 +42,8 @@ export default {
             },
             keyframes: {
                 glow: {
-                    '0%': { boxShadow: '0 0 5px #177D4F' },
-                    '100%': { boxShadow: '0 0 20px #8AAB35' },
+                    '0%': { boxShadow: '0 0 5px #10b981' },
+                    '100%': { boxShadow: '0 0 20px #34d399' },
                 }
             }
         },

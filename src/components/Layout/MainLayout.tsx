@@ -4,28 +4,17 @@ import { BottomNav } from "./BottomNav";
 
 export function MainLayout() {
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg flex flex-col relative">
-            <div className="flex-1 pb-24 pb-safe">
-                <Outlet />
-                <footer className="py-6 text-center text-[10px] text-zinc-400 dark:text-zinc-600 opacity-60 hover:opacity-100 transition-opacity space-y-2">
-                    <div className="flex justify-center gap-2">
-                        <a href="/privacy" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">Privacy Policy</a>
-                        <span>•</span>
-                        <a href="/terms" className="hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">Terms of Service</a>
-                    </div>
-                    <p>
-                        App design by{' '}
-                        <a
-                            href="https://ehukaimedia.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-bold hover:text-emerald-500 transition-colors"
-                        >
-                            Ehukai Media
-                        </a>
-                    </p>
-                </footer>
-            </div>
+        <div className="min-h-screen bg-glass-gradient text-glass-text flex flex-col relative overflow-hidden">
+            {/* Main Content Area */}
+            <main className="flex-1 pb-24 pt-safe pb-safe px-4 overflow-y-auto h-screen scrollbar-hide">
+                <div className="max-w-md mx-auto w-full pt-4">
+                    <Outlet />
+                </div>
+
+                {/* Pad the bottom so content isn't hidden behind the floating nav */}
+                <div className="h-24" />
+            </main>
+
             <BottomNav />
         </div>
     );
