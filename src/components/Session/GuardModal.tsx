@@ -6,7 +6,6 @@ import { useDataStore } from "../../store/useDataStore";
 import { useAppStore } from "../../store/useAppStore";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface GuardModalProps {
     isOpen: boolean;
