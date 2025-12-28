@@ -57,13 +57,17 @@ export function IntakePractitionerSection() {
                             : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-emerald-500/50'
                             }`}
                     >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${currentSession?.practitionerId === p.id ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-200' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border ${currentSession?.practitionerId === p.id ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-200 border-emerald-500/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border-zinc-200 dark:border-zinc-700'
                             }`}>
-                            <span className="font-bold text-sm">{p.name.charAt(0)}</span>
+                            <span className="font-bold text-sm">{(p.clinicName || p.name || "S").charAt(0)}</span>
                         </div>
                         <div>
-                            <div className="font-medium text-zinc-900 dark:text-zinc-100">{p.name}</div>
-                            <div className="text-xs text-zinc-500">{p.role}</div>
+                            <div className="font-bold text-zinc-900 dark:text-zinc-100">
+                                {p.clinicName || (p.name && p.name !== "Unknown Practitioner" ? p.name : "Staff")}
+                            </div>
+                            <div className="text-xs text-zinc-500 font-medium">
+                                {p.clinicName ? (p.name && p.name !== "Unknown Practitioner" ? p.name : "Staff") : "Staff"} • {p.role}
+                            </div>
                         </div>
                     </button>
                 ))}
