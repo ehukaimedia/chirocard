@@ -1,5 +1,5 @@
 export interface PlaceResult {
-    place_id: number;
+    place_id: string;
     lat: string;
     lon: string;
     display_name: string;
@@ -19,38 +19,61 @@ export interface PlaceResult {
     };
 }
 
+interface PhotonFeature {
+    type: 'Feature';
+    geometry: { type: 'Point'; coordinates: [number, number] };
+    properties: {
+        osm_type: string;
+        osm_id: number;
+        name?: string;
+        housenumber?: string;
+        street?: string;
+        city?: string;
+        state?: string;
+        postcode?: string;
+        country?: string;
+    };
+}
+
+function toPlaceResult(feature: PhotonFeature): PlaceResult {
+    const p = feature.properties;
+    const streetPart = [p.housenumber, p.street].filter(Boolean).join(' ');
+    const display_name = [p.name, streetPart, p.city, p.state, p.country]
+        .filter(Boolean)
+        .join(', ');
+    return {
+        place_id: `${p.osm_type}-${p.osm_id}`,
+        lat: feature.geometry.coordinates[1].toString(),
+        lon: feature.geometry.coordinates[0].toString(),
+        display_name,
+        name: p.name,
+        address: {
+            house_number: p.housenumber,
+            road: p.street,
+            city: p.city,
+            state: p.state,
+            postcode: p.postcode,
+            country: p.country,
+        },
+    };
+}
+
 export async function searchPlaces(query: string, location?: { lat: number; lon: number }, signal?: AbortSignal): Promise<PlaceResult[]> {
     if (!query || query.length < 3) return [];
 
     try {
-        let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
+        let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`;
 
         if (location) {
-            // Create a roughly 100km viewbox (1 degree is approx 111km)
-            const delta = 1.0;
-            const viewbox = [
-                location.lon - delta, // left
-                location.lat + delta, // top
-                location.lon + delta, // right
-                location.lat - delta  // bottom
-            ].join(',');
-            url += `&viewbox=${viewbox}&bounded=1`;
+            url += `&lat=${location.lat}&lon=${location.lon}`;
         }
 
-        const response = await fetch(
-            url,
-            {
-                headers: {
-                    'User-Agent': 'ChiroCardWebApp/1.0'
-                },
-                signal
-            }
-        );
+        const response = await fetch(url, { signal });
 
         if (!response.ok) throw new Error('Network response was not ok');
 
-        const data = await response.json();
-        return data as PlaceResult[];
+        const data = await response.json() as { features: PhotonFeature[] };
+        return data.features.map(toPlaceResult);
     } catch {
         return [];
     }
