@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Intake from "./pages/Intake";
 import Profile from "./pages/Profile";
@@ -12,6 +12,7 @@ import { MainLayout } from "./components/Layout/MainLayout";
 import SessionActive from "./pages/SessionActive";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import NotFound from "./pages/NotFound";
 
 
 import { useNotifications } from "./hooks/useNotifications";
@@ -46,7 +47,7 @@ function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

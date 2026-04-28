@@ -15,7 +15,9 @@ export function StatusUpdateModal({ isOpen, onClose }: StatusUpdateModalProps) {
 
     useEffect(() => {
         if (user?.primaryComplaints) {
-            setStatusText(user.primaryComplaints.join(", "));
+            queueMicrotask(() => {
+                setStatusText(user.primaryComplaints.join(", "));
+            });
         }
     }, [user, isOpen]);
 

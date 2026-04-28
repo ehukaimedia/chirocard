@@ -112,8 +112,8 @@ export default function SessionActive() {
             trackEvent('complete_session', { id: currentSession.id, practitioner: currentSession.practitionerName });
             endSession();
             navigate("/");
-        } catch (error) {
-            console.error("Failed to save session:", error);
+        } catch {
+            /* Error handled by UI toast */
             toast("Failed to save session.", "error");
         }
     };

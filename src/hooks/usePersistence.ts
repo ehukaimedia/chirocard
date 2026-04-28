@@ -14,12 +14,12 @@ export function usePersistence() {
                 }
                 setIsPersisted(persisted);
                 if (persisted) {
-                    console.log("Storage persistence enabled.");
+                    /* Persistence granted */
                 } else {
-                    console.log("Storage persistence not granted by browser.");
+                    /* Persistence not granted */
                 }
-            } catch (error) {
-                console.error("Error requesting persistence:", error);
+            } catch {
+                /* Persistence request failed */
             }
         }
         initPersistence();

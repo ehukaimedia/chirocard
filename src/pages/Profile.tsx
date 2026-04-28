@@ -47,29 +47,31 @@ export default function Profile() {
 
     useEffect(() => {
         if (user && !isEditing) {
-            setFormData({
-                name: user.name || "",
-                photo: user.photo || "",
-                email: user.email || "",
-                phone: user.phone || "",
-                address: user.address || "",
-                primaryComplaints: user.primaryComplaints || [],
-                contraindications: user.contraindications || [],
-                preferences: user.preferences || [],
-                height: user.height || "",
-                weight: user.weight || "",
-                dateOfBirth: user.dateOfBirth || "",
-                occupation: user.occupation || "",
-                activityLevel: user.activityLevel || "Moderate",
-                bodyHistory: user.bodyHistory || [],
-                medications: user.medications || [],
-                allergies: user.allergies || [],
-                mobilityStatus: user.mobilityStatus || [],
-                physicalActivities: user.physicalActivities || [],
-                diet: user.diet || [],
-                supplements: user.supplements || [],
-                hydration: user.hydration || "",
-                insurance: Array.isArray(user.insurance) ? user.insurance : (user.insurance ? [user.insurance] : [])
+            queueMicrotask(() => {
+                setFormData({
+                    name: user.name || "",
+                    photo: user.photo || "",
+                    email: user.email || "",
+                    phone: user.phone || "",
+                    address: user.address || "",
+                    primaryComplaints: user.primaryComplaints || [],
+                    contraindications: user.contraindications || [],
+                    preferences: user.preferences || [],
+                    height: user.height || "",
+                    weight: user.weight || "",
+                    dateOfBirth: user.dateOfBirth || "",
+                    occupation: user.occupation || "",
+                    activityLevel: user.activityLevel || "Moderate",
+                    bodyHistory: user.bodyHistory || [],
+                    medications: user.medications || [],
+                    allergies: user.allergies || [],
+                    mobilityStatus: user.mobilityStatus || [],
+                    physicalActivities: user.physicalActivities || [],
+                    diet: user.diet || [],
+                    supplements: user.supplements || [],
+                    hydration: user.hydration || "",
+                    insurance: Array.isArray(user.insurance) ? user.insurance : (user.insurance ? [user.insurance] : [])
+                });
             });
 
             // Auto-enable edit mode if requested AND fields are missing
@@ -77,7 +79,7 @@ export default function Profile() {
                 const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
                 const isComplete = requiredFields.every(field => user[field as keyof typeof user]);
                 if (!isComplete) {
-                    setIsEditing(true);
+                    queueMicrotask(() => setIsEditing(true));
                 }
             }
         }
@@ -96,7 +98,7 @@ export default function Profile() {
 
         if (missingFieldsList.length > 0) {
             setMissingFields(missingFieldsList.map(f => f.key));
-            console.log("Validation failed. Missing:", missingFieldsList);
+            /* Validation failure handled by UI */
             toast(`Please fill in required fields: ${missingFieldsList.map(f => f.label).join(', ')}`, "error");
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
@@ -136,8 +138,8 @@ export default function Profile() {
             setIsEditing(false);
             toast("Profile updated successfully", "success");
             trackEvent('update_profile');
-        } catch (error) {
-            console.error("Failed to update profile:", error);
+        } catch {
+            /* Error handled by toast */
             toast("Failed to update profile", "error");
         }
     };
@@ -230,7 +232,7 @@ export interface FormData {
 }
 
 const PassportView = ({ user }: { user: UserProfile | undefined }) => {
-    console.log("PassportView user:", user);
+    /* Removed debug log */
     return (
         <div className="space-y-6">
             {/* ID Card Header */}
@@ -269,9 +271,9 @@ const PassportView = ({ user }: { user: UserProfile | undefined }) => {
                                 <p className="text-zinc-200 font-medium">
                                     {user?.dateOfBirth ? (() => {
                                         const birthDate = new Date(user.dateOfBirth);
-                                        const ageDifMs = Date.now() - birthDate.getTime();
-                                        const ageDate = new Date(ageDifMs); // miliseconds from epoch
-                                        return Math.abs(ageDate.getUTCFullYear() - 1970);
+                                        const now = new Date();
+                                        const ageMs = now.getTime() - birthDate.getTime();
+                                        return Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000));
                                     })() : "--"}
                                 </p>
                             </div>

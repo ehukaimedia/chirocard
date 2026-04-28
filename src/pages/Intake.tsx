@@ -37,12 +37,11 @@ export default function Intake() {
     // Check for profile completion
     useEffect(() => {
         if (user) {
-            const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'];
-            // @ts-expect-error
-            const missing = requiredFields.filter(field => !user[field]);
+            const requiredFields = ['name', 'dateOfBirth', 'height', 'weight', 'phone'] as const;
+            const missing = requiredFields.filter(field => !(user as Record<string, unknown>)[field]);
 
             if (missing.length > 0) {
-                console.log("Profile incomplete, missing:", missing);
+                /* Profile incomplete — handled by UI */
                 toast("Please complete your profile to start a session.", "error");
                 // Pass state to Profile to auto-enable edit mode
                 navigate("/profile", { state: { editMode: true, missingFields: missing } });

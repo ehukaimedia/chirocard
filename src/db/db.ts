@@ -150,15 +150,32 @@ export class ChiroCardDB extends Dexie {
 
     constructor() {
         super('ChiroCardDB');
-        this.version(16).stores({
+        this.version(17).stores({
             users: 'id', // Simple key-value for user settings
             practitioners: 'id, name, role, order', // UUIDs, not auto-increment
             sessions: 'id, date, practitionerId', // UUIDs, not auto-increment
             bodyLogs: '++id, timestamp, status', // Keep auto-increment for logs if they don’t use UUIDs (check usage)
             appointments: '++id, date, practitionerId, status',
-            routines: '++id, isCompletedToday, status',
+            routines: 'id, isCompletedToday, status',
             routineCompletions: 'id, routineId, date, completedAt',
             journal: 'id, date'
+        }).upgrade(async (tx) => {
+            // Migrate routines from auto-increment numeric IDs to string UUIDs
+            const routines = await tx.table('routines').toArray();
+            const needsMigration = routines.some((r: { id?: unknown }) => typeof r.id === 'number');
+            if (needsMigration) {
+                await tx.table('routines').clear();
+                for (const r of routines) {
+                    const oldId = r.id;
+                    r.id = crypto.randomUUID();
+                    await tx.table('routines').add(r);
+                    // Update references in routineCompletions
+                    const completions = await tx.table('routineCompletions').where('routineId').equals(String(oldId)).toArray();
+                    for (const c of completions) {
+                        await tx.table('routineCompletions').update(c.id, { routineId: r.id });
+                    }
+                }
+            }
         });
         this.homework = this.routines; // Alias
     }

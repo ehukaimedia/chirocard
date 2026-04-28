@@ -1,4 +1,4 @@
-import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
+import { REGIONS } from "../constants/bodyRegions";
 import type { Session, UserProfile } from "../db/db";
 
 /**

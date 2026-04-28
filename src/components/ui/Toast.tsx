@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
@@ -25,17 +25,26 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
+    const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
     const toast = useCallback((message: string, type: ToastType = "info") => {
         const id = crypto.randomUUID();
         setToasts((prev) => [...prev, { id, message, type }]);
 
         // Auto dismiss
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             setToasts((prev) => prev.filter((t) => t.id !== id));
+            timersRef.current.delete(id);
         }, 3000);
+        timersRef.current.set(id, timer);
     }, []);
 
     const removeToast = (id: string) => {
+        const timer = timersRef.current.get(id);
+        if (timer) {
+            clearTimeout(timer);
+            timersRef.current.delete(id);
+        }
         setToasts((prev) => prev.filter((t) => t.id !== id));
     };
 

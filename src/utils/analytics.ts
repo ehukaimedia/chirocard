@@ -1,6 +1,6 @@
 export const trackEvent = (
     eventName: 'begin_session' | 'complete_session' | 'update_profile' | 'view_promotion' | 'generate_lead' | 'complete_routine' | 'print_report' | 'add_routine_to_calendar' | 'add_practitioner',
-    params?: Record<string, any>
+    params?: Record<string, string | number | boolean | undefined>
 ) => {
     if (typeof window !== 'undefined' && window.dataLayer) {
         window.dataLayer.push({
@@ -8,12 +8,12 @@ export const trackEvent = (
             ...params
         });
     } else {
-        console.warn(`[Analytics] dataLayer not found. Event dropped: ${eventName}`, params);
+        /* Analytics skipped when dataLayer unavailable */
     }
 };
 
 declare global {
     interface Window {
-        dataLayer: any[];
+        dataLayer: unknown[];
     }
 }

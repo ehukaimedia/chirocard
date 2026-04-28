@@ -1,0 +1,18 @@
+export const REGIONS = [
+    { id: "head", label: "Head" },
+    { id: "neck", label: "Neck" },
+    { id: "l-shoulder", label: "Left Shoulder" },
+    { id: "r-shoulder", label: "Right Shoulder" },
+    { id: "upper-back", label: "Upper Back" },
+    { id: "lower-back", label: "Lower Back" },
+    { id: "chest", label: "Chest" },
+    { id: "abdominals", label: "Abdominals" },
+    { id: "l-arm", label: "Left Arm" },
+    { id: "r-arm", label: "Right Arm" },
+    { id: "l-hip", label: "Left Hip" },
+    { id: "r-hip", label: "Right Hip" },
+    { id: "l-leg", label: "Left Leg" },
+    { id: "r-leg", label: "Right Leg" },
+    { id: "l-foot", label: "Left Foot" },
+    { id: "r-foot", label: "Right Foot" },
+];

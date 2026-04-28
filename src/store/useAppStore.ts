@@ -80,13 +80,6 @@ export const useAppStore = create<AppState>()(
         (set) => ({
             viewMode: 'personal',
             currentSession: null,
-            scannedPatientData: null,
-            activePractitioner: null,
-            intakeData: null,
-            resumedSessionData: null,
-            activeAppointmentId: null,
-            activeSessionId: null,
-
             calendarViewSpan: 30,
             defaultRoutineTime: "07:00",
             routineTimeInterval: 15,

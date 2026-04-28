@@ -1,6 +1,7 @@
-import { useParams } from "react-router-dom";
-import { useDataStore } from "../store/useDataStore";
-import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
+import { useParams, useNavigate } from "react-router-dom";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../db/db";
+import { REGIONS } from "../constants/bodyRegions";
 import { Info, AlertTriangle, ChevronLeft, History, Printer, Calendar, Check, Clock, Trash2, Edit } from "lucide-react";
 import { useState } from "react";
 import { Modal } from "../components/ui/Modal";
@@ -12,11 +13,10 @@ import { trackEvent } from "../utils/analytics";
 
 export default function SessionReport() {
     const { id } = useParams();
-    const { sessions, user, saveSession, saveRoutine } = useDataStore();
+    const navigate = useNavigate();
 
-    const session = sessions.find(s => s.id === id);
-    // const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
-    // const user = useLiveQuery(() => db.users.get("me"));
+    const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
+    const user = useLiveQuery(() => db.users.get("me"));
     const [addedRecs, setAddedRecs] = useState<Set<number>>(new Set());
 
     // Modal State
@@ -55,18 +55,14 @@ export default function SessionReport() {
                 updatedLog = session.postSessionLog ? [...session.postSessionLog, newEntry] : [newEntry];
             }
 
-            await saveSession({
-                ...session,
+            await db.sessions.update(session.id, {
                 postSessionLog: updatedLog
             });
-            // await db.sessions.update(session.id, {
-            //     postSessionLog: updatedLog
-            // });
             setJournalEntry("");
             setIsAddingEntry(false);
             setEditingEntryId(null);
-        } catch (error) {
-            console.error("Failed to save journal entry:", error);
+        } catch {
+            /* Error handled by UI state */
         }
     };
 
@@ -85,17 +81,13 @@ export default function SessionReport() {
         if (!session || !session.postSessionLog || !deletingEntryId) return;
         try {
             const updatedLog = session.postSessionLog.filter((e: PostSessionEntry) => e.id !== deletingEntryId);
-            await saveSession({
-                ...session,
+            await db.sessions.update(session.id, {
                 postSessionLog: updatedLog
             });
-            // await db.sessions.update(session.id, {
-            //     postSessionLog: updatedLog
-            // });
             setIsDeleteModalOpen(false);
             setDeletingEntryId(null);
-        } catch (error) {
-            console.error("Failed to delete entry:", error);
+        } catch {
+            /* Error handled by UI state */
         }
     };
 
@@ -115,7 +107,7 @@ export default function SessionReport() {
         if (editingRecIndex === null) return;
 
         try {
-            await saveRoutine({
+            await db.routines.add({
                 title: data.title,
                 description: data.description || "",
                 frequency: data.daysOfWeek.length === 7 ? "daily" : "custom",
@@ -127,7 +119,6 @@ export default function SessionReport() {
                 id: crypto.randomUUID(),
                 createdAt: Date.now()
             });
-            // await db.routines.add({ ... });
 
             trackEvent('add_routine_to_calendar', { title: data.title, category: data.category });
 
@@ -138,8 +129,8 @@ export default function SessionReport() {
             });
             setIsModalOpen(false);
             setEditingRecIndex(null);
-        } catch (error) {
-            console.error("Failed to add to calendar:", error);
+        } catch {
+            /* Error handled by UI state */
         }
     };
 
@@ -166,15 +157,13 @@ export default function SessionReport() {
             }))
         : [];
 
-    console.log("Post Session Log:", session.postSessionLog);
-
     return (
-        <div className="min-h-screen bg-white text-zinc-900 px-8 pt-[calc(env(safe-area-inset-top)+5rem)] pb-12 max-w-[210mm] mx-auto print:p-0 print:max-w-none">
+        <div className="min-h-screen bg-white text-zinc-900 p-8 max-w-[210mm] mx-auto print:p-0 print:max-w-none">
             {/* Top Navigation Bar - Hidden when printing */}
-            <nav className="fixed top-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-white/80 backdrop-blur-md border-b border-zinc-200 flex items-center justify-between px-8 z-50 print:hidden">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200 flex items-center justify-between px-8 z-50 print:hidden">
                 <div className="flex items-center gap-6">
                     <button
-                        onClick={() => window.location.href = "/"}
+                        onClick={() => navigate("/")}
                         className="text-zinc-500 hover:text-zinc-900 font-medium text-sm flex items-center gap-2 transition-colors"
                     >
                         <ChevronLeft className="w-4 h-4" />
@@ -182,7 +171,7 @@ export default function SessionReport() {
                     </button>
                     <div className="h-4 w-px bg-zinc-200"></div>
                     <button
-                        onClick={() => window.location.href = "/journal"}
+                        onClick={() => navigate("/journal")}
                         className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
                     >
                         <History className="w-4 h-4" />

@@ -21,20 +21,25 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
         if (value !== undefined && value !== query) {
             setQuery(value);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
     useEffect(() => {
+        let isMounted = true;
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    setUserLocation({
-                        lat: position.coords.latitude,
-                        lon: position.coords.longitude
-                    });
+                    if (isMounted) {
+                        setUserLocation({
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude
+                        });
+                    }
                 },
-                (error) => console.log("Geolocation error:", error)
+                () => { /* Silently ignore geolocation errors */ }
             );
         }
+        return () => { isMounted = false; };
     }, []);
 
     useEffect(() => {
@@ -48,16 +53,25 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
     }, []);
 
     useEffect(() => {
+        const abortController = new AbortController();
         const timer = setTimeout(async () => {
             if (query.length >= 3 && isSearching) {
-                const places = await searchPlaces(query, userLocation);
-                setResults(places);
-                setShowResults(true);
-                setIsSearching(false);
+                try {
+                    const places = await searchPlaces(query, userLocation, abortController.signal);
+                    setResults(places);
+                    setShowResults(true);
+                } catch {
+                    // Request was aborted or failed silently
+                } finally {
+                    setIsSearching(false);
+                }
             }
         }, 500);
 
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            abortController.abort();
+        };
     }, [query, isSearching, userLocation]);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {

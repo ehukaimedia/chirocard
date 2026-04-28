@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./Button";
 
+let _modalOpenCount = 0;
+
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -45,12 +47,18 @@ export function Modal({
 
         if (isOpen) {
             document.addEventListener("keydown", handleEscape);
+            _modalOpenCount++;
             document.body.style.overflow = "hidden";
         }
 
         return () => {
             document.removeEventListener("keydown", handleEscape);
-            document.body.style.overflow = "unset";
+            if (isOpen) {
+                _modalOpenCount = Math.max(0, _modalOpenCount - 1);
+                if (_modalOpenCount === 0) {
+                    document.body.style.overflow = "unset";
+                }
+            }
         };
     }, [isOpen, onClose, hideCloseButton]);
 
@@ -71,6 +79,7 @@ export function Modal({
                     {!hideCloseButton && (
                         <button
                             onClick={onClose}
+                            aria-label="Close modal"
                             className="p-1 text-zinc-400 hover:text-zinc-500 dark:hover:text-zinc-300 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                         >
                             <X className="w-5 h-5" />

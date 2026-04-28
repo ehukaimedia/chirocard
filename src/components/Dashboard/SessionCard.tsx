@@ -1,6 +1,6 @@
 import { type Session } from "../../db/db";
-import { GlassCard } from "../ui/GlassCard";
-import { REGIONS } from "../BodyMap/BodyRegionSelector";
+import { Card } from "../ui/Card";
+import { REGIONS } from "../../constants/bodyRegions";
 import { Activity, FileText, ArrowRight, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -14,7 +14,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
     // Extract treated areas
     const treatedAreas = session.bodyMap
         ? Object.entries(session.bodyMap)
-            .filter(([_, status]) => status === 'addressed' || status === 'issue')
+            .filter(([, status]) => status === 'addressed' || status === 'issue')
             .map(([id]) => REGIONS.find(r => r.id === id)?.label)
             .filter(Boolean)
         : [];
@@ -35,19 +35,19 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
     const moreBadgesCount = allBadges.length - 3;
 
     return (
-        <GlassCard variant="default" className="group relative overflow-hidden transition-all hover:shadow-glass active:scale-[0.99] p-0 border-glass-border">
+        <Card className="group relative overflow-hidden transition-all hover:shadow-md border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
             <div className="p-5 flex flex-col gap-4">
                 {/* Header: Date & Practitioner */}
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex flex-col items-center justify-center text-primary border border-primary/20 shadow-sm">
-                            <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">{new Date(session.date).toLocaleString('default', { month: 'short' })}</span>
-                            <span className="text-lg font-black leading-none">{new Date(session.date).getDate()}</span>
+                        <div className="h-12 w-12 rounded-xl bg-emerald-500/10 flex flex-col items-center justify-center text-emerald-600 dark:text-emerald-500 border border-emerald-500/20">
+                            <span className="text-xs font-bold uppercase">{new Date(session.date).toLocaleString('default', { month: 'short' })}</span>
+                            <span className="text-lg font-bold leading-none">{new Date(session.date).getDate()}</span>
                         </div>
                         <div>
-                            <h4 className="font-bold text-glass-text text-lg tracking-tight">{session.practitionerName}</h4>
-                            <div className="flex items-center gap-2 text-xs text-glass-text-secondary">
-                                <span className="bg-glass-100 px-2 py-0.5 rounded-full border border-glass-border font-medium">
+                            <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{session.practitionerName}</h4>
+                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                <span className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full border border-zinc-200 dark:border-zinc-700">
                                     {session.practitionerClass}
                                 </span>
                             </div>
@@ -57,7 +57,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
                     {onDelete && (
                         <button
                             onClick={(e) => onDelete(session.id, e)}
-                            className="bg-red-50 text-red-400 hover:text-red-500 hover:bg-red-100 transition-colors p-2 rounded-full opacity-0 group-hover:opacity-100"
+                            className="text-zinc-400 hover:text-red-500 transition-colors p-2 opacity-0 group-hover:opacity-100"
                             title="Delete Record"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -70,21 +70,21 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
                     <div className="flex flex-wrap gap-2 items-center">
                         {maxPainLevel > 0 && (
                             <span className={`
-                                px-2.5 py-1 rounded-lg text-xs font-bold border
-                                ${maxPainLevel >= 7 ? 'bg-red-50 text-red-600 border-red-100' :
-                                    maxPainLevel >= 4 ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                        'bg-blue-50 text-blue-600 border-blue-100'}
+                                px-2 py-1 rounded-md text-xs font-bold border
+                                ${maxPainLevel >= 7 ? 'bg-red-50 text-red-700 border-red-100' :
+                                    maxPainLevel >= 4 ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                                        'bg-blue-50 text-blue-700 border-blue-100'}
                             `}>
-                                Pain: {maxPainLevel}/10
+                                Max Pain: {maxPainLevel}/10
                             </span>
                         )}
                         {displayBadges.map(badge => (
-                            <span key={badge} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-glass-100 text-glass-text-secondary border border-glass-border">
+                            <span key={badge} className="px-2 py-1 rounded-md text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                                 {badge}
                             </span>
                         ))}
                         {moreBadgesCount > 0 && (
-                            <span className="text-xs text-glass-text-secondary opacity-60">+{moreBadgesCount}</span>
+                            <span className="text-xs text-zinc-400">+{moreBadgesCount} more</span>
                         )}
                     </div>
                 )}
@@ -94,10 +94,10 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
                     {/* Treated Areas */}
                     {treatedAreas.length > 0 && (
                         <div className="flex items-start gap-2">
-                            <Activity className="w-4 h-4 text-primary/60 mt-0.5 shrink-0" />
+                            <Activity className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
                             <div className="flex flex-wrap gap-1.5">
                                 {treatedAreas.map((area, i) => (
-                                    <span key={i} className="text-xs font-bold text-glass-text-secondary bg-glass-100 px-2 py-0.5 rounded-md">
+                                    <span key={i} className="text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
                                         {area}
                                     </span>
                                 ))}
@@ -108,15 +108,15 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
                     {/* Recommendations / Notes */}
                     {(recCount > 0 || session.notes) && (
                         <div className="flex items-start gap-2">
-                            <FileText className="w-4 h-4 text-primary/60 mt-0.5 shrink-0" />
-                            <div className="text-sm text-glass-text-secondary line-clamp-2">
+                            <FileText className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+                            <div className="text-sm text-zinc-600 dark:text-zinc-400">
                                 {recCount > 0 && (
-                                    <span className="mr-2 text-primary font-bold">
-                                        {recCount} Recs
+                                    <span className="mr-2 text-emerald-600 dark:text-emerald-500 font-medium">
+                                        {recCount} Recommendation{recCount !== 1 ? 's' : ''}
                                     </span>
                                 )}
                                 {session.notes && (
-                                    <span className="italic opacity-80">
+                                    <span className="italic truncate line-clamp-1">
                                         "{session.notes}"
                                     </span>
                                 )}
@@ -127,10 +127,10 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
             </div>
 
             {/* Footer / Action */}
-            <Link to={`/session/${session.id}/report`} className="block bg-glass-100/50 px-5 py-3 border-t border-glass-border flex justify-between items-center hover:bg-glass-100 transition-colors">
-                <span className="text-[10px] text-glass-text-secondary font-bold uppercase tracking-widest">View Report</span>
-                <ArrowRight className="w-4 h-4 text-primary transform group-hover:translate-x-1 transition-transform" />
+            <Link to={`/session/${session.id}/report`} className="block bg-zinc-50 dark:bg-zinc-950/50 px-5 py-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
+                <span className="text-xs text-zinc-400 font-medium uppercase tracking-wider">View Report</span>
+                <ArrowRight className="w-4 h-4 text-emerald-500 transform group-hover:translate-x-1 transition-transform" />
             </Link>
-        </GlassCard>
+        </Card>
     );
 }

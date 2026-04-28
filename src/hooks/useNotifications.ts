@@ -1,24 +1,21 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useMemo } from 'react';
-import { type BodyworkRoutine } from '../db/db';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db, type BodyworkRoutine } from '../db/db';
 import { useAppStore } from '../store/useAppStore';
-import { useDataStore } from '../store/useDataStore';
 
 export function useNotifications() {
     const { notificationSettings } = useAppStore();
-    const { routines: allRoutines, journalEntries: allJournalEntries } = useDataStore();
-
-    const routines = useMemo(() => allRoutines.filter(r => r.status === 'active'), [allRoutines]);
-
-    const journalEntries = useMemo(() => {
+    const routinesQuery = useLiveQuery(() => db.routines.where('status').equals('active').toArray());
+    const routines = useMemo(() => routinesQuery || [], [routinesQuery]);
+    const journalEntriesQuery = useLiveQuery(async () => {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
-        const todayTime = todayStart.getTime();
-        return allJournalEntries.filter(j => j.date >= todayTime);
-    }, [allJournalEntries]);
+        return db.journal.where('date').aboveOrEqual(todayStart.getTime()).toArray();
+    });
+    const journalEntries = useMemo(() => journalEntriesQuery || [], [journalEntriesQuery]);
 
     // Use refs to prevent interval closure staleness and duplicate notifications
-    const lastCheckRef = useRef<number>(Date.now());
+    const lastCheckRef = useRef<number>(new Date().getTime());
 
     // Reset journal notification state at midnight (or just rely on date check)
     // Simple way: Track the date string of the last journal notification
@@ -30,13 +27,13 @@ export function useNotifications() {
 
         // Check if Notification API is supported
         if (!('Notification' in window)) {
-            console.log('This browser does not support desktop notification');
+            /* Browser doesn't support notifications */
             return;
         }
 
         // Request permission on mount if default
         if (Notification.permission === 'default') {
-            Notification.requestPermission().catch(err => console.error("Error requesting notification permission:", err));
+            Notification.requestPermission().catch(() => { /* Silently ignore */ });
         }
 
         const checkReminders = () => {
@@ -66,8 +63,8 @@ export function useNotifications() {
                                 icon: '/icon-192x192.png',
                                 tag: `routine-${routine.id}-${todayStr}` // Prevent duplicate notifications for same event
                             });
-                        } catch (e) {
-                            console.error("Error creating routine notification:", e);
+                        } catch {
+                            /* Silently ignore notification errors */
                         }
                     }
                 });
@@ -91,8 +88,8 @@ export function useNotifications() {
                                 tag: `journal-${todayStr}`
                             });
                             lastJournalDateRef.current = todayStr;
-                        } catch (e) {
-                            console.error("Error creating journal notification:", e);
+                        } catch {
+                            /* Silently ignore notification errors */
                         }
                     }
                 }

@@ -40,8 +40,8 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
             onClose();
             setFormData({ role: "Chiropractor" }); // Reset form
             toast("Practitioner added successfully", "success");
-        } catch (error) {
-            console.error("Failed to save practitioner:", error);
+        } catch {
+            /* Error handled by toast */
             toast("Failed to save practitioner. Please try again.", "error");
         }
     };

@@ -3,7 +3,7 @@ import { useDataStore } from "../store/useDataStore";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowLeft, User, Activity, FileText, CheckCircle } from "lucide-react";
-import { REGIONS } from "../components/BodyMap/BodyRegionSelector";
+import { REGIONS } from "../constants/bodyRegions";
 
 export default function SessionDetails() {
     const { id } = useParams();

@@ -11,9 +11,9 @@ export function IntakeProfileSection() {
     const calculateAge = (dob?: string) => {
         if (!dob) return "Age not set";
         const birthDate = new Date(dob);
-        const ageDifMs = Date.now() - birthDate.getTime();
-        const ageDate = new Date(ageDifMs);
-        return Math.abs(ageDate.getUTCFullYear() - 1970) + " years old";
+        const now = new Date();
+        const ageMs = now.getTime() - birthDate.getTime();
+        return Math.floor(ageMs / (365.25 * 24 * 60 * 60 * 1000)) + " years old";
     };
 
     return (

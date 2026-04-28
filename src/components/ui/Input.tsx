@@ -13,7 +13,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         return (
             <div className="w-full space-y-2">
                 {label && (
-                    <label className={cn(
+                    <label htmlFor={props.id} className={cn(
                         "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
                         error ? "text-red-500 dark:text-red-400" : "text-zinc-700 dark:text-zinc-300"
                     )}>

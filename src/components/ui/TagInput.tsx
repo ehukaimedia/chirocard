@@ -19,7 +19,7 @@ export const TagInput: React.FC<TagInputProps> = ({
     suggestions = []
 }) => {
     const [inputValue, setInputValue] = useState("");
-    const listId = `datalist-${label.replace(/\s+/g, '-').toLowerCase()}-${Math.random().toString(36).substr(2, 9)}`;
+    const listId = React.useId();
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' || e.key === ',') {

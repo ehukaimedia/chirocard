@@ -4,17 +4,18 @@ import { Button } from "../components/ui/Button";
 import { ArrowLeft, Users, User, Calendar, History, AlertTriangle, Trash2 } from "lucide-react";
 import { DataManagement } from "../components/Profile/DataManagement";
 import { useAppStore } from "../store/useAppStore";
-import { useDataStore } from "../store/useDataStore";
+import { db } from "../db/db";
+import { importDB, exportDB } from "dexie-export-import";
 import { Modal } from "../components/ui/Modal";
 import { WelcomeModal } from "../components/Onboarding/WelcomeModal";
 import { TagInput } from "../components/ui/TagInput";
 import { useToast } from "../components/ui/Toast";
 import { NotificationSettings } from "../components/Settings/NotificationSettings";
 import { AppInstallSection } from "../components/Settings/AppInstallSection";
+// import { useLiveQuery } from "dexie-react-hooks";
 
 export default function Settings() {
     const navigate = useNavigate();
-    const { clearData } = useDataStore();
     // const user = useLiveQuery(() => db.users.get("me"));
     const {
         calendarViewSpan,
@@ -33,29 +34,49 @@ export default function Settings() {
 
     const handleFreshStart = async () => {
         try {
-            // 1. Wipe Database
-            // await db.delete();
-            // await db.open(); 
-            await clearData();
+            // 1. Create emergency backup before wipe
+            let emergencyBackup: Blob | null = null;
+            try {
+                emergencyBackup = await exportDB(db);
+            } catch {
+                // Proceed without backup if export fails
+            }
 
-            // 2. Reset Store
+            // 2. Wipe Database
+            await db.delete();
+            try {
+                await db.open(); // Re-open to ensure it's clean and ready
+            } catch (openError) {
+                // If open fails, try to recover with emergency backup
+                if (emergencyBackup) {
+                    toast("Reset encountered an issue. Attempting recovery...", "error");
+                    try {
+                        await db.open();
+                        await importDB(emergencyBackup);
+                    } catch {
+                        // Recovery failed
+                    }
+                }
+                throw openError;
+            }
+
+            // 3. Reset Store
             reset();
 
-            // 3. Clear Local Storage (Persisted Store)
+            // 4. Clear Local Storage (Persisted Store)
             localStorage.removeItem('chirocard-storage');
 
-            // 4. Reload
+            // 5. Reload
             window.location.reload();
-        } catch (error) {
-            console.error("Failed to reset app:", error);
+        } catch {
             toast("Failed to reset application data. Please try again.", "error");
         }
     };
 
     return (
-        <div className="min-h-screen bg-zinc-50 px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-24">
+        <div className="min-h-screen bg-zinc-50 p-6 pb-24">
             {/* Top Navigation Bar */}
-            <nav className="fixed top-0 left-0 right-0 min-h-[64px] h-auto bg-white/80 backdrop-blur-md border-b border-zinc-200 hidden md:flex items-center px-6 pt-[calc(env(safe-area-inset-top)+16px)] pb-4 z-50">
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200 hidden md:flex items-center px-6 z-50">
                 <Button variant="ghost" onClick={() => navigate("/")} className="text-zinc-500 hover:text-zinc-900 flex items-center gap-2 pl-0 hover:bg-transparent">
                     <ArrowLeft className="w-4 h-4" />
                     Return to Dashboard

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDataStore } from "../../store/useDataStore";
 import { Modal } from "../ui/Modal";
@@ -21,9 +21,12 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
     const { toast } = useToast();
 
     // Reset view when reopened
-    if (isOpen === false && showForm === true) {
-        setTimeout(() => setShowForm(false), 300);
-    }
+    useEffect(() => {
+        if (isOpen === false && showForm === true) {
+            const timer = setTimeout(() => setShowForm(false), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen, showForm]);
 
     const [formData, setFormData] = useState<FormData>({
         name: "",
@@ -105,8 +108,8 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
             onClose();
             toast("Profile created successfully!", "success");
             navigate("/profile");
-        } catch (error) {
-            console.error("Failed to update profile:", error);
+        } catch {
+            /* Error handled by toast */
             toast("Failed to update profile", "error");
         }
     };

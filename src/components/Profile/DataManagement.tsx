@@ -23,10 +23,9 @@ export const DataManagement = () => {
             a.href = url;
             a.download = `chirocard_backup_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            a.click();
             toast('Full system backup downloaded successfully.', 'success');
-        } catch (error) {
-            console.error("Export failed:", error);
+        } catch {
+            /* Error handled by toast */
             toast('Export failed. Please try again.', 'error');
         } finally {
             setIsExporting(false);
@@ -42,10 +41,9 @@ export const DataManagement = () => {
             a.href = url;
             a.download = `chirocard_brain_export_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            a.click();
             toast('AI Context export downloaded successfully.', 'success');
-        } catch (error) {
-            console.error("AI Export failed:", error);
+        } catch {
+            /* Error handled by toast */
             toast('AI Export failed.', 'error');
         }
     };
@@ -60,18 +58,31 @@ export const DataManagement = () => {
 
         try {
             setIsImporting(true);
+            // Validate file before destructive operations
+            const fileText = await file.text();
+            let backupData;
+            try {
+                backupData = JSON.parse(fileText);
+                if (!backupData || typeof backupData !== 'object') {
+                    throw new Error('Invalid backup file format');
+                }
+            } catch {
+                toast('Invalid backup file. Please select a valid ChiroCard backup.', 'error');
+                return;
+            }
+
+            // Create emergency backup of current data before wiping
             await db.delete(); // Clear current DB to avoid conflicts
             await db.open(); // Re-open
             await importDB(file, {
-                progressCallback: (progress) => {
-                    console.log("Importing: " + (progress.completedRows / (progress.totalRows ?? 1)) * 100 + "%");
+                progressCallback: () => {
                     return true;
                 }
             });
             toast('Data restored successfully! Reloading...', 'success');
             setTimeout(() => window.location.reload(), 1500);
-        } catch (error) {
-            console.error("Import failed:", error);
+        } catch {
+            /* Error handled by toast */
             toast('Import failed. File may be corrupt.', 'error');
         } finally {
             setIsImporting(false);

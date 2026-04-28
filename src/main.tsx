@@ -1,4 +1,4 @@
-import React, { StrictMode } from 'react'
+import { StrictMode, Component, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
@@ -9,8 +9,8 @@ import { ToastProvider } from './components/ui/Toast.tsx'
 // Force Dark Mode - Removed for Light Mode conversion
 // document.documentElement.classList.add('dark');
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
-  constructor(props: { children: React.ReactNode }) {
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -19,17 +19,41 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+  componentDidCatch() {
+    /* Errors are handled by the boundary UI below */
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '20px', color: 'red', fontFamily: 'sans-serif' }}>
-          <h1>Something went wrong.</h1>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.toString()}</pre>
-          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.stack}</pre>
+        <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
+          <div className="bg-white p-8 rounded-2xl shadow-lg border border-zinc-200 max-w-md w-full text-center">
+            <h1 className="text-xl font-bold text-red-600 mb-2">Something went wrong.</h1>
+            <p className="text-sm text-zinc-600 mb-6">The application encountered an unexpected error.</p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-zinc-900 text-white py-2.5 rounded-xl font-medium hover:bg-zinc-800 transition-colors"
+              >
+                Reload Application
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  new Promise<void>((resolve) => {
+                    const req = indexedDB.deleteDatabase('ChiroCardDB');
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => resolve();
+                  }).then(() => {
+                    window.location.reload();
+                  });
+                }}
+                className="w-full bg-white text-red-600 border border-red-200 py-2.5 rounded-xl font-medium hover:bg-red-50 transition-colors"
+              >
+                Clear Data & Reload
+              </button>
+            </div>
+          </div>
         </div>
       );
     }
@@ -52,9 +76,27 @@ createRoot(document.getElementById('root')!).render(
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(registration => {
-      console.log('SW registered: ', registration);
-    }).catch(registrationError => {
-      console.log('SW registration failed: ', registrationError);
+      // Check for updates every 60 minutes
+      setInterval(() => {
+        registration.update().catch(() => {});
+      }, 60 * 60 * 1000);
+
+      // Notify user when a new service worker is waiting
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available — prompt user to refresh
+              if (confirm('A new version of ChiroCard is available. Reload to update?')) {
+                window.location.reload();
+              }
+            }
+          });
+        }
+      });
+    }).catch(() => {
+      // Silent fail for SW registration errors
     });
   });
 }

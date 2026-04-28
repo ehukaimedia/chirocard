@@ -44,20 +44,22 @@ export function BodyworkRoutineModal({
 
     useEffect(() => {
         if (isOpen) {
-            if (initialValues) {
-                setRoutineTitle(initialValues.title);
-                setRoutineDesc(initialValues.description);
-                setRoutineTimes(initialValues.reminderTimes || []);
-                setRoutineDays(initialValues.daysOfWeek || []);
-                setRoutineCategory(initialValues.category || 'custom');
-            } else {
-                setRoutineTitle("");
-                setRoutineDesc("");
-                setRoutineTimes([]);
-                setRoutineDays([]);
-                setRoutineCategory('custom');
-                setTimeInput("07:00");
-            }
+            queueMicrotask(() => {
+                if (initialValues) {
+                    setRoutineTitle(initialValues.title);
+                    setRoutineDesc(initialValues.description);
+                    setRoutineTimes(initialValues.reminderTimes || []);
+                    setRoutineDays(initialValues.daysOfWeek || []);
+                    setRoutineCategory(initialValues.category || 'custom');
+                } else {
+                    setRoutineTitle("");
+                    setRoutineDesc("");
+                    setRoutineTimes([]);
+                    setRoutineDays([]);
+                    setRoutineCategory('custom');
+                    setTimeInput("07:00");
+                }
+            });
         }
     }, [isOpen, initialValues]);
 

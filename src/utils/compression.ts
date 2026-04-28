@@ -15,8 +15,8 @@ export function compressData(data: unknown): string {
         }
         // Base64 encode
         return btoa(binary);
-    } catch (e) {
-        console.error("Compression failed", e);
+    } catch {
+        /* Compression error — silently return empty string */
         return "";
     }
 }
@@ -36,8 +36,8 @@ export function decompressData(base64: string): unknown {
         // Decompress
         const decompressed = pako.inflate(bytes, { to: 'string' });
         return JSON.parse(decompressed);
-    } catch (e) {
-        console.error("Decompression failed", e);
+    } catch {
+        /* Decompression error — silently return null */
         return null;
     }
 }

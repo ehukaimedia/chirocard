@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { type Appointment, type BodyworkRoutine, type Practitioner } from "../db/db";
-import { useDataStore } from "../store/useDataStore";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, type Appointment, type BodyworkRoutine, type Practitioner } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -20,19 +20,8 @@ import { useAppStore } from "../store/useAppStore";
 export default function Calendar() {
     const navigate = useNavigate();
     const { calendarViewSpan, routineTimeInterval } = useAppStore();
-
-    const {
-        appointments,
-        routines: allRoutines,
-        routineCompletions,
-        saveAppointment,
-        deleteAppointment,
-        saveRoutine,
-        deleteRoutine,
-        saveRoutineCompletion,
-        deleteRoutineCompletion,
-        practitioners
-    } = useDataStore();
+    const appointments = useLiveQuery(() => db.appointments.orderBy("date").toArray());
+    const allRoutines = useLiveQuery(() => db.routines.toArray());
 
     const activeRoutines = allRoutines?.filter(h => h.status === 'active' || !h.status) || [];
     const pendingRoutines = allRoutines?.filter(h => h.status === 'pending') || [];
@@ -101,15 +90,12 @@ export default function Calendar() {
 
         const dateObj = new Date(`${apptDate}T${apptTime}`);
 
-        await saveAppointment({
+        await db.appointments.add({
             id: crypto.randomUUID(),
             practitionerId: selectedPractitioner.id,
             practitionerName: selectedPractitioner.name,
-            practitionerClass: 'Chiropractor', // Default or fetch from practitioner?
-            date: dateObj.getTime(),
-            notes: "",
-            status: 'scheduled'
-        } as Appointment);
+            date: dateObj.getTime()
+        });
 
         setIsAddingAppt(false);
         setApptDate("");
@@ -118,7 +104,7 @@ export default function Calendar() {
     };
 
     const handleAddRoutine = async (data: BodyworkRoutineData) => {
-        await saveRoutine({
+        await db.routines.add({
             id: crypto.randomUUID(),
             title: data.title,
             description: data.description,
@@ -135,25 +121,20 @@ export default function Calendar() {
     };
 
     const toggleRoutine = async (id: string, currentStatus: boolean, title: string) => {
-        const now = Date.now();
-        // Update Routine Status
-        // We need to find the routine first to update it fully, but for simple toggle we use helper
-        // Ideally saveRoutine merges, but our implementation replaces.
-        // So we should find it first.
-        const routine = allRoutines.find(r => r.id === id);
-        if (routine) {
-            await saveRoutine({
-                ...routine,
-                isCompletedToday: !currentStatus,
-                lastCompletedAt: !currentStatus ? now : undefined
-            });
-        }
+        const now = new Date().getTime();
+        await db.routines.update(id, {
+            isCompletedToday: !currentStatus,
+            lastCompletedAt: !currentStatus ? now : undefined
+        });
 
-        const todayStr = new Date().toISOString().split('T')[0];
-
+        // Log completion to history if marking as done
         if (!currentStatus) {
-            // Mark as done -> Add completion log
-            await saveRoutineCompletion({
+            // Check if already logged for today to avoid duplicates?
+            // Simple approach: just add a log.
+            // Better: Check if a completion exists for this routine on this date?
+            // For now, let's just add it.
+            const todayStr = new Date().toISOString().split('T')[0];
+            await db.routineCompletions.add({
                 id: crypto.randomUUID(),
                 routineId: id,
                 routineTitle: title,
@@ -161,13 +142,16 @@ export default function Calendar() {
                 date: todayStr
             });
         } else {
-            // Mark as not done -> Remove completion log for today
-            const recent = routineCompletions
-                .filter(rc => rc.routineId === id && rc.date === todayStr)
-                .sort((a, b) => b.completedAt - a.completedAt)[0]; // Last one
+            // If unchecking, maybe remove the log from today?
+            // This is tricky if there are multiple completions.
+            // Let's find the most recent completion for this routine today and delete it.
+            const todayStr = new Date().toISOString().split('T')[0];
+            const recent = await db.routineCompletions
+                .where({ routineId: id, date: todayStr })
+                .last();
 
             if (recent) {
-                await deleteRoutineCompletion(recent.id);
+                await db.routineCompletions.delete(recent.id);
             }
         }
     };
@@ -181,13 +165,15 @@ export default function Calendar() {
         if (!deleteId || !deleteType) return;
 
         if (deleteType === 'appointment') {
-            await deleteAppointment(deleteId);
+            await db.appointments.delete(deleteId);
+            // If we are editing this appointment, close the modal
             if (editingAppt?.id === deleteId) {
                 setEditingAppt(null);
                 setPractitionerDetails(null);
             }
         } else {
-            await deleteRoutine(deleteId);
+            await db.routines.delete(deleteId);
+            // If we are editing this routine, close the modal
             if (editingRoutine?.id === deleteId) {
                 setEditingRoutine(null);
             }
@@ -198,14 +184,10 @@ export default function Calendar() {
     };
 
     const activateRoutine = async (id: string, time?: string) => {
-        const routine = allRoutines.find(r => r.id === id);
-        if (routine) {
-            await saveRoutine({
-                ...routine,
-                status: 'active',
-                reminderTimes: time ? [time] : []
-            });
-        }
+        await db.routines.update(id, {
+            status: 'active',
+            reminderTimes: time ? [time] : []
+        });
     };
 
     const handleEditClick = (hw: BodyworkRoutine, e: React.MouseEvent) => {
@@ -223,14 +205,13 @@ export default function Calendar() {
     const handleSaveEdit = async (data: BodyworkRoutineData) => {
         if (!editingRoutine) return;
 
-        await saveRoutine({
-            ...editingRoutine,
+        await db.routines.update(editingRoutine.id, {
             title: data.title,
             description: data.description,
             reminderTimes: data.reminderTimes,
             frequency: data.daysOfWeek.length === 7 ? "daily" : "custom",
             daysOfWeek: data.daysOfWeek,
-            category: data.category || 'custom'
+            category: data.category
         });
 
         setEditingRoutine(null);
@@ -251,8 +232,8 @@ export default function Calendar() {
 
         setEditApptPractitioner({ id: appt.practitionerId, name: appt.practitionerName });
 
-        // Fetch full practitioner details from store
-        const practitioner = practitioners.find(p => p.id === appt.practitionerId);
+        // Fetch full practitioner details
+        const practitioner = await db.practitioners.get(appt.practitionerId);
         setPractitionerDetails(practitioner || null);
     };
 
@@ -261,8 +242,7 @@ export default function Calendar() {
 
         const dateObj = new Date(`${editApptDate}T${editApptTime}`);
 
-        await saveAppointment({
-            ...editingAppt,
+        await db.appointments.update(editingAppt.id, {
             practitionerId: editApptPractitioner.id,
             practitionerName: editApptPractitioner.name,
             date: dateObj.getTime()
@@ -270,7 +250,7 @@ export default function Calendar() {
 
         // Update local details if practitioner changed
         if (editApptPractitioner.id !== practitionerDetails?.id) {
-            const practitioner = practitioners.find(p => p.id === editApptPractitioner.id);
+            const practitioner = await db.practitioners.get(editApptPractitioner.id);
             setPractitionerDetails(practitioner || null);
         }
 
@@ -289,10 +269,9 @@ export default function Calendar() {
 
         const dateStr = date.toDateString();
         const hasAppt = appointments?.some(a => new Date(a.date).toDateString() === dateStr);
-        // Also check for sessions? In the previous code there was a comment about it.
-        // Let's assume we want to show sessions too.
-        // const hasSession = sessions.some(s => new Date(s.date).toDateString() === dateStr);
 
+        // In a real app, we'd check historical completion data here.
+        // For now, we'll just show a dot for today if habits are done.
         const isToday = dateStr === new Date().toDateString();
         const allHabitsDone = activeRoutines.length > 0 && activeRoutines.every(h => h.isCompletedToday);
         const hasCompletedHabits = isToday && allHabitsDone;
@@ -306,9 +285,9 @@ export default function Calendar() {
     };
 
     return (
-        <div className="min-h-screen bg-light-bg dark:bg-dark-bg px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-24" >
+        <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 pb-24">
             {/* ... Navigation ... */}
-            < nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50" >
+            <nav className="fixed top-0 left-0 right-0 h-16 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 hidden md:flex items-center px-6 z-50">
                 <button
                     onClick={() => navigate("/")}
                     className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 font-medium text-sm flex items-center gap-2 transition-colors"
@@ -316,7 +295,7 @@ export default function Calendar() {
                     <ChevronLeft className="w-4 h-4" />
                     Return to Dashboard
                 </button>
-            </nav >
+            </nav>
 
             <div className="md:mt-16 mb-6 pt-6 flex items-center gap-4">
                 <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Calendar</h1>
@@ -535,19 +514,14 @@ export default function Calendar() {
                                 upcomingAppointments.map((appt: Appointment) => (
                                     <Card
                                         key={appt.id}
-                                        className="p-4 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-all bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-xl"
+                                        className="p-3 flex justify-between items-center cursor-pointer hover:border-emerald-500/50 transition-colors bg-zinc-50 dark:bg-zinc-900/50"
                                         onClick={() => handleApptClick(appt)}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-sm shrink-0 border border-emerald-100 dark:border-emerald-800">
-                                                {new Date(appt.date).getDate()}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-sm text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
-                                                <p className="text-xs text-zinc-500 font-medium">
-                                                    {new Date(appt.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short' })} • {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </p>
-                                            </div>
+                                        <div>
+                                            <p className="font-medium text-sm text-zinc-900 dark:text-zinc-100">{appt.practitionerName}</p>
+                                            <p className="text-xs text-zinc-500">
+                                                {new Date(appt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', weekday: 'short' })} • {new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
                                         </div>
                                     </Card>
                                 ))
@@ -626,7 +600,7 @@ export default function Calendar() {
                 <div className="space-y-6 py-2">
                     {/* Practitioner Details Card */}
                     {practitionerDetails && (
-                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-5 space-y-4 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-4 space-y-3 border border-zinc-100 dark:border-zinc-800">
                             <div className="flex items-start gap-3">
                                 <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                                     <Building2 className="w-5 h-5" />
@@ -641,9 +615,9 @@ export default function Calendar() {
 
                             <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                 {practitionerDetails.address && (
-                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2 rounded-lg">
-                                        <MapPin className="w-4 h-4 shrink-0 text-zinc-400" />
-                                        <span className="truncate font-medium">{practitionerDetails.address}</span>
+                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                        <MapPin className="w-4 h-4 shrink-0" />
+                                        <span className="truncate">{practitionerDetails.address}</span>
                                     </div>
                                 )}
                                 {practitionerDetails.phone && (
@@ -683,30 +657,23 @@ export default function Calendar() {
                         <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Edit Details</h4>
                         {!editApptPractitioner ? (
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Select Practitioner</label>
+                                <label className="text-xs text-zinc-500">Select Practitioner</label>
                                 <PractitionerManager onSelect={(p) => setEditApptPractitioner({ id: p.id, name: p.name })} />
                             </div>
                         ) : (
-                            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex justify-between items-center shadow-sm">
-                                <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{editApptPractitioner.name}</span>
-                                <Button size="sm" variant="ghost" onClick={() => setEditApptPractitioner(null)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">Change</Button>
+                            <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
+                                <span className="text-sm font-medium">{editApptPractitioner.name}</span>
+                                <Button size="sm" variant="ghost" onClick={() => setEditApptPractitioner(null)}>Change</Button>
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</label>
-                                <Input type="date" value={editApptDate} onChange={e => setEditApptDate(e.target.value)} className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Time</label>
-                                <Input
-                                    type="time"
-                                    value={editApptTime}
-                                    onChange={e => setEditApptTime(e.target.value)}
-                                    step={routineTimeInterval === 1 ? "60" : "900"}
-                                    className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm"
-                                />
-                            </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Input type="date" value={editApptDate} onChange={e => setEditApptDate(e.target.value)} />
+                            <Input
+                                type="time"
+                                value={editApptTime}
+                                onChange={e => setEditApptTime(e.target.value)}
+                                step={routineTimeInterval === 1 ? "60" : "900"}
+                            />
                         </div>
                     </div>
 
@@ -734,30 +701,23 @@ export default function Calendar() {
                 <div className="space-y-4 py-2">
                     {!selectedPractitioner ? (
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Practitioner</label>
+                            <label className="text-xs text-zinc-500">Select Practitioner</label>
                             <PractitionerManager onSelect={(p) => setSelectedPractitioner({ id: p.id, name: p.name })} />
                         </div>
                     ) : (
-                        <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex justify-between items-center shadow-sm">
-                            <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{selectedPractitioner.name}</span>
-                            <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/40">Change</Button>
+                        <div className="p-2 bg-primary/10 rounded-lg flex justify-between items-center">
+                            <span className="text-sm font-medium">{selectedPractitioner.name}</span>
+                            <Button size="sm" variant="ghost" onClick={() => setSelectedPractitioner(null)}>Change</Button>
                         </div>
                     )}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</label>
-                            <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm" />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Time</label>
-                            <Input
-                                type="time"
-                                value={apptTime}
-                                onChange={e => setApptTime(e.target.value)}
-                                step={routineTimeInterval === 1 ? "60" : "900"}
-                                className="h-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm"
-                            />
-                        </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input type="date" value={apptDate} onChange={e => setApptDate(e.target.value)} />
+                        <Input
+                            type="time"
+                            value={apptTime}
+                            onChange={e => setApptTime(e.target.value)}
+                            step={routineTimeInterval === 1 ? "60" : "900"}
+                        />
                     </div>
                 </div>
             </Modal>
@@ -782,6 +742,6 @@ export default function Calendar() {
                 onConfirm={confirmDelete}
                 variant="danger"
             />
-        </div >
+        </div>
     );
 }

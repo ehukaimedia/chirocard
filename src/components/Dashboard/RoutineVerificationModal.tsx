@@ -2,7 +2,7 @@ import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { type BodyworkRoutine, db } from "../../db/db";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trackEvent } from "../../utils/analytics";
 
 interface RoutineVerificationModalProps {
@@ -24,11 +24,29 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
     const currentRoutine = routines[currentIndex];
 
     // Reset index when modal opens/closes or routines change
-    if (!isOpen && currentIndex !== 0) {
-        setCurrentIndex(0);
-        setShowTimeEdit(false);
-        setNotes("");
-    }
+    useEffect(() => {
+        if (!isOpen && currentIndex !== 0) {
+            queueMicrotask(() => {
+                setCurrentIndex(0);
+                setShowTimeEdit(false);
+                setNotes("");
+            });
+        }
+    }, [isOpen, currentIndex]);
+
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isMountedRef = useRef(true);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+        };
+    }, []);
 
     const handleAction = async (completed: boolean) => {
         if (!currentRoutine) return;
@@ -36,7 +54,7 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
         setIsAnimating(true);
 
         // Wait for animation
-        setTimeout(async () => {
+        timerRef.current = setTimeout(async () => {
             if (completed) {
                 // Construct timestamp from inputs
                 const timestamp = new Date(`${completedDate}T${completedTime}`).getTime();
@@ -83,11 +101,13 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
                 setShowTimeEdit(false);
                 setNotes("");
             } else {
-                onClose();
-                setIsAnimating(false);
-                setCurrentIndex(0);
-                setShowTimeEdit(false);
-                setNotes("");
+                if (isMountedRef.current) {
+                    onClose();
+                    setIsAnimating(false);
+                    setCurrentIndex(0);
+                    setShowTimeEdit(false);
+                    setNotes("");
+                }
             }
         }, 300);
     };
