@@ -98,7 +98,7 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: Pl
                                             >
                                                 <div className="relative z-10">
                                                     <h4 className="font-bold text-lg text-white group-hover:text-emerald-400 transition-colors truncate mb-1">
-                                                        {place.name || place.display_name.split(',')[0]}
+                                                        {place.name || place.display_name?.split(',')[0] || place.display_name}
                                                     </h4>
                                                     <div className="flex items-start gap-2 text-zinc-400">
                                                         <MapPin className="w-4 h-4 shrink-0 mt-0.5" />

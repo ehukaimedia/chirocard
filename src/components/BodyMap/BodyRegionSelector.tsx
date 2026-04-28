@@ -65,9 +65,12 @@ export function BodyRegionSelector({
         }
 
         onChange?.(partId, next);
-        onSave?.(partId, { status: next, level: levels[partId] || 0, note: notes[partId] || '' });
+        onSave?.(partId, {
+            status: next,
+            level: next === 'normal' ? 0 : (levels[partId] || 0),
+            note: next === 'normal' ? '' : (notes[partId] || '')
+        });
 
-        // Reset level to 0 if deselected
         if (next === 'normal' && onLevelChange) {
             onLevelChange(partId, 0);
         }

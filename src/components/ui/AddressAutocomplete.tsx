@@ -119,7 +119,7 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
                                 <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                                        {place.name || place.display_name.split(',')[0]}
+                                        {place.name || place.display_name?.split(',')[0] || place.display_name}
                                     </span>
                                     <span className="text-[10px] text-zinc-500 truncate">
                                         {place.display_name}
