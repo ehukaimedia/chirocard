@@ -6,7 +6,9 @@ export type BodyStatus = "normal" | "issue" | "addressed" | "watch";
 interface BodyRegionSelectorProps {
     value: Record<string, BodyStatus>;
     levels?: Record<string, number>;
-    onChange: (part: string, status: BodyStatus) => void;
+    notes?: Record<string, string>;
+    onChange?: (part: string, status: BodyStatus) => void;
+    onSave?: (part: string, data: { status: BodyStatus; level: number; note: string }) => void;
     onLevelChange?: (part: string, level: number) => void;
     readOnly?: boolean;
     mode?: 'simple' | 'detailed';
@@ -15,7 +17,9 @@ interface BodyRegionSelectorProps {
 export function BodyRegionSelector({
     value,
     levels = {},
+    notes = {},
     onChange,
+    onSave,
     onLevelChange,
     readOnly = false,
     mode = 'detailed'
@@ -60,7 +64,8 @@ export function BodyRegionSelector({
             else next = "normal";
         }
 
-        onChange(partId, next);
+        onChange?.(partId, next);
+        onSave?.(partId, { status: next, level: levels[partId] || 0, note: notes[partId] || '' });
 
         // Reset level to 0 if deselected
         if (next === 'normal' && onLevelChange) {

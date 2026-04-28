@@ -121,7 +121,7 @@ export function AddPractitionerModal({ isOpen, onClose, onAdded }: AddPractition
                         setFormData(prev => ({
                             ...prev,
                             address: addr,
-                            clinicName: place?.displayName.text || prev.clinicName
+                            clinicName: (place?.name || place?.display_name.split(',')[0]) ?? prev.clinicName
                         }));
                     }}
                     onChange={(addr) => setFormData(prev => ({ ...prev, address: addr }))}

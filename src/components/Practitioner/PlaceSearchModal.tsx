@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Star, X, Loader2, Hospital } from "lucide-react";
-import { searchPlaces, type GooglePlace } from "../../services/places";
+import { Search, MapPin, X, Loader2, Hospital } from "lucide-react";
+import { searchPlaces, type PlaceResult } from "../../services/places";
 
 interface PlaceSearchModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelect: (place: GooglePlace) => void;
+    onSelect: (place: PlaceResult) => void;
     userLocation?: { lat: number; lon: number };
 }
 
 export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: PlaceSearchModalProps) {
     const [query, setQuery] = useState("");
-    const [results, setResults] = useState<GooglePlace[]>([]);
+    const [results, setResults] = useState<PlaceResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -89,7 +89,7 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: Pl
                                     >
                                         {results.map((place, idx) => (
                                             <motion.button
-                                                key={place.id}
+                                                key={place.place_id}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
@@ -97,20 +97,12 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: Pl
                                                 className="w-full group text-left p-4 rounded-2xl bg-white/5 dark:bg-zinc-800/20 border border-white/5 dark:border-zinc-800/50 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all relative overflow-hidden active:scale-[0.98]"
                                             >
                                                 <div className="relative z-10">
-                                                    <div className="flex justify-between items-start mb-1">
-                                                        <h4 className="font-bold text-lg text-white group-hover:text-emerald-400 transition-colors truncate pr-4">
-                                                            {place.displayName.text}
-                                                        </h4>
-                                                        {place.rating && (
-                                                            <div className="flex items-center gap-1 bg-zinc-900/50 border border-white/10 px-2 py-0.5 rounded-full shrink-0">
-                                                                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                                                                <span className="text-[10px] font-bold text-white">{place.rating}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <h4 className="font-bold text-lg text-white group-hover:text-emerald-400 transition-colors truncate mb-1">
+                                                        {place.name || place.display_name.split(',')[0]}
+                                                    </h4>
                                                     <div className="flex items-start gap-2 text-zinc-400">
                                                         <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-                                                        <p className="text-sm line-clamp-2">{place.formattedAddress}</p>
+                                                        <p className="text-sm line-clamp-2">{place.display_name}</p>
                                                     </div>
                                                 </div>
                                             </motion.button>

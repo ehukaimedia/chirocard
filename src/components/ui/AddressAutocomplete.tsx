@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Input, type InputProps } from "./Input";
 import { MapPin, Loader2 } from "lucide-react";
-import { searchPlaces, type GooglePlace } from "../../services/places";
+import { searchPlaces, type PlaceResult } from "../../services/places";
 
 interface AddressAutocompleteProps extends Omit<InputProps, 'onChange' | 'onSelect' | 'value'> {
     value?: string;
-    onSelect: (address: string, placeDetails?: GooglePlace) => void;
+    onSelect: (address: string, placeDetails?: PlaceResult) => void;
     onChange?: (value: string) => void;
 }
 
 export function AddressAutocomplete({ value, onSelect, onChange, className, ...props }: AddressAutocompleteProps) {
     const [query, setQuery] = useState(value || "");
-    const [results, setResults] = useState<GooglePlace[]>([]);
+    const [results, setResults] = useState<PlaceResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -81,8 +81,8 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
         if (onChange) onChange(val);
     };
 
-    const handleSelect = (place: GooglePlace) => {
-        const fullAddress = place.formattedAddress;
+    const handleSelect = (place: PlaceResult) => {
+        const fullAddress = place.display_name;
         setQuery(fullAddress);
         setShowResults(false);
         onSelect(fullAddress, place);
@@ -111,7 +111,7 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
                     {results.length > 0 ? (
                         results.map((place) => (
                             <button
-                                key={place.id}
+                                key={place.place_id}
                                 type="button"
                                 onClick={() => handleSelect(place)}
                                 className="w-full p-3 text-left border-b border-zinc-100 dark:border-zinc-700 flex items-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors last:border-0"
@@ -119,10 +119,10 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
                                 <MapPin className="w-4 h-4 text-emerald-500 shrink-0" />
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                                        {place.displayName.text}
+                                        {place.name || place.display_name.split(',')[0]}
                                     </span>
                                     <span className="text-[10px] text-zinc-500 truncate">
-                                        {place.formattedAddress}
+                                        {place.display_name}
                                     </span>
                                 </div>
                             </button>
