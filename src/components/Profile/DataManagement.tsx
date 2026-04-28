@@ -56,34 +56,60 @@ export const DataManagement = () => {
             return;
         }
 
+        let emergencyBackup: Blob | null = null;
+
         try {
             setIsImporting(true);
-            // Validate file before destructive operations
+
+            // Step 1: Validate format BEFORE any destructive operation
             const fileText = await file.text();
-            let backupData;
+            let backupData: { formatName?: string; data?: { databaseName?: string } };
             try {
                 backupData = JSON.parse(fileText);
-                if (!backupData || typeof backupData !== 'object') {
-                    throw new Error('Invalid backup file format');
+                if (
+                    !backupData ||
+                    typeof backupData !== 'object' ||
+                    backupData.formatName !== 'dexie' ||
+                    backupData.data?.databaseName !== db.name
+                ) {
+                    throw new Error('Not a valid ChiroCard backup');
                 }
             } catch {
                 toast('Invalid backup file. Please select a valid ChiroCard backup.', 'error');
                 return;
             }
 
-            // Create emergency backup of current data before wiping
-            await db.delete(); // Clear current DB to avoid conflicts
-            await db.open(); // Re-open
-            await importDB(file, {
-                progressCallback: () => {
-                    return true;
+            // Step 2: Create emergency backup before destructive operations
+            let hasData = false;
+            try { hasData = (await db.users.count()) > 0; } catch { /* ignore */ }
+            try {
+                emergencyBackup = await exportDB(db);
+            } catch {
+                if (hasData) {
+                    toast('Could not create a safety backup of your existing data. Please download a backup manually before restoring.', 'error');
+                    return;
                 }
-            });
+                // DB is empty — safe to proceed without backup
+            }
+
+            // Step 3: Destructive import (importDB creates its own connection; no db.open() needed)
+            await db.delete();
+            await importDB(file, { progressCallback: () => true });
             toast('Data restored successfully! Reloading...', 'success');
             setTimeout(() => window.location.reload(), 1500);
         } catch {
-            /* Error handled by toast */
-            toast('Import failed. File may be corrupt.', 'error');
+            // Step 4: Attempt recovery if we have an emergency backup
+            if (emergencyBackup) {
+                try {
+                    await importDB(emergencyBackup);
+                    toast('Import failed, but your previous data was recovered. Reloading...', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } catch {
+                    toast('Import failed and recovery was unsuccessful. Your data may be lost. Please contact support.', 'error');
+                }
+            } else {
+                toast('Import failed. File may be corrupt.', 'error');
+            }
         } finally {
             setIsImporting(false);
         }

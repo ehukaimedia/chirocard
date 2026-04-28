@@ -36,25 +36,34 @@ export default function Settings() {
         try {
             // 1. Create emergency backup before wipe
             let emergencyBackup: Blob | null = null;
+            let hasData = false;
+            try { hasData = (await db.users.count()) > 0; } catch { /* ignore */ }
             try {
                 emergencyBackup = await exportDB(db);
             } catch {
-                // Proceed without backup if export fails
+                if (hasData) {
+                    toast("Could not create a safety backup. Please download a backup before resetting.", "error");
+                    return;
+                }
+                // DB is empty — safe to proceed without backup
             }
 
             // 2. Wipe Database
             await db.delete();
             try {
-                await db.open(); // Re-open to ensure it's clean and ready
+                await db.open();
             } catch (openError) {
-                // If open fails, try to recover with emergency backup
                 if (emergencyBackup) {
                     toast("Reset encountered an issue. Attempting recovery...", "error");
                     try {
-                        await db.open();
+                        // importDB creates its own Dexie instance; no db.open() needed
                         await importDB(emergencyBackup);
+                        toast("Your data was recovered. Reloading...", "success");
+                        setTimeout(() => window.location.reload(), 1500);
+                        return;
                     } catch {
-                        // Recovery failed
+                        toast("Recovery failed. To restore your data, clear your browser's site data and re-import your backup file.", "error");
+                        return;
                     }
                 }
                 throw openError;
