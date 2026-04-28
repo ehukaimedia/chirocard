@@ -34,4 +34,8 @@ dist-ssr
 # Capacitor / mobile build artifacts
 android/
 ios/
+mobile/
+
+# Claude Code worktree data
+.claude/
 
