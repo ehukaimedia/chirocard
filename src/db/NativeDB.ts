@@ -32,10 +32,8 @@ export class NativeDB implements IDatabase {
 
             // Schema
             await this.db.execute(SQL_SCHEMA);
-
-            console.log('Native SQLite Database Initialized');
         } catch (err) {
-            console.error('Failed to init Native DB', err);
+            if (import.meta.env.DEV) console.error('Failed to init Native DB', err);
             throw err;
         }
     }

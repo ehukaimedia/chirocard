@@ -100,9 +100,8 @@ export const useDataStore = create<DataState>((set) => ({
                 journalEntries: journal,
                 practitioners
             });
-            console.log("DataStore Initialized");
         } catch (err) {
-            console.error("Failed to initialize DataStore", err);
+            if (import.meta.env.DEV) console.error("Failed to initialize DataStore", err);
             set({ isLoading: false, error: err instanceof Error ? err.message : String(err) });
         }
     },
@@ -113,7 +112,7 @@ export const useDataStore = create<DataState>((set) => ({
             set({ user }); // Optimistically update the user state
             await database.get().saveUser(user);
         } catch (err) {
-            console.error("Failed to save user", err);
+            if (import.meta.env.DEV) console.error("Failed to save user", err);
             // Revert optimistic update if save fails, or handle error
             // For simplicity, we'll just set an error here.
             set({ error: err instanceof Error ? err.message : String(err) });
