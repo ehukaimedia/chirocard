@@ -1,5 +1,18 @@
 # Rules for Cloudflare Pages
 
+# Security headers + data-egress allowlist. The connect-src list is the
+# enforcement half of docs/playgrounds/specs/data-egress-boundary.html and must
+# match src/constants/egress.ts — a fetch/beacon to any origin not listed here
+# is blocked by the browser (e.g. the removed allorigins.win proxy).
+# No <meta> CSP fallback in index.html on purpose: it would break the Vite dev
+# server's websocket HMR. This header applies to the production deploy.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com; connect-src 'self' https://photon.komoot.io https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://www.googletagmanager.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
+
 # Do not cache the service worker so updates are detected immediately
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate

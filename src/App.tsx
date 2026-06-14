@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import { useNotifications } from "./hooks/useNotifications";
 import { usePersistence } from "./hooks/usePersistence";
 import { useDataStore } from "./store/useDataStore";
+import { loadAnalytics } from "./utils/analytics";
 import { useEffect } from "react";
 
 function App() {
@@ -27,6 +28,12 @@ function App() {
   // Initialize Data Layer (SQLite/Dexie)
   useEffect(() => {
     useDataStore.getState().initialize();
+  }, []);
+
+  // Load analytics only for returning users who already opted in.
+  // First-time / declined users get nothing until they accept the banner.
+  useEffect(() => {
+    loadAnalytics();
   }, []);
   return (
     <BrowserRouter>
