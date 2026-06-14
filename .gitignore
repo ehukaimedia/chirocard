@@ -31,11 +31,17 @@ dist-ssr
 .env.production
 .env.staging
 
-# Capacitor / mobile build artifacts
-android/
-ios/
+# Capacitor: the native projects (android/, ios/) are INTENTIONALLY committed —
+# their generated native config is part of the repo. Only the separate Expo app
+# under mobile/ is ignored.
 mobile/
 
 # Claude Code worktree data
 .claude/
+
+# Impeccable design tooling: the installed skill files + lockfile are not
+# committed (like node_modules). The generated design CONTEXT is committed:
+# PRODUCT.md, DESIGN.md, .impeccable/design.json.
+.agents/
+skills-lock.json
 

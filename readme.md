@@ -12,40 +12,41 @@
 ## Core Philosophy
 
 - **Patient is the Database** — All health records, history, and preferences live on the patient's device. No cloud, no accounts, no lock-in.
-- **Zero-Knowledge Privacy** — We do not store user data. Your health information never leaves your device.
-- **Frictionless Practitioner Experience** — Practitioners use a stateless "Kiosk Mode" to view and chart sessions. No accounts, no login, no installation required.
-- **Installable App (PWA)** — Works offline and installs to the home screen of any device (iOS, Android, Desktop) without an app store.
+- **Local-First Privacy** — Your health records never leave your device. The only outbound calls are optional, opt-in analytics and address lookups, and neither carries your health data.
+- **Frictionless Practitioner Experience** — A practitioner charts a session right on the patient's device — no account, no login, no install. *(A stateless QR "kiosk" handoff is on the [roadmap](#roadmap), not yet implemented.)*
+- **Installable App (PWA)** — Installs to the home screen of any device (iOS, Android, Desktop) without an app store. *(Full offline caching is on the roadmap; the service worker is currently a passthrough.)*
 
 ---
 
 ## Features
 
-### For Patients
-- **Bodywork Passport** — Carry your body history, session notes, and preferences in your pocket
-- **One-Tap Check-In** — Start a session and generate a QR code to instantly share your status with your practitioner
-- **Session History** — Permanent record of every adjustment, massage, and therapy session
-- **Care Team** — Automatically build a list of trusted practitioners just by scanning their session records
+- **Bodywork Passport** — Carry your body history, session notes, and preferences on your own device
+- **Smart Charting** — Interactive body map for logging complaints, adjustments, and treatment notes
+- **Session History** — Permanent, local record of every adjustment, massage, and therapy session
+- **Care Team** — Keep a list of your trusted practitioners and clinics
+- **Clinic Search** — Address autofill powered by OpenStreetMap (no API key required)
+- **Session Reports** — Print / PDF-ready summaries of any session
 - **Calendar** — Track appointments and wellness habits with device calendar export
 - **Journal** — Personal wellness notes and reflections
-
-### For Practitioners
-- **Kiosk Mode** — Dedicated charting interface for tablets and phones
-- **Instant Intake** — Scan a patient's QR code to instantly load their profile and current complaints
-- **Smart Charting** — Interactive body map for logging adjustments and treatment notes
-- **Auto-Add** — Your clinic info is automatically saved to the patient's phone when they scan your session record
-- **Clinic Search** — Address autofill powered by OpenStreetMap (no API key required)
-- **Session Reports** — Professional PDF-ready summaries to share with patients
+- **Own Your Data** — Export your full record to JSON anytime; nothing is stored on a server
 
 ---
 
 ## Workflow
 
-1. **Patient** starts a session on their phone and enters current complaints
-2. **Patient** shows the "Check-In" QR code to the Practitioner
-3. **Practitioner** scans the code with the Kiosk (Tablet/Phone)
-4. **Practitioner** performs the treatment and charts it in the Kiosk
-5. **Practitioner** hits "Finish" to generate a session QR code
-6. **Patient** scans the session QR code to save the record and auto-add the practitioner to their team
+1. Start a session and enter your current complaints (intake)
+2. Chart the session on the interactive body map
+3. Save it to your permanent, on-device history
+4. Export a PDF-ready report — or your complete data — whenever you want
+
+---
+
+## Roadmap
+
+- **Practitioner QR handoff** *(planned, not yet implemented)* — a stateless "kiosk" flow
+  letting a walk-in practitioner view a patient's check-in and chart a session by scanning a
+  QR code, with the record handed back to the patient's device. The local-first record,
+  charting, and export above ship today; this cross-device handoff is the next milestone.
 
 ---
 
@@ -60,7 +61,7 @@
 | **Routing** | React Router v7 |
 | **Mobile** | Capacitor 8 (iOS / Android) |
 | **Place Search** | Photon / OpenStreetMap (no API key required) |
-| **QR** | html5-qrcode · qrcode.react · pako compression |
+| **Analytics** | Google Tag Manager / GA4 — opt-in only, off by default |
 
 ---
 
@@ -84,7 +85,7 @@ npm start
 
 ## Environment Variables
 
-No environment variables are required to run the app. The following are optional analytics integrations — copy `.env.example` to `.env` and fill in as needed:
+No environment variables are required to run the app. Copy `.env.example` to `.env` and fill in as needed:
 
 ```bash
 cp .env.example .env
@@ -92,10 +93,8 @@ cp .env.example .env
 
 | Variable | Purpose |
 |---|---|
-| `GTM_ID` | Google Tag Manager container ID |
-| `GA4_PROPERTY_ID` | Google Analytics 4 property |
-| `GA4_MID` | GA4 measurement ID |
-| `GSC_SITE` | Google Search Console property (use `sc-domain:yourdomain.com`) |
+| `VITE_GTM_ID` | **App only.** Google Tag Manager container for opt-in analytics. If unset, analytics is off. Loaded lazily and only after the user consents. |
+| `GA4_PROPERTY_ID`, `GA4_MID`, `GSC_SITE` | **Tooling only** (Google Webmaster MCP CLI). Not read by the app build. |
 
 ---
 

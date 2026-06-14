@@ -64,7 +64,8 @@ export function RoutineVerificationModal({ isOpen, onClose, routines }: RoutineV
                     lastCompletedAt: timestamp
                 });
                 if (currentIndex === 0) {
-                    trackEvent('complete_routine', { routine_id: currentRoutine.id, title: currentRoutine.title });
+                    // Minimized: no record-derived identifiers (no routine id or title).
+                    trackEvent('complete_routine');
                 }
 
                 // Log completion

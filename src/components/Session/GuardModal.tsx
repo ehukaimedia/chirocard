@@ -54,7 +54,7 @@ export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
         const newPractitioner: Practitioner = {
             id,
             name: formData.name || "",
-            role: formData.role as any || "Chiropractor",
+            role: (formData.role as Practitioner["role"]) || "Chiropractor",
             clinicName: formData.clinicName || "",
             email: formData.email || "",
             phone: formData.phone || "",

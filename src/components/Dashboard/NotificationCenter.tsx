@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Bell, Calendar, CheckCircle, Clock, ChevronRight } from "lucide-react";
 import { Button } from "../ui/Button";
 import { type BodyworkRoutine } from "../../db/db";
@@ -13,27 +13,24 @@ export function NotificationCenter() {
     const [selectedRoutine, setSelectedRoutine] = useState<BodyworkRoutine | null>(null);
     const { appointments: allAppointments, routines: allRoutines } = useDataStore();
 
-    // Queries
-    const appointments = useMemo(() => {
-        const now = Date.now();
-        return allAppointments
-            .filter(a => a.date >= now)
-            .sort((a, b) => a.date - b.date)
-            .slice(0, 3);
-    }, [allAppointments]);
-
-
+    // Time-dependent reads happen in the render body so they reflect the current
+    // moment; the React Compiler memoizes the component, so manual useMemo isn't needed.
     const now = new Date();
+    const nowTs = now.getTime();
     const dayOfWeek = now.getDay();
-    // Get all routines that match today's day of week or are daily (empty days array)
-    // Then filter by not completed today
-    const routines = useMemo(() => {
-        return allRoutines.filter(r => {
-            if (r.status !== 'active') return false;
-            const matchesDay = r.daysOfWeek?.length === 0 || r.daysOfWeek?.includes(dayOfWeek);
-            return matchesDay && !r.isCompletedToday;
-        });
-    }, [allRoutines, dayOfWeek]);
+
+    // Upcoming appointments (next 3).
+    const appointments = allAppointments
+        .filter(a => a.date >= nowTs)
+        .sort((a, b) => a.date - b.date)
+        .slice(0, 3);
+
+    // Active routines matching today's day-of-week (or daily) that aren't completed yet.
+    const routines = allRoutines.filter(r => {
+        if (r.status !== 'active') return false;
+        const matchesDay = r.daysOfWeek?.length === 0 || r.daysOfWeek?.includes(dayOfWeek);
+        return matchesDay && !r.isCompletedToday;
+    });
 
     const hasNotifications = appointments.length > 0 || routines.length > 0;
     const notificationCount = routines.length + appointments.length;

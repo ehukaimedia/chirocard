@@ -8,7 +8,6 @@ export class WebDB implements IDatabase {
         if (!dexie.isOpen()) {
             await dexie.open();
         }
-        console.log("Web Dexie Database Initialized");
     }
 
     // --- User ---

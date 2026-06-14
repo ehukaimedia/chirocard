@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { ArrowLeft, Database, CloudOff } from "lucide-react";
+import { EGRESS_ALLOWLIST } from "../constants/egress";
 
 export default function Privacy() {
     const navigate = useNavigate();
@@ -45,7 +46,7 @@ export default function Privacy() {
                         </div>
                         <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2">No Cloud Sync</h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                            Because we don't sync your data to the cloud, we cannot see, sell, or share your personal health information. It literally does not leave your phone.
+                            Because we don't sync your data to the cloud, we cannot see, sell, or share your personal health information. Your health records never leave your device — the only data that ever leaves is optional, opt-in usage analytics and clinic address lookups, and neither includes your health records.
                         </p>
                     </div>
                 </section>
@@ -68,11 +69,20 @@ export default function Privacy() {
 
                     <h3>3. Third-Party Services</h3>
                     <p>
-                        We use minimal third-party services to enhance functionality:
+                        This is the complete, exhaustive set of third parties the app can contact —
+                        generated from the same allowlist the app enforces, so it cannot drift.
+                        Nothing below ever receives your health records:
                     </p>
                     <ul>
-
-                        <li><strong>Google Analytics / Vercel Analytics:</strong> We may use anonymous, aggregate telemetry to understand general usage patterns (e.g., "how many users visited the settings page"). This data is anonymized and contains no health information.</li>
+                        {EGRESS_ALLOWLIST.map((service) => (
+                            <li key={service.origin}>
+                                <strong>
+                                    {service.origin.replace("https://", "")}
+                                    {service.consentGated ? " (opt-in only)" : ""}:
+                                </strong>{" "}
+                                {service.purpose}
+                            </li>
+                        ))}
                     </ul>
 
                     <h3>4. Communications</h3>

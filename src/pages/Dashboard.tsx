@@ -143,7 +143,8 @@ export default function Dashboard() {
                         nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? (
                             <div
                                 onClick={() => {
-                                    trackEvent('begin_session', { type: 'appointment', id: nextAppointment.id });
+                                    // Minimized: keep the non-identifying type; drop the appointment id.
+                                    trackEvent('begin_session', { type: 'appointment' });
                                     navigate("/intake", { state: { appointmentId: nextAppointment.id } });
                                 }}
                                 className="group bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 rounded-3xl p-1 pb-1 shadow-lg cursor-pointer transform transition-all active:scale-[0.98]"

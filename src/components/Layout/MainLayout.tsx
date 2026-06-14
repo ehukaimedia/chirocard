@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { BottomNav } from "./BottomNav";
+import { ConsentBanner } from "../Consent/ConsentBanner";
 
 export function MainLayout() {
     const location = useLocation();
@@ -39,6 +40,7 @@ export function MainLayout() {
                 </footer>
             </div>
             <BottomNav />
+            <ConsentBanner />
         </div>
     );
 }

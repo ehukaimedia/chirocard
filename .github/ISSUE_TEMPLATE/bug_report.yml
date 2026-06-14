@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a problem with ChiroCard
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! **Do not include real health data or secrets.**
+        For security vulnerabilities, use the private process in SECURITY.md instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Tap '...'
+        3. See error
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser/OS or device, and app version/commit if known.
+      placeholder: "iOS 18 Safari / chirocard.com / commit abc1234"
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else?
+      description: Console errors, screenshots (no health data), etc.
+    validations:
+      required: false
