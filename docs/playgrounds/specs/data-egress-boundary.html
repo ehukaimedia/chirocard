@@ -140,7 +140,7 @@
             <em>plus</em> practitioner names/roles, routine titles, and session ids. Raw clinical
             notes/body metrics stay local, but this is <b>not</b> content-free.
             <span class="src">index.html:14 (hardcoded GTM-5RGKKRRX) · analytics.ts:5 · SessionActive.tsx:112 · PractitionerManager.tsx:71 · RoutineVerificationModal.tsx:67</span></div>
-          <div class="dest"><span class="tag bad">ALWAYS-ON · NO CONSENT</span><br>→ googletagmanager.com → GA4</div>
+          <div class="dest"><span class="tag bad">ALWAYS-ON · NO CONSENT</span><br>→ GTM dataLayer (googletagmanager.com); GA4 is the configured target</div>
         </div>
         <div class="edge gated hide" data-tgt>
           <div class="what"><b>Behavioral telemetry</b> — loaded <b>only after explicit opt-in</b>;
@@ -152,16 +152,18 @@
 
         <!-- PHOTON -->
         <div class="edge leak" data-cur>
-          <div class="what"><b>Typed address query</b> — the practitioner's clinic-address text,
-            sent on keystroke. Undisclosed on the Privacy page.
-            <span class="src">src/services/places.ts:65 (photon.komoot.io)</span></div>
-          <div class="dest"><span class="tag warn">ON INPUT · UNDISCLOSED</span><br>→ photon.komoot.io</div>
+          <div class="what"><b>Address query + device GPS coordinates</b> — the typed clinic-address text
+            <em>and</em>, when the browser grants geolocation, the device's precise lat/lon. Debounced
+            (500ms, ≥3 chars), not on every keystroke. Undisclosed on the Privacy page.
+            <span class="src">AddressAutocomplete.tsx:29-43 (geolocation) · places.ts:65-68 (&amp;lat&amp;lon → photon.komoot.io)</span></div>
+          <div class="dest"><span class="tag bad">GPS + QUERY · UNDISCLOSED</span><br>→ photon.komoot.io</div>
         </div>
         <div class="edge gated hide" data-tgt>
-          <div class="what"><b>Typed address query</b> — fires only on explicit practitioner input
-            (already true), debounced, and <b>disclosed</b> as a named third party.
-            <span class="src">owner: src/services/places.ts · listed in egress allowlist</span></div>
-          <div class="dest"><span class="tag ok">DISCLOSED · ON INPUT</span><br>→ photon.komoot.io</div>
+          <div class="what"><b>Address query</b> — fires only on explicit practitioner input (already
+            debounced), <b>disclosed</b> as a named third party, and the <b>GPS coordinates dropped</b>
+            (or sent only with explicit location consent — data minimization).
+            <span class="src">owner: src/services/places.ts + AddressAutocomplete.tsx · listed in egress allowlist</span></div>
+          <div class="dest"><span class="tag ok">DISCLOSED · NO GPS</span><br>→ photon.komoot.io</div>
         </div>
 
         <!-- ALLORIGINS -->
@@ -206,11 +208,11 @@
         <td>every page load + tracked events</td>
       </tr>
       <tr>
-        <td>Address search<span class="src">services/places.ts:65</span></td>
-        <td>typed clinic-address query string</td>
-        <td><code>places.ts</code></td>
+        <td>Address search<span class="src">places.ts:65-68 · AddressAutocomplete.tsx:29-43</span></td>
+        <td>typed address query <b>+ device GPS lat/lon</b> (when geolocation granted)</td>
+        <td><code>places.ts</code> + <code>AddressAutocomplete.tsx</code></td>
         <td>komoot (Photon/OSM)</td>
-        <td>practitioner types an address</td>
+        <td>practitioner types an address (debounced 500ms)</td>
       </tr>
       <tr>
         <td>Maps link resolve<span class="src">utils/googleMaps.ts:46</span></td>
@@ -268,6 +270,7 @@
         <tr><td>trackEvent guard</td><td class="cur">fires whenever <code>window.dataLayer</code> exists</td><td class="tgt">no-op unless consent granted</td></tr>
         <tr><td>Telemetry payload</td><td class="cur">sends record-derived ids — practitioner names/roles, routine titles, session ids (SessionActive.tsx:112, PractitionerManager.tsx:71, RoutineVerificationModal.tsx:67, SessionReport.tsx:123)</td><td class="tgt">minimized to non-identifying counts/categories</td></tr>
         <tr><td>Disclosed third parties</td><td class="cur">claims "Google/Vercel Analytics" (Vercel not used); omits Photon &amp; allorigins</td><td class="tgt">Privacy page enumerates exactly the live egress set, no more, no less</td></tr>
+        <tr><td>Address geolocation</td><td class="cur">browser GPS lat/lon requested on mount and appended to every Photon query (AddressAutocomplete.tsx:29-43, places.ts:67-68)</td><td class="tgt">GPS dropped from the query, or sent only with explicit location consent</td></tr>
         <tr><td>Maps link resolve</td><td class="cur">public CORS proxy in the path</td><td class="tgt">local-only long-link parse; proxy removed (or replaced + disclosed)</td></tr>
         <tr><td>Network policy</td><td class="cur">no CSP; any origin reachable</td><td class="tgt">CSP allowlist = exactly the egress domains</td></tr>
         <tr><td>Claim wording</td><td class="cur">"zero-knowledge / never leaves your device / HIPAA-GDPR"</td><td class="tgt">precise: records stay local; named, consented telemetry &amp; lookups may leave</td></tr>
@@ -286,7 +289,7 @@
     <ul>
       <li><b>Device / IndexedDB</b> — patient owns it. <code>db.ts</code> is the single schema source of truth (Dexie v17 + migrations); records are written through that Dexie instance from many components (e.g. <code>PractitionerManager.tsx:66</code>, <code>AddJournalModal.tsx:17</code>, <code>RoutineVerificationModal.tsx:71</code>) and the <code>WebDB.ts</code> adapter — not a single writer. The contract invariant is only that these records are <b>never emitted off-device</b>.</li>
       <li><b>Analytics egress</b> — consent module authorizes; deferred loader emits; Google processes.</li>
-      <li><b>Address egress</b> — <code>places.ts</code> owns; fires only on explicit practitioner input.</li>
+      <li><b>Address egress</b> — <code>places.ts</code> + <code>AddressAutocomplete.tsx</code> own; fires on debounced practitioner input. Currently also emits device GPS lat/lon — to be dropped or consent-gated.</li>
       <li><b>Link-resolution egress</b> — <code>googleMaps.ts</code> owns; flagged for the remove/replace decision.</li>
     </ul>
 

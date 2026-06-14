@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-13
 - **Auditor:** claude (agent)
-- **Standard:** Ehukai Media Premium Open-Source Standard
+- **Standard:** Ehukai Media Premium Open-Source Standard (all `§N` citations below refer to that standard's sections §1–§10, not to any file in this repo)
 - **Repo:** `ehukaimedia/chirocard` (PUBLIC) · default branch `main` · live at https://chirocard.com (`curl -sSI -L https://chirocard.com` → HTTP 200 on 2026-06-13 — external, time-sensitive evidence, not repo-sourced)
 - **Method:** cold-read of the tracked tree, ran `npm run build`, `npm run lint`, `npm audit`, `gh repo view`, secret scan, and source inspection of every egress point. Every claim below cites the command or `file:line` it came from.
 
@@ -65,7 +65,7 @@ This is the load-bearing finding because the privacy promise *is* the product's 
 
 **What the code actually does:**
 - `index.html:14` loads **Google Tag Manager with a hardcoded container `GTM-5RGKKRRX`** on every page, including pages that render health data — unconditionally, with no consent gate. `src/utils/analytics.ts:5` pushes behavioral events (`begin_session`, `complete_session`, `add_practitioner`, …) into the GTM `dataLayer`. (What GTM then forwards is defined by the live container config, which is external to this repo; the repo-verifiable fact is that the data is handed to a third-party tag manager that is loaded on every page.)
-- `src/services/places.ts:65` sends the practitioner's typed address query to `photon.komoot.io` (third party).
+- `src/services/places.ts:65` sends the typed address query to `photon.komoot.io` (third party) — **and, when the browser grants geolocation, the device's precise GPS coordinates**: `src/components/ui/AddressAutocomplete.tsx:29-43` calls `navigator.geolocation.getCurrentPosition` on mount and `places.ts:67-68` appends `&lat=…&lon=…` to the request. So a third party receives the user's device location. (Search is debounced 500ms / ≥3 chars, not per-keystroke.)
 - `src/utils/googleMaps.ts:46` sends Google Maps share links through `https://api.allorigins.win/get` — a **public CORS proxy** — to scrape a business name.
 
 **Precise framing (honesty applied to this audit — scoped to what the repo proves):** the *raw* clinical content — session notes, body metrics, DOB — stays in IndexedDB, and the secret scan is clean. But the analytics path is **not** content-free: `trackEvent` pushes **record-derived identifiers** into the GTM `dataLayer` — practitioner names + roles (`src/components/Practitioner/PractitionerManager.tsx:71`), routine titles (`src/components/Dashboard/RoutineVerificationModal.tsx:67`, `src/pages/SessionReport.tsx:123`), and the practitioner name + session id on session completion (`src/pages/SessionActive.tsx:112`). So the defect is twofold: **(a)** the **absolute, enforced-nowhere copy** — "zero-knowledge," "never leaves your device," "HIPAA/GDPR compliance"; and **(b)** **record-derived identifiers are handed to an unconditionally-loaded third-party tag manager** with no consent and no data-minimization (whether/where GTM forwards them is container-config-dependent and not provable from the repo — but the data being available to it is). A `safe: true`-style claim that is true regardless of the facts is a bug, not a feature (§9).

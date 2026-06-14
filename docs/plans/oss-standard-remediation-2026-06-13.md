@@ -81,6 +81,11 @@ it ships first. Implements playground gates GATE-1…GATE-5.
    `src/utils/googleMaps.ts:42-107`; keep local-only long-link parsing (`extractPlaceFromGoogleLink`,
    no network) + manual entry. Alternative (needs sign-off): replace with an owned resolver and
    disclose. Do **not** keep the public proxy.
+6. **Minimize address-search geolocation.** `src/components/ui/AddressAutocomplete.tsx:29-43`
+   requests browser GPS and `src/services/places.ts:67-68` appends the device's `lat`/`lon` to every
+   Photon query. **Stop sending GPS by default** — drop the `&lat&lon` params, or send them only
+   after an explicit location-consent opt-in. Disclose Photon (and any retained geolocation) in the
+   Privacy page via `EGRESS_ALLOWLIST`.
 
 **Verify (the gate)**
 - GATE-1: with consent unset, network panel / a test shows **no** request to `googletagmanager.com`
@@ -218,6 +223,11 @@ only under Phase A0 option (a), with that feature. Today's real, ungated contrac
 3. **QR workflow claims (Finding 15, if Phase A0 = remove):** remove the QR check-in/handoff
    workflow from `readme.md:41-49` + the feature list, and from `docs/PRD.md`. (If A0 = build, instead
    make the README accurate to the shipped feature.)
+3b. **PRD privacy/no-egress claims (`docs/PRD.md`):** correct the absolute claims that Finding 1
+   contradicts — `docs/PRD.md:32` "No personal health information (PHI) is transmitted to cloud
+   servers" and `docs/PRD.md:99` "All data remains on the user's device. No external transmission
+   occurs" — to the precise boundary (records stay local; consented analytics, address/geolocation
+   lookups may leave). Re-scope or qualify the HIPAA/GDPR/CCPA compliance bullets (`PRD.md:33-34`).
 4. **AGENTS.md:** "React 18" → "React 19" (line 3); confirm commands still accurate (add `npm test`).
 5. **copilot-instructions.md:** drop or qualify the unsubstantiated "HIPAA/GDPR compliance" claim
    (line 4); fix the stale `GuestSession.tsx` reference and `Dexie v13` → `v17` (`src/db/db.ts:153`);
@@ -231,6 +241,8 @@ only under Phase A0 option (a), with that feature. Today's real, ungated contrac
 - `grep -rn "Vercel Analytics" src` → empty; `grep -rn "React 18" AGENTS.md` → empty;
   `grep -rni "guestsession\|Dexie v13\|HIPAA" .github` → empty or corrected;
   `grep -rniE "QR|check-in" readme.md docs/PRD.md` consistent with A0's outcome;
+  `grep -rni "no external transmission\|not transmitted\|no .* transmitted to cloud" docs/PRD.md` →
+  empty or corrected to the precise boundary;
   `grep -rnE "console\.(log|error|warn)" src` → empty/guarded; `npm run build` shows reduced
   main-chunk size if F-7 done.
 
