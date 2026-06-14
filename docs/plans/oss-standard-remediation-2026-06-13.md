@@ -50,9 +50,9 @@ autonomous one.
   delete the dead `src/utils/compression.ts`, and drop the unused `html5-qrcode`, `qrcode.react`,
   `pako` (and verify `react-signature-canvas`) deps. Smallest scope; makes the repo honest today.
 
-**Default recommendation:** (b) remove now to pass the honesty bar, and track (a) as a real feature
-with its own spec. **Do not proceed to Phase A until the maintainer picks a/b** — it changes Phase C,
-Phase E (deps), and Phase F (docs).
+**DECISION (2026-06-13, maintainer):** **(b) REMOVE.** Strip the QR claims, delete the dead
+`compression.ts`, and drop the unused QR deps; QR is tracked as a future-feature spec. Phase C drops
+the QR/compression tests, Phase E removes the deps, Phase F removes the QR copy.
 
 ---
 
@@ -96,8 +96,9 @@ it ships first. Implements playground gates GATE-1…GATE-5.
   check-out.
 - `npm run build` passes.
 
-**Decision needed from maintainer:** keep GA4 (consent-gated) vs. drop analytics entirely; and the
-allorigins.win remove-vs-replace choice. Default in this plan: **consent-gated GA4 + remove proxy.**
+**DECISION (2026-06-13, maintainer):** **consent-gated GA4** (keep analytics, opt-in only, env
+container id, CSP, minimized payloads) · **remove the allorigins.win proxy** (local-only link parse) ·
+**drop device GPS** from the Photon query by default.
 
 ---
 
