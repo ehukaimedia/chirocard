@@ -2,7 +2,9 @@
 
 > The canonical, maintained guide is **[AGENTS.md](../AGENTS.md)** (build/test/run,
 > structure, conventions); **[CONTRIBUTING.md](../CONTRIBUTING.md)** has the hard
-> rules. This file is a short orientation; prefer those when they conflict.
+> rules; **[PRODUCT.md](../PRODUCT.md)** / **[DESIGN.md](../DESIGN.md)** carry
+> product + visual-design context. This file is a short orientation; prefer those
+> when they conflict.
 
 ## Project Overview
 
@@ -40,7 +42,7 @@ Anything that leaves the device must be in the allowlist and enforced by the CSP
 - Function-declaration components; UI primitives in `src/components/ui/` using the
   `cn()` helper (`src/lib/utils.ts`).
 - Tailwind tokens live in `tailwind.config.js` (emerald `primary` #059669 /
-  `secondary` #10b981 on the `ecfdf5` "mint paper" surface).
+  `secondary` #10b981 on the `ecfdf5` "mint paper" surface). See DESIGN.md.
 - Reactive reads via `useLiveQuery` (dexie-react-hooks).
 
 ## Adding a database table / changing the schema

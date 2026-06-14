@@ -39,3 +39,9 @@ mobile/
 # Claude Code worktree data
 .claude/
 
+# Impeccable design tooling: the installed skill files + lockfile are not
+# committed (like node_modules). The generated design CONTEXT is committed:
+# PRODUCT.md, DESIGN.md, .impeccable/design.json.
+.agents/
+skills-lock.json
+
