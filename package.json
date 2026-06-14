@@ -1,7 +1,7 @@
 {
   "name": "chirocard",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -31,7 +31,6 @@
     "react-calendar": "^6.0.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6",
-    "react-signature-canvas": "^1.1.0-alpha.2",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.8"
   },
@@ -42,7 +41,6 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
-    "@types/react-signature-canvas": "^1.0.7",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.1",
@@ -58,12 +56,13 @@
     "vite": "^7.2.4",
     "vitest": "4.1.8"
   },
-  "comment:overrides": "Pin transitive test-dep versions to ones publicly released >=7 days ago (OSS-standard quarantine). From jsdom: @csstools/css-color-parser, undici. From vitest's optional @vitest/coverage-v8 peer: ast-v8-to-istanbul, obug, and make-dir's semver (scoped so the top-level semver@6 is untouched). Revisit when bumping jsdom/vitest.",
+  "comment:overrides": "Pin transitive versions to ones publicly released >=7 days ago (OSS-standard quarantine). Test deps: @csstools/css-color-parser, undici (jsdom); ast-v8-to-istanbul, obug, make-dir's scoped semver (vitest coverage peer). Build dep: rollup pinned to 4.61.0 — the audit-fix wanted the same-day 4.62.0; 4.61.0 is >=4.59.0 (non-vulnerable) and quarantine-safe. Revisit when these clear quarantine.",
   "overrides": {
     "@csstools/css-color-parser": "4.1.1",
     "undici": "7.27.1",
     "ast-v8-to-istanbul": "1.0.3",
     "obug": "2.1.2",
+    "rollup": "4.61.0",
     "make-dir": {
       "semver": "7.8.2"
     }
