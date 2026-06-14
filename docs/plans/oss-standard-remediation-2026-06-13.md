@@ -2,7 +2,7 @@
 
 - **Date:** 2026-06-13
 - **Author:** claude (agent)
-- **Driven by:** [OSS-standard audit](../code-reviews/claude-oss-standard-audit-2026-06-13.md) (14 findings)
+- **Driven by:** [OSS-standard audit](../code-reviews/claude-oss-standard-audit-2026-06-13.md) (15 findings)
 - **Contract:** [Data-Egress Boundary playground](../playgrounds/specs/data-egress-boundary.html) (Phase A builds to its Spec Seed)
 - **Durability gate:** **PASS** (audit §0). The local-first, no-account, QR-handoff wedge survives platform churn — *provided the privacy claims are made true.* That is why Phase A is first and load-bearing.
 
@@ -133,9 +133,10 @@ only under Phase A0 option (a), with that feature. Today's real, ungated contrac
    `upgrade()` (`db.ts:167-175`). Test that a database seeded at an older version upgrades to v17
    without data loss, and that the `upgrade()` transform is idempotent. A migration bug corrupts the
    patient's only copy of their record.
-2. **Export/import round-trip.** `src/utils/exportUtils.ts` (`dexie-export-import`) is the user's only
-   backup path. Test export → wipe → import restores byte-equivalent data; assert a truncated/garbled
-   import fails *cleanly* (structured error, no silent partial restore).
+2. **Export/import round-trip.** `dexie-export-import` (`exportDB`/`importDB`) in
+   `src/components/Profile/DataManagement.tsx:20,97` and `src/pages/Settings.tsx:42,60` is the user's
+   only backup path. Test export → wipe → import restores byte-equivalent data; assert a
+   truncated/garbled import fails *cleanly* (structured error, no silent partial restore).
 3. **Store actions & transforms.** Cover `src/store/*` actions and `src/utils/compression.ts`
    (round-trip + corrupted-input clean failure) even though `compression.ts` is currently unused — if
    Phase A0 keeps it, it must be gated; if A0 removes it, this sub-task is dropped.

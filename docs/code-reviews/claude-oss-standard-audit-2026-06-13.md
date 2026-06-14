@@ -3,7 +3,7 @@
 - **Date:** 2026-06-13
 - **Auditor:** claude (agent)
 - **Standard:** Ehukai Media Premium Open-Source Standard
-- **Repo:** `ehukaimedia/chirocard` (PUBLIC) · default branch `main` · live at https://chirocard.com (verified HTTP 200)
+- **Repo:** `ehukaimedia/chirocard` (PUBLIC) · default branch `main` · live at https://chirocard.com (`curl -sSI -L https://chirocard.com` → HTTP 200 on 2026-06-13 — external, time-sensitive evidence, not repo-sourced)
 - **Method:** cold-read of the tracked tree, ran `npm run build`, `npm run lint`, `npm audit`, `gh repo view`, secret scan, and source inspection of every egress point. Every claim below cites the command or `file:line` it came from.
 
 > The one test: *would this survive a skeptical reviewer who clones cold, reads the claims, runs the commands, and tries to break it?* Today: **no** — not because the product is weak, but because several headline claims are not enforced and the release-readiness scaffolding (CI, tests, repo-health files) is absent.
@@ -18,7 +18,7 @@
 
 **Durable-wedge checks (§2.1):**
 - **Specific painful workflow.** A patient who sees multiple hands-on practitioners (chiro + massage + PT + acupuncture) has no single record they own; each clinic keeps its own silo. A walk-in practitioner has no fast, accountless way to see prior bodywork. ChiroCard's *intended* QR check-in/check-out is designed to close both — but it is not yet built (Finding 15); today the patient-owned record + export is the realized value.
-- **Compounding layer.** Local-first ownership and an open export/import format (`dexie-export-import`, `src/utils/exportUtils.ts`) are implemented and are exactly the "local-first state / open contracts" the standard names as platform-churn-resistant. The portable QR wire format is intended but unbuilt.
+- **Compounding layer.** Local-first ownership and an open export/import format (`dexie-export-import`, used in `src/components/Profile/DataManagement.tsx` and `src/pages/Settings.tsx`) are implemented and are exactly the "local-first state / open contracts" the standard names as platform-churn-resistant. The portable QR wire format is intended but unbuilt.
 - **Adapter-first.** It rides existing rails (PWA, device calendar export, OSM/Photon for address lookup) rather than fighting a platform.
 - **Dogfoodable slice.** The single-device intake → session → report → export loop runs and is live; the cross-device QR handoff is not yet built.
 
@@ -82,7 +82,7 @@ This is the load-bearing finding because the privacy promise *is* the product's 
 
 There are **zero** test files and no test runner (`package.json` has no `test` script; AGENTS.md admits "No automated tests yet"). The standard requires a verification gate + negative/corruption tests wherever the project has a *contract*. The contracts that **actually exist** in the code today and are ungated:
 - **Dexie schema + migrations** — `src/db/db.ts:153` is at `version(17)` with an `upgrade()` that mutates data (`db.ts:167-175`). A migration bug silently corrupts a patient's only copy of their record; this is the highest-value thing to gate.
-- **Export / import round-trip** — `dexie-export-import` via `src/utils/exportUtils.ts` is the user's *only* backup path (the Privacy page tells users they are responsible for backups). A broken export = silent data loss.
+- **Export / import round-trip** — `dexie-export-import` (`exportDB`/`importDB`) in `src/components/Profile/DataManagement.tsx:20,97` and `src/pages/Settings.tsx:42,60` is the user's *only* backup path (the Privacy page tells users they are responsible for backups). A broken export = silent data loss. (`src/utils/exportUtils.ts` is a separate session **text-digest** generator — not the DB backup path.)
 - **Store actions & data transforms** — `src/store/*`, `src/utils/compression.ts`.
 
 Note: the **QR session wire format is not a live contract** — it is described in the README but **not implemented** (see Finding 15: `compressData`/`decompressData` have no callers; no QR scanner/renderer exists). A golden round-trip + corruption gate for the QR payload should be added **when/if** that feature is built, not before. Point the first tests at the migration and export/import paths, which are real and load-bearing today. (This is distinct from the privacy boundary — keep them separate.)
