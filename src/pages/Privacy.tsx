@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { ArrowLeft, Database, CloudOff } from "lucide-react";
+import { EGRESS_ALLOWLIST } from "../constants/egress";
 
 export default function Privacy() {
     const navigate = useNavigate();
@@ -68,12 +69,20 @@ export default function Privacy() {
 
                     <h3>3. Third-Party Services</h3>
                     <p>
-                        We use a minimal, exhaustive set of third-party services. Nothing below ever
-                        receives your health records:
+                        This is the complete, exhaustive set of third parties the app can contact —
+                        generated from the same allowlist the app enforces, so it cannot drift.
+                        Nothing below ever receives your health records:
                     </p>
                     <ul>
-                        <li><strong>Google Analytics (via Google Tag Manager) — opt-in only:</strong> Analytics is <em>off by default</em> and loads only after you explicitly allow it. When enabled, it records anonymous usage patterns (e.g., which screens are visited). It never includes your health records, names, or session content.</li>
-                        <li><strong>Photon / OpenStreetMap (address search):</strong> When you search for a clinic address, the text you type is sent to Photon to return suggestions. No health data and no device location are sent.</li>
+                        {EGRESS_ALLOWLIST.map((service) => (
+                            <li key={service.origin}>
+                                <strong>
+                                    {service.origin.replace("https://", "")}
+                                    {service.consentGated ? " (opt-in only)" : ""}:
+                                </strong>{" "}
+                                {service.purpose}
+                            </li>
+                        ))}
                     </ul>
 
                     <h3>4. Communications</h3>

@@ -1,10 +1,11 @@
 /**
  * The complete list of third parties this app may contact, and why.
  *
- * This is the single source of truth for the data-egress boundary
- * (docs/playgrounds/specs/data-egress-boundary.html). It drives both the
- * Content-Security-Policy connect-src allowlist and the Privacy page's
- * "Third-Party Services" section, so documentation and enforcement cannot drift.
+ * The single source of truth for the data-egress boundary. The Privacy page
+ * (src/pages/Privacy.tsx) renders its "Third-Party Services" list directly from
+ * this array, so the user-facing disclosure cannot drift from the code. The
+ * Content-Security-Policy in public/_headers is kept in sync by hand (a static
+ * header file can't import this module) — see the note on EGRESS_ALLOWLIST below.
  *
  * Health records never appear here — they stay in IndexedDB. Every entry below
  * is either opt-in (analytics) or fired only by an explicit user action
@@ -21,9 +22,9 @@ export interface EgressEntry {
 }
 
 // IMPORTANT: this list is mirrored by the `connect-src` (and `script-src`)
-// directives in `public/_headers`. Keep the two in sync — if you add an origin
-// here, add it to the CSP, and vice versa. (Phase F consumes this list to render
-// the Privacy page's third-party section, closing the doc↔enforcement loop.)
+// directives in `public/_headers`. Keep the two in sync by hand — if you add an
+// origin here, add it to the CSP, and vice versa. (The Privacy page consumes this
+// array directly, so its disclosure stays in sync automatically.)
 // GA4 collects via regional hosts, so the CSP additionally allows the
 // `*.google-analytics.com` / `*.analytics.google.com` wildcards of the canonical
 // origin listed below.

@@ -1,11 +1,11 @@
 # Rules for Cloudflare Pages
 
-# Security headers + data-egress allowlist. The connect-src list is the
-# enforcement half of docs/playgrounds/specs/data-egress-boundary.html and must
-# match src/constants/egress.ts — a fetch/beacon to any origin not listed here
-# is blocked by the browser (e.g. the removed third-party CORS proxy).
-# No <meta> CSP fallback in index.html on purpose: it would break the Vite dev
-# server's websocket HMR. This header applies to the production deploy.
+# Security headers + data-egress allowlist. The connect-src list below must match
+# the EGRESS_ALLOWLIST in src/constants/egress.ts (the source of truth) — a
+# fetch/beacon to any origin not listed here is blocked by the browser (e.g. the
+# removed third-party CORS proxy). No <meta> CSP fallback in index.html on
+# purpose: it would break the Vite dev server's websocket HMR. This header
+# applies to the production deploy.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
