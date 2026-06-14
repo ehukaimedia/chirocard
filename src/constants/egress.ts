@@ -20,10 +20,22 @@ export interface EgressEntry {
     readonly consentGated: boolean;
 }
 
+// IMPORTANT: this list is mirrored by the `connect-src` (and `script-src`)
+// directives in `public/_headers`. Keep the two in sync — if you add an origin
+// here, add it to the CSP, and vice versa. (Phase F consumes this list to render
+// the Privacy page's third-party section, closing the doc↔enforcement loop.)
+// GA4 collects via regional hosts, so the CSP additionally allows the
+// `*.google-analytics.com` / `*.analytics.google.com` wildcards of the canonical
+// origin listed below.
 export const EGRESS_ALLOWLIST: readonly EgressEntry[] = [
     {
         origin: "https://www.googletagmanager.com",
-        purpose: "Anonymous usage analytics (Google Tag Manager / GA4). Opt-in only; no health records or practitioner names are sent.",
+        purpose: "Anonymous usage analytics — Google Tag Manager loader. Opt-in only; no health records or practitioner names are sent.",
+        consentGated: true,
+    },
+    {
+        origin: "https://www.google-analytics.com",
+        purpose: "Anonymous usage analytics — GA4 measurement collection (regional hosts under *.google-analytics.com / *.analytics.google.com). Opt-in only.",
         consentGated: true,
     },
     {

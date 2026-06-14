@@ -109,7 +109,8 @@ export default function SessionActive() {
             });
 
             toast("Session saved successfully!", "success");
-            trackEvent('complete_session', { id: currentSession.id, practitioner: currentSession.practitionerName });
+            // Minimized: no record-derived identifiers (no session id, no practitioner name).
+            trackEvent('complete_session');
             endSession();
             navigate("/");
         } catch {

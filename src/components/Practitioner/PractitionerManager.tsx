@@ -68,7 +68,8 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                     id: crypto.randomUUID(),
                     order: count // Add to end
                 });
-                trackEvent('add_practitioner', { name: practitionerData.name, category: practitionerData.role });
+                // Minimized: drop the practitioner name; keep only the non-identifying role category.
+                trackEvent('add_practitioner', { category: practitionerData.role });
             }
 
             setIsEditing(false);
