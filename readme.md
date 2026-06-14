@@ -12,9 +12,9 @@
 ## Core Philosophy
 
 - **Patient is the Database** — All health records, history, and preferences live on the patient's device. No cloud, no accounts, no lock-in.
-- **Zero-Knowledge Privacy** — We do not store user data. Your health information never leaves your device.
-- **Frictionless Practitioner Experience** — Practitioners use a stateless "Kiosk Mode" to view and chart sessions. No accounts, no login, no installation required.
-- **Installable App (PWA)** — Works offline and installs to the home screen of any device (iOS, Android, Desktop) without an app store.
+- **Local-First Privacy** — Your health records never leave your device. The only outbound calls are optional, opt-in analytics and address lookups, and neither carries your health data.
+- **Frictionless Practitioner Experience** — A practitioner charts a session right on the patient's device — no account, no login, no install. *(A stateless QR "kiosk" handoff is on the [roadmap](#roadmap), not yet implemented.)*
+- **Installable App (PWA)** — Installs to the home screen of any device (iOS, Android, Desktop) without an app store. *(Full offline caching is on the roadmap; the service worker is currently a passthrough.)*
 
 ---
 

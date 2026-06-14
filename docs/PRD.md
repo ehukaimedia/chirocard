@@ -15,7 +15,7 @@
 
 **Vision:** To facilitate **Intelligent Care** by empowering individuals to own their holistic wellness data and simplifying the communication loop between patients and providers.
 
-**Key Differentiator:** "Local-First" architecture ensuring zero-knowledge privacy. This is a **User-Owned** journal, distinct from medical records held by clinics.
+**Key Differentiator:** "Local-First" architecture — health records stay on the user's device (no cloud copy). This is a **User-Owned** journal, distinct from medical records held by clinics.
 
 ## 2. Market Analysis & Need
 *   **The Gap:** Current market solutions are dominated by "Practice Management Software" (for clinics) or generic "Fitness Trackers" (steps/calories).
@@ -71,8 +71,8 @@
 ### 6.6. Profile ("Bodywork Passport")
 *   **Inline Creation:** Profile creation is integrated directly into the onboarding "Welcome Modal". Users must complete their profile before accessing the app.
 *   **Validation:** Critical fields (Name, DOB, Height, Weight, Phone) are strictly enforced with visual cues (red highlights, asterisks) to ensure data validity.
-*   **User Details:** Name, biometrics, and preferences. Address auto-fill via Google Places.
-*   **Practitioner List:** Manage saved practitioners. Add new practitioners instantly using Google Places search.
+*   **User Details:** Name, biometrics, and preferences. Address auto-fill via Photon / OpenStreetMap (no API key required).
+*   **Practitioner List:** Manage saved practitioners. Add new practitioners with Photon / OpenStreetMap address search.
 
 ### 6.7. Settings & Data Management
 *   **Dedicated Settings Page:** Central location for app configuration.
@@ -114,7 +114,7 @@
 
 ### 7.3. Progressive Web App (PWA)
 *   **Installable:** Users can install the app directly from the browser (Chrome, Safari, etc.) to their home screen.
-*   **Offline Capable:** Service worker ensures the app loads instantly and works offline.
+*   **Offline (roadmap):** A service worker is registered, but it is currently a passthrough — full offline caching is planned, not yet implemented.
 *   **Smart Install Prompt:** Custom "Install App" banner detects eligibility and guides users (including iOS-specific instructions).
 
 ### 7.2. Development Workflow
