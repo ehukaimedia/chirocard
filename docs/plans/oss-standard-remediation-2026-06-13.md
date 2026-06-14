@@ -47,7 +47,11 @@ it ships first. Implements playground gates GATE-1…GATE-5.
 2. **Defer & de-hardcode analytics.** Remove the inline GTM `<script>` from `index.html:7-16`.
    Add an idempotent `loadAnalytics()` that injects GTM **only when consent === "granted"**, reading
    the container id from `import.meta.env.VITE_GTM_ID` (absent ⇒ analytics simply off).
-3. **Gate `trackEvent`.** `src/utils/analytics.ts` becomes a no-op unless consent is granted.
+3. **Gate + minimize `trackEvent`.** `src/utils/analytics.ts` becomes a no-op unless consent is
+   granted; **and** audit its call sites to stop sending **record-derived identifiers** —
+   practitioner names/roles (`PractitionerManager.tsx:71`), routine titles
+   (`RoutineVerificationModal.tsx:67`, `SessionReport.tsx:123`), and the practitioner name + session
+   id on completion (`SessionActive.tsx:112`). Send only non-identifying counts/categories.
 4. **Egress allowlist + CSP.** Add an `EGRESS_ALLOWLIST` constant; emit a Content-Security-Policy
    (via `public/_headers` for Cloudflare Pages and a `<meta>` fallback) restricting
    `script-src`/`connect-src` to exactly: GTM/GA4, `photon.komoot.io`, and (only if kept) the maps
@@ -77,8 +81,9 @@ allorigins.win remove-vs-replace choice. Default in this plan: **consent-gated G
 runner, then wire CI so every push/PR runs lint + build + test.
 
 **Tasks**
-1. **ESLint ignores (Finding 10).** Add `ignores: ["dist", "mobile", "android", "ios", ".claude", "node_modules"]`
-   to `eslint.config.js` so `npm run lint` scans only source. This drops the count from 54 → 11.
+1. **ESLint ignores (Finding 10).** Extend the existing `globalIgnores(['dist'])` at
+   `eslint.config.js:9` to also ignore `mobile`, `android`, `ios`, `.claude` so `npm run lint` scans
+   only tracked source. This drops the count from 54 → 11.
 2. **Fix the 11 src errors (Finding 4):** type the 8 `any` in `src/store/useDataStore.ts:104,115`,
    `src/db/NativeDB.ts`, `src/components/Dashboard/NotificationCenter.tsx:18`,
    `src/components/Session/GuardModal.tsx`; fix the `react-hooks/preserve-manual-memoization` +
@@ -149,8 +154,10 @@ negative/corruption tests (§3.3). Distinct from Phase A — this is the *wire f
    `.gitignore:35-37` ignores them. Decide and make them agree. **Recommended:** un-ignore the
    native dirs (Capacitor config legitimately lives there) — keep them tracked; remove those
    `.gitignore` lines (added in `12abd7f`). Document the decision in CONTRIBUTING.
-3. **Dependency vulns (Finding 9):** `npm audit` = 15 (12 high) via `@capacitor/cli` → `tar`
-   (dev-only). Apply `npm audit fix` / bump `@capacitor/cli` — but only to a version **public ≥7
+3. **Dependency vulns (Finding 9):** `npm audit` = 15 (12 high) across **build + runtime** deps
+   (`vite`, `esbuild`, `rollup`, `postcss`, `tar`, `@capacitor/cli`, and the **runtime**
+   `react-router-dom`/`react-router`, plus transitives) — not dev-only. Apply `npm audit fix` and
+   bump the direct deps (notably `react-router-dom` and `vite`) — each only to a version **public ≥7
    days** (verify the registry timestamp), then re-lock. Add Dependabot.
 4. **Versioning (Finding 12):** bump `package.json` from `0.0.0` to a real SemVer (`1.0.0` given it's
    live), tag the release, and start the CHANGELOG `Unreleased`→`1.0.0` entry.

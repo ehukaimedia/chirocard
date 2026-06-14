@@ -136,16 +136,18 @@
       <div class="edges" id="edges">
         <!-- ANALYTICS -->
         <div class="edge leak" data-cur>
-          <div class="what"><b>Behavioral telemetry</b> — page views + event names
-            (<code>begin_session</code>, <code>complete_session</code>, <code>add_practitioner</code>…). No health content.
-            <span class="src">index.html:14 (hardcoded GTM-5RGKKRRX) · src/utils/analytics.ts:5</span></div>
+          <div class="what"><b>Behavioral telemetry + record-derived identifiers</b> — event names
+            <em>plus</em> practitioner names/roles, routine titles, and session ids. Raw clinical
+            notes/body metrics stay local, but this is <b>not</b> content-free.
+            <span class="src">index.html:14 (hardcoded GTM-5RGKKRRX) · analytics.ts:5 · SessionActive.tsx:112 · PractitionerManager.tsx:71 · RoutineVerificationModal.tsx:67</span></div>
           <div class="dest"><span class="tag bad">ALWAYS-ON · NO CONSENT</span><br>→ googletagmanager.com → GA4</div>
         </div>
         <div class="edge gated hide" data-tgt>
           <div class="what"><b>Behavioral telemetry</b> — loaded <b>only after explicit opt-in</b>;
-            container id injected from build-time env; constrained by CSP.
-            <span class="src">owner: src/lib/consent.ts (new) gates the GTM loader</span></div>
-          <div class="dest"><span class="tag ok">CONSENT-GATED</span><br>→ googletagmanager.com → GA4</div>
+            container id from build-time env; constrained by CSP; payloads <b>minimized</b> to
+            non-identifying counts/categories (no practitioner names or routine titles).
+            <span class="src">owner: src/lib/consent.ts (new) gates the GTM loader + trackEvent payload review</span></div>
+          <div class="dest"><span class="tag ok">CONSENT-GATED · MINIMIZED</span><br>→ googletagmanager.com → GA4</div>
         </div>
 
         <!-- PHOTON -->
@@ -194,8 +196,8 @@
     <thead><tr><th>Egress point</th><th>What leaves</th><th>Owner (in repo)</th><th>Processor</th><th>Trigger</th></tr></thead>
     <tbody>
       <tr>
-        <td>Analytics (GTM→GA4)<span class="src">index.html:14 · analytics.ts:5</span></td>
-        <td>page views, event names, no health content</td>
+        <td>Analytics (GTM→GA4)<span class="src">index.html:14 · analytics.ts:5 · SessionActive.tsx:112</span></td>
+        <td>event names + <b>record-derived ids</b> (practitioner names/roles, routine titles, session ids); raw notes/metrics stay local</td>
         <td><b>consent module</b> + deferred loader (new)</td>
         <td>Google</td>
         <td>every page load + tracked events</td>
@@ -257,6 +259,7 @@
         <tr><td>Analytics load</td><td class="cur">GTM fires on first paint, every page, no consent</td><td class="tgt">GTM deferred until consent === "granted"</td></tr>
         <tr><td>GTM container id</td><td class="cur">hardcoded <code>GTM-5RGKKRRX</code> in index.html (script-injection surface)</td><td class="tgt">injected from build-time env; absent ⇒ analytics simply off</td></tr>
         <tr><td>trackEvent guard</td><td class="cur">fires whenever <code>window.dataLayer</code> exists</td><td class="tgt">no-op unless consent granted</td></tr>
+        <tr><td>Telemetry payload</td><td class="cur">sends record-derived ids — practitioner names/roles, routine titles, session ids (SessionActive.tsx:112, PractitionerManager.tsx:71, RoutineVerificationModal.tsx:67, SessionReport.tsx:123)</td><td class="tgt">minimized to non-identifying counts/categories</td></tr>
         <tr><td>Disclosed third parties</td><td class="cur">claims "Google/Vercel Analytics" (Vercel not used); omits Photon &amp; allorigins</td><td class="tgt">Privacy page enumerates exactly the live egress set, no more, no less</td></tr>
         <tr><td>Maps link resolve</td><td class="cur">public CORS proxy in the path</td><td class="tgt">local-only long-link parse; proxy removed (or replaced + disclosed)</td></tr>
         <tr><td>Network policy</td><td class="cur">no CSP; any origin reachable</td><td class="tgt">CSP allowlist = exactly the egress domains</td></tr>

@@ -40,8 +40,8 @@
 | 6 | `scripts/setup_chirocard_tags.js` hardcodes an absolute path to the author's machine — cannot run on a clean clone | §3.4, §9 | **High** |
 | 7 | GitHub metadata empty: no description, no topics, no homepage link, no branch protection | §3.1, §3.2 | **Medium** |
 | 8 | Stale/incorrect docs: AGENTS.md says "React 18" (is 19.2); README `GTM_ID` env table is misleading; Privacy page cites unused "Vercel Analytics" | §1, §3.4 | **Medium** |
-| 9 | Dependency vulnerabilities: `npm audit` = 15 (12 high) via `@capacitor/cli` → `tar` | §3.5 | **Medium** |
-| 10 | `eslint.config.js` has no `ignores`; lints `.claude/`, `mobile/`, `dist/` — config defect masking signal | §3.3 | **Medium** |
+| 9 | Dependency vulnerabilities: `npm audit` = 15 (12 high) across build **and** runtime deps (vite, esbuild, rollup, postcss, tar, @capacitor/cli, and the runtime `react-router-dom`) | §3.5 | **Medium** |
+| 10 | `eslint.config.js` ignores only `dist`; not `.claude/`/`mobile/`/native dirs, so `npm run lint` scans non-source → 54 vs 11 real | §3.3 | **Medium** |
 | 11 | `.gitignore` ↔ tracked-tree contradiction: `android/` (53 files) & `ios/` (21) are committed but now git-ignored | §6 | **Medium** |
 | 12 | `version: "0.0.0"` + no CHANGELOG → no SemVer/release discipline for a public, live product | §3.1, §3.5 | **Low** |
 | 13 | `console.log`/`console.error` debugging left in `src` (8 occurrences) | §6, §9 | **Low** |
@@ -67,7 +67,7 @@ This is the load-bearing finding because the privacy promise *is* the product's 
 - `src/services/places.ts:65` sends the practitioner's typed address query to `photon.komoot.io` (third party).
 - `src/utils/googleMaps.ts:46` sends Google Maps share links through `https://api.allorigins.win/get` — a **public CORS proxy** — to scrape a business name.
 
-**Precise framing (honesty applied to this audit):** health *records* genuinely stay in IndexedDB; the secret scan is clean and there is no record exfiltration. The defect is the **absolute, enforced-nowhere copy** — "zero-knowledge," "never leaves your device," "HIPAA/GDPR compliance" — while behavioral telemetry, typed address queries, and Maps links *do* leave. A `safe: true`-style claim that is true regardless of the facts is a bug, not a feature (§9).
+**Precise framing (honesty applied to this audit):** the *raw* clinical content — session notes, body metrics, DOB — stays in IndexedDB, and the secret scan is clean. But the analytics path is **not** content-free: `trackEvent` sends **record-derived identifiers** off-device to GA4 — practitioner names + roles (`src/components/Practitioner/PractitionerManager.tsx:71`), routine titles (`src/components/Dashboard/RoutineVerificationModal.tsx:67`, `src/pages/SessionReport.tsx:123`), and the practitioner name + session id on session completion (`src/pages/SessionActive.tsx:112`). So the defect is twofold: **(a)** the **absolute, enforced-nowhere copy** — "zero-knowledge," "never leaves your device," "HIPAA/GDPR compliance"; and **(b)** **record-derived data actually leaving** with no consent and no data-minimization. A `safe: true`-style claim that is true regardless of the facts is a bug, not a feature (§9).
 
 **Why the hardcoded GTM is worse than "just analytics":** a hardcoded third-party tag container on pages that render health data is an **arbitrary-script-injection surface** — whoever controls `GTM-5RGKKRRX` can inject any JavaScript into a health app, with no consent gate and no Content-Security-Policy. This is the architectural reason the data-egress boundary must be pinned as a contract (see the playground spec).
 
@@ -114,11 +114,11 @@ A tracked file imports from a **hardcoded absolute path on the author's machine*
 
 ### Finding 9 — Dependency vulnerabilities (Medium · §3.5)
 
-`npm audit` → **15 vulnerabilities (3 moderate, 12 high)**, all from `@capacitor/cli` → `tar` (path-traversal / hardlink-escape advisories). Dev/build-time only, but unaddressed. A fix is offered (`npm audit fix`); any upgrade must respect the standard's **7-day module quarantine** (§3.5) — verify the target version has been public ≥7 days before pinning.
+`npm audit --json` → **15 vulnerabilities (3 moderate, 12 high)** spanning **build *and* runtime** dependencies — not a single source. The vulnerable set: `vite`, `esbuild`, `rollup`, `postcss`, `@capacitor/cli`, `tar`, `react-router` / `react-router-dom`, `minimatch`, `picomatch`, `flatted`, `@xmldom/xmldom`, `ajv`, `brace-expansion`, `@isaacs/brace-expansion`. Most are build/transitive, but **`react-router-dom` (high) is a runtime dependency**, so this is *not* purely dev-only. A fix is offered (`npm audit fix`); any upgrade must respect the standard's **7-day module quarantine** (§3.5) — verify each target version has been public ≥7 days before pinning. (The full `--json` output is authoritative here; a summary `npm audit` truncates to the largest advisory group and understates the spread.)
 
 ### Finding 10 — ESLint config has no ignores (Medium · §3.3)
 
-`eslint.config.js` defines no `ignores`, so `eslint .` walks `.claude/worktrees/.../mobile/`, `mobile/`, and `dist/`. That inflates the error count from 11 (real) to 54 and means the lint signal is noise. The config should ignore non-source dirs so the command is trustworthy.
+`eslint.config.js:9` sets `globalIgnores(['dist'])` — so `dist/` *is* ignored — but nothing else is. `eslint .` therefore still walks `.claude/worktrees/.../mobile/`, `mobile/`, `android/`, and `ios/`, which is why the full `npm run lint` reports **54** errors versus the **11** real ones in `src` (`npx eslint src`). The fix is to extend `globalIgnores` to also cover `.claude`, `mobile`, `android`, `ios` so the lint signal is trustworthy.
 
 ### Finding 11 — `.gitignore` ↔ tracked-tree contradiction (Medium · §6)
 
