@@ -105,7 +105,7 @@ A tracked file imports from a **hardcoded absolute path on the author's machine*
 
 ### Finding 7 — GitHub metadata & branch protection (Medium · §3.1, §3.2)
 
-`gh repo view`: **description `""`**, **homepageUrl `""`**, **topics `null`**. `gh api .../branches/main/protection` → **404 "Branch not protected."** §3.1 explicitly requires an accurate description + topics for discoverability; §3.2 requires branch protection on the default branch where the platform allows. The live URL exists but isn't linked from the repo.
+`gh repo view`: **description `""`**, **homepageUrl `""`**, **topics `null`**. `gh api .../branches/main/protection` → **404 "Branch not protected."** §3.1 explicitly requires an accurate description + topics for discoverability; §3.2 requires branch protection on the default branch where the platform allows. (The README *does* link the live site via a badge — `readme.md:6` — so the gap is specifically the empty GitHub repo metadata fields, including `homepageUrl`, not the README.)
 
 ### Finding 8 — Stale / inaccurate docs (Medium · §1, §3.4)
 
@@ -124,7 +124,7 @@ A tracked file imports from a **hardcoded absolute path on the author's machine*
 
 ### Finding 11 — `.gitignore` ↔ tracked-tree contradiction (Medium · §6)
 
-`.gitignore:35-37` ignores `android/`, `ios/`, `mobile/`, but `git ls-files` shows **android = 53 tracked, ios = 21 tracked** (mobile is correctly untracked). This is a contradiction to *resolve as a decision*, not a blind deletion: Capacitor projects often commit `android/`/`ios/` on purpose because native config lives there. Decide one way and make `.gitignore` and the tree agree — most likely **un-ignore the native dirs** (keep them tracked) rather than delete committed native config. The `.gitignore` entry added in `12abd7f` is the likely defect.
+`.gitignore:35-37` ignores `android/`, `ios/`, `mobile/`, but `git ls-files` shows **android = 53 tracked, ios = 21 tracked** (mobile is correctly untracked). This is a contradiction to *resolve as a decision*, not a blind deletion: Capacitor projects often commit `android/`/`ios/` on purpose because native config lives there. Decide one way and make `.gitignore` and the tree agree — most likely **un-ignore the native dirs** (keep them tracked) rather than delete committed native config. The `android/`+`ios/` `.gitignore` entries were added in **`b30a350`** ("strengthen .gitignore"); `mobile/`+`.claude/` came later in `12abd7f`.
 
 ### Finding 12 — No versioning/changelog (Low · §3.1, §3.5)
 

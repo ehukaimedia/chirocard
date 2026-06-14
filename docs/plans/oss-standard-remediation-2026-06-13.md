@@ -110,10 +110,11 @@ runner, then wire CI so every push/PR runs lint + build + test.
 1. **ESLint ignores (Finding 10).** Extend the existing `globalIgnores(['dist'])` at
    `eslint.config.js:9` to also ignore `mobile`, `android`, `ios`, `.claude` so `npm run lint` scans
    only tracked source. This drops the count from 54 → 11.
-2. **Fix the 11 src errors (Finding 4):** type the 8 `any` in `src/store/useDataStore.ts:104,115`,
-   `src/db/NativeDB.ts`, `src/components/Dashboard/NotificationCenter.tsx:18`,
-   `src/components/Session/GuardModal.tsx`; fix the `react-hooks/preserve-manual-memoization` +
-   `purity` in `src/pages/SessionActive.tsx:24`. Target: `npx eslint src` → 0 errors.
+2. **Fix the 11 src errors (Finding 4):** type the **8 `@typescript-eslint/no-explicit-any`** in
+   `src/store/useDataStore.ts:104,115`, `src/db/NativeDB.ts`, and `src/components/Session/GuardModal.tsx`;
+   fix the **1 `react-hooks/purity`** in `src/components/Dashboard/NotificationCenter.tsx:18`; and the
+   **2 `react-hooks/preserve-manual-memoization`** in `src/pages/SessionActive.tsx:24`. Target:
+   `npx eslint src` → 0 errors.
 3. **Test runner.** Add **Vitest + React Testing Library** (quarantine-checked versions); add
    `"test": "vitest run"` to `package.json`. Seed with store-action + data-transform tests
    (per AGENTS.md guidance) plus the Phase A consent-gate test (GATE-1).
@@ -186,8 +187,8 @@ only under Phase A0 option (a), with that feature. Today's real, ungated contrac
    absolute path. Verify nothing in `src`/build references it.
 2. **gitignore↔native decision (Finding 11):** `android/` (53) & `ios/` (21) are tracked but
    `.gitignore:35-37` ignores them. Decide and make them agree. **Recommended:** un-ignore the
-   native dirs (Capacitor config legitimately lives there) — keep them tracked; remove those
-   `.gitignore` lines (added in `12abd7f`). Document the decision in CONTRIBUTING.
+   native dirs (Capacitor config legitimately lives there) — keep them tracked; remove the
+   `android/`+`ios/` `.gitignore` lines (added in `b30a350`). Document the decision in CONTRIBUTING.
 3. **Dependency vulns (Finding 9):** `npm audit` = 15 (12 high) across **build + runtime** deps
    (`vite`, `esbuild`, `rollup`, `postcss`, `tar`, `@capacitor/cli`, and the **runtime**
    `react-router-dom`/`react-router`, plus transitives) — not dev-only. Apply `npm audit fix` and
@@ -202,7 +203,8 @@ only under Phase A0 option (a), with that feature. Today's real, ungated contrac
 
 **Verify**
 - `npm audit` → 0 high (or documented residual); `node scripts/...` no longer references an absolute
-  path (or the file is gone); `git check-ignore android ios` consistent with the chosen decision;
+  path (or the file is gone); `git check-ignore -v --no-index android ios mobile` consistent with the
+  chosen decision (plain `git check-ignore` won't report already-tracked ignored paths);
   `npx depcheck` (or grep) shows no unused QR deps remain (if A0 = remove); `npm run build` still green.
 
 ---
