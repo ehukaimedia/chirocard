@@ -45,7 +45,7 @@ export default function Privacy() {
                         </div>
                         <h3 className="font-bold text-zinc-900 dark:text-zinc-100 mb-2">No Cloud Sync</h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed">
-                            Because we don't sync your data to the cloud, we cannot see, sell, or share your personal health information. It literally does not leave your phone.
+                            Because we don't sync your data to the cloud, we cannot see, sell, or share your personal health information. Your health records never leave your device — the only data that ever leaves is optional, opt-in usage analytics and clinic address lookups, and neither includes your health records.
                         </p>
                     </div>
                 </section>
@@ -68,11 +68,12 @@ export default function Privacy() {
 
                     <h3>3. Third-Party Services</h3>
                     <p>
-                        We use minimal third-party services to enhance functionality:
+                        We use a minimal, exhaustive set of third-party services. Nothing below ever
+                        receives your health records:
                     </p>
                     <ul>
-
-                        <li><strong>Google Analytics / Vercel Analytics:</strong> We may use anonymous, aggregate telemetry to understand general usage patterns (e.g., "how many users visited the settings page"). This data is anonymized and contains no health information.</li>
+                        <li><strong>Google Analytics (via Google Tag Manager) — opt-in only:</strong> Analytics is <em>off by default</em> and loads only after you explicitly allow it. When enabled, it records anonymous usage patterns (e.g., which screens are visited). It never includes your health records, names, or session content.</li>
+                        <li><strong>Photon / OpenStreetMap (address search):</strong> When you search for a clinic address, the text you type is sent to Photon to return suggestions. No health data and no device location are sent.</li>
                     </ul>
 
                     <h3>4. Communications</h3>

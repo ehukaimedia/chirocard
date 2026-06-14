@@ -24,12 +24,12 @@
 
 ## 3. Goals & Objectives
 *   **Build a Modern Bodywork Journal:** Create a beautiful, high-performance web application that makes tracking bodywork sessions as intuitive as a daily diary.
-*   **Establish the Bodywork Passport:** Standardize the "Check-In" workflow so users can easily share their health context ("My Passport") with any practitioner via a simple QR scan.
+*   **Establish the Bodywork Passport:** Make the user the portable, central record of their own bodywork history. *(A QR-based practitioner check-in/handoff is planned — see Roadmap — and is not yet implemented.)*
 *   **Visualize Wellness:** Move beyond text logs to intuitive button-style body maps and calendar views that show progress over time.
 *   **Ship Native Apps:** Deploy to Apple App Store and Google Play Store using Capacitor to ensure the passport is always in the user's pocket.
 
 ## 4. Global Compliance & Privacy (Security by Design)
-*   **Local-First Architecture:** Data is stored exclusively on the user's device (IndexedDB via Dexie.js). No personal health information (PHI) is transmitted to cloud servers.
+*   **Local-First Architecture:** Health records are stored exclusively on the user's device (IndexedDB via Dexie.js). **No health-record content is transmitted to any server.** The only outbound calls are optional, opt-in usage analytics (Google Tag Manager / GA4) and address lookups (Photon/OpenStreetMap) — neither carries health-record content. See the data-egress boundary for the exhaustive list.
 *   **HIPAA (USA):** As a user-owned Personal Health Record (PHR), ChiroCard empowers users to share their own data.
 *   **GDPR (Europe) & CCPA (California):** Users have full control, access, and erasure rights over their local data.
 *   **Encryption:** Data is stored locally; future cloud sync will use E2EE.
@@ -44,7 +44,6 @@
 *   **"Bento Grid" Layout:** High-contrast, dark mode aesthetic ("Bioluminescent Nature").
 *   **Status Indicators:** "Active Care Plan" status, next appointment, daily habits count.
 *   **Quick Actions:** Start Session, View History, View Calendar.
-*   **Persistent Check-In QR:** Prominent "Show Check-In QR" button appears if a session is ready for check-in but hasn't been scanned, ensuring easy access.
 *   **Recent Activity:** List of recent sessions.
 
 ### 6.2. Calendar & Scheduling
@@ -96,7 +95,7 @@
     3.  **Verify & Stamp:** Practitioner verifies the session ("Digitally Verified") and hands the device back to the user.
     4.  **Completion:** The session is saved locally.
 
-*   **Compliance:** All data remains on the user's device. No external transmission occurs.
+*   **Compliance:** Health records remain on the user's device; no record content is transmitted. The only outbound calls are opt-in analytics and address lookups (see the data-egress boundary), neither of which carries record content.
 
 ## 7. Mobile Deployment Strategy
 **Framework:** [Capacitor](https://capacitorjs.com/) (Installed & Configured)

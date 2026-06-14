@@ -120,8 +120,8 @@ export default function SessionReport() {
                 createdAt: Date.now()
             });
 
-            // Minimized: drop the routine title; keep only the non-identifying category.
-            trackEvent('add_routine_to_calendar', { category: data.category });
+            // Minimized: no record-derived fields (routine title and category stay on-device).
+            trackEvent('add_routine_to_calendar');
 
             setAddedRecs(prev => {
                 const next = new Set(prev);
