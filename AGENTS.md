@@ -3,7 +3,7 @@
 ChiroCard is a **Bodywork Journal & Digital Passport** built as a Vite + React 19 + TypeScript PWA that keeps all data local through Dexie/IndexedDB. Use this guide to stay consistent and ship safely.
 
 ## Project Structure & Module Organization
-- `src/main.tsx` mounts `App.tsx` and the router for Dashboard, Intake, Profile, Team, Calendar, and Guest Session.
+- `src/main.tsx` mounts `App.tsx` and the router: Dashboard, Intake, Profile, Team, Calendar, Journal, Settings, Session (active / details / report), Privacy, and Terms.
 - UI primitives live in `src/components/ui`; feature pieces sit in `src/components/*`; screens in `src/pages/*`.
 - State sits in `src/store` (Zustand). Dexie schema is in `src/db/db.ts`—bump versions and add migrations when tables change.
 - Reusable hooks go in `src/hooks`; `src/utils`/`src/lib` are pure helpers; `src/assets` and `public` hold static files; `dist` is build output.

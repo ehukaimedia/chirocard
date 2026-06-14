@@ -28,11 +28,10 @@
 *   **Visualize Wellness:** Move beyond text logs to intuitive button-style body maps and calendar views that show progress over time.
 *   **Ship Native Apps:** Deploy to Apple App Store and Google Play Store using Capacitor to ensure the passport is always in the user's pocket.
 
-## 4. Global Compliance & Privacy (Security by Design)
+## 4. Privacy (by design)
 *   **Local-First Architecture:** Health records are stored exclusively on the user's device (IndexedDB via Dexie.js). **No health-record content is transmitted to any server.** The only outbound calls are optional, opt-in usage analytics (Google Tag Manager / GA4) and address lookups (Photon/OpenStreetMap) — neither carries health-record content. See the data-egress boundary for the exhaustive list.
-*   **HIPAA (USA):** As a user-owned Personal Health Record (PHR), ChiroCard empowers users to share their own data.
-*   **GDPR (Europe) & CCPA (California):** Users have full control, access, and erasure rights over their local data.
-*   **Encryption:** Data is stored locally; future cloud sync will use E2EE.
+*   **User-owned record:** As a user-owned Personal Health Record (PHR), the user controls their own data and can export or delete it at any time. ChiroCard is **not** a certified HIPAA/GDPR/CCPA-compliant system and makes no such compliance claim; it is designed to respect the *principles* of data ownership and minimization those regimes describe.
+*   **Encryption:** Data is stored locally; any future cloud sync would use E2EE.
 
 ## 5. Target Audience
 *   **Primary:** Individuals ("Users") who regularly see bodywork practitioners.
@@ -57,8 +56,8 @@
 *   **Notes:** Add specific notes for the practitioner.
 *   **Hand-off Mode:** Securely transition to Practitioner Mode.
 
-### 6.4. Practitioner Mode ("Guest Session")
-*   **Zero-Friction Workflow:** Designed for the practitioner to use on the user's device.
+### 6.4. Practitioner Mode (device hand-off, in `src/pages/SessionActive.tsx`)
+*   **Zero-Friction Workflow:** Designed for the practitioner to chart on the user's device after a physical hand-off (no separate app, account, or QR code — see §6.6).
 *   **Read-Only Intake:** View user's reported issues and notes.
 *   **Treatment Log:** Practitioner adds their own notes and marks treated areas.
 *   **Sign-off:** "Sign" button locks the session and generates a report.
@@ -126,7 +125,7 @@
     3.  `npx cap open ios` / `npx cap open android` (Build & Run)
 
 ## 8. Technical Stack
-*   **Frontend:** React 18, Vite, TypeScript.
+*   **Frontend:** React 19, Vite, TypeScript.
 *   **Styling:** Tailwind CSS, Framer Motion.
 *   **State/Data:** Dexie.js (IndexedDB).
 *   **Icons:** Lucide React.
