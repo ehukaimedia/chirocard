@@ -179,12 +179,15 @@
           <div class="dest"><span class="tag ok">LOCAL PARSE</span><br>(no off-device call)</div>
         </div>
 
-        <!-- QR PEER -->
+        <!-- QR PEER (DESIGNED, NOT IMPLEMENTED) -->
         <div class="edge peer" data-cur data-tgt>
-          <div class="what"><b>QR session handoff</b> patient ⇄ practitioner — optical, device-to-device,
-            <b>no server</b>. This crosses devices but not the network; stays inside the contract.
-            <span class="src">src/utils/compression.ts (pako) · html5-qrcode / qrcode.react</span></div>
-          <div class="dest"><span class="tag peer">PEER · OFFLINE</span><br>camera ⇄ screen</div>
+          <div class="what"><b>QR session handoff</b> patient ⇄ practitioner — <b>DESIGNED, NOT YET
+            IMPLEMENTED</b> (Audit Finding 15). The intended flow is optical, device-to-device,
+            <b>no server</b> (would stay inside the contract). Today <code>compressData</code>/
+            <code>decompressData</code> exist but have <b>no callers</b>, and <code>html5-qrcode</code>/
+            <code>qrcode.react</code> are unused deps.
+            <span class="src">src/utils/compression.ts:6,27 (dead) · no QR imports in src</span></div>
+          <div class="dest"><span class="tag peer">PEER · OFFLINE</span><br>(not built)</div>
         </div>
       </div>
     </div>
@@ -217,11 +220,11 @@
         <td>practitioner pastes a short Maps link</td>
       </tr>
       <tr>
-        <td>QR handoff<span class="src">compression.ts · html5-qrcode</span></td>
-        <td>session payload (peer, optical)</td>
-        <td><code>compression.ts</code> wire format</td>
-        <td>none (device⇄device)</td>
-        <td>scan check-in / session QR</td>
+        <td>QR handoff <span class="cur">(not built)</span><span class="src">compression.ts:6,27 (dead)</span></td>
+        <td>intended peer/optical payload — <b>not implemented</b> (Finding 15)</td>
+        <td><code>compression.ts</code> codec exists but unused</td>
+        <td>none (would be device⇄device)</td>
+        <td>n/a — feature absent</td>
       </tr>
       <tr>
         <td><b>Health records</b><span class="src">db/db.ts:153</span></td>
@@ -233,15 +236,19 @@
     </tbody>
   </table>
   <p class="src"><b>Edge-direction evidence:</b> the GTM <code>&lt;script&gt;</code> in <code>index.html:14</code> is the
-    emitter to googletagmanager.com; <code>analytics.ts:5-9</code> pushes to <code>window.dataLayer</code> which GTM
-    forwards to GA4; <code>places.ts:65</code> and <code>googleMaps.ts:46</code> are the literal <code>fetch()</code> call sites.</p>
+    emitter to googletagmanager.com; <code>analytics.ts:5-9</code> pushes to <code>window.dataLayer</code> (the
+    repo-verifiable boundary). The container's configured target is GA4 — the GA4 event tags are
+    provisioned by <code>scripts/setup_chirocard_tags.js</code> — but what the live container forwards is
+    config-dependent and external to this repo. <code>places.ts:65</code> and <code>googleMaps.ts:46</code> are
+    the literal <code>fetch()</code> call sites.</p>
 
   <div class="reject">
     <b>Runner-up contract considered &amp; rejected for this playground:</b> the QR/<code>pako</code>
-    session <em>wire format</em>. It is a real frozen contract and deserves a verification gate —
-    but it is a <b>test target</b> (golden round-trip + corruption tests, see the plan §C), not an
-    egress-boundary concern. Pinning two contracts in one playground would blur the intent. The QR
-    handoff appears here only as a <em>peer, offline</em> edge to show it is inside the boundary.
+    session <em>wire format</em>. It <em>would</em> be a real contract deserving a verification gate — but
+    it is currently <b>not implemented</b> (Audit Finding 15: <code>compressData</code>/<code>decompressData</code>
+    have no callers; the QR libs are unused). So it is neither an egress concern nor a present test
+    target; a golden round-trip + corruption gate belongs with that feature <em>if/when it is built</em>.
+    The QR edge appears above only to mark the <em>intended</em> peer flow as designed-but-absent.
     <br><b>Rejected remediation option:</b> "keep the public allorigins.win proxy and just add a sentence
     to the Privacy page." Rejected — a health app should not route any user-supplied URL through an
     arbitrary public proxy; disclosure does not remove the third-party-in-the-path risk.
@@ -277,7 +284,7 @@
 
     <h3>Ownership boundaries</h3>
     <ul>
-      <li><b>Device / IndexedDB</b> — patient owns it; <code>db.ts</code> is the only writer; never emitted.</li>
+      <li><b>Device / IndexedDB</b> — patient owns it. <code>db.ts</code> is the single schema source of truth (Dexie v17 + migrations); records are written through that Dexie instance from many components (e.g. <code>PractitionerManager.tsx:66</code>, <code>AddJournalModal.tsx:17</code>, <code>RoutineVerificationModal.tsx:71</code>) and the <code>WebDB.ts</code> adapter — not a single writer. The contract invariant is only that these records are <b>never emitted off-device</b>.</li>
       <li><b>Analytics egress</b> — consent module authorizes; deferred loader emits; Google processes.</li>
       <li><b>Address egress</b> — <code>places.ts</code> owns; fires only on explicit practitioner input.</li>
       <li><b>Link-resolution egress</b> — <code>googleMaps.ts</code> owns; flagged for the remove/replace decision.</li>

@@ -21,17 +21,38 @@ audit/spec/plan. Execution happens in follow-up PRs per the phases below.
 
 | Finding (severity) | Phase |
 |---|---|
+| **15 QR workflow not implemented (High)** — build-or-remove fork | **A0 (decide first)** |
 | 1 Privacy claims not enforced (Critical) | **A** |
 | 2 No CI/CD (Critical) | **B** |
-| 4 Lint fails on src (High) · 10 ESLint no ignores (Medium) | **B** |
-| 3 No tests / QR wire format ungated (High) | **C** |
+| 4 Lint fails on src (High) · 10 ESLint ignores only `dist` (Medium) | **B** |
+| 3 No tests; real contracts (Dexie migrations, export/import) ungated (High) | **C** |
 | 5 Missing repo-health files (High) · 7 GitHub metadata + branch protection (Medium) | **D** |
 | 6 Machine-path script (High) | **E** |
 | 11 gitignore↔native contradiction (Medium) | **E** |
-| 9 Dependency vulns (Medium) | **E** |
+| 9 Dependency vulns build+runtime (Medium) | **E** |
 | 12 No versioning/CHANGELOG (Low) | **D** (CHANGELOG) + **E** (version) |
-| 8 Stale/inaccurate docs (Medium) | **F** |
+| 8 Stale/inaccurate docs incl. copilot-instructions (Medium) | **F** |
 | 13 Debug logging (Low) · 14 Bundle weight (Low) | **F** |
+
+---
+
+## Phase A0 — Resolve the QR build-or-remove fork (Finding 15) · decide before anything else
+
+**Goal:** the README's headline workflow (QR check-in/handoff) is **not implemented** — the QR libs
+are unused deps and `compressData`/`decompressData` are dead code with no callers. Every downstream
+phase depends on which way this resolves, so decide first. This is a **maintainer decision**, not an
+autonomous one.
+
+- **Option (a) — BUILD it.** Implement the QR scanner/renderer + guest-session flow so the README
+  becomes true. This is a *feature*, not a fix: it adds a new cross-device wire-format contract that
+  Phase C must then gate (golden round-trip + corruption tests). Largest scope.
+- **Option (b) — REMOVE the claims.** Strip the QR workflow from README/PRD/`copilot-instructions.md`,
+  delete the dead `src/utils/compression.ts`, and drop the unused `html5-qrcode`, `qrcode.react`,
+  `pako` (and verify `react-signature-canvas`) deps. Smallest scope; makes the repo honest today.
+
+**Default recommendation:** (b) remove now to pass the honesty bar, and track (a) as a real feature
+with its own spec. **Do not proceed to Phase A until the maintainer picks a/b** — it changes Phase C,
+Phase E (deps), and Phase F (docs).
 
 ---
 
@@ -101,22 +122,29 @@ runner, then wire CI so every push/PR runs lint + build + test.
 
 ---
 
-## Phase C — QR/`pako` wire-format contract tests (Finding 3) · High
+## Phase C — Contract tests for the contracts that actually exist (Finding 3) · High
 
-**Goal:** the patient↔practitioner QR payload is a real contract; gate it with golden +
-negative/corruption tests (§3.3). Distinct from Phase A — this is the *wire format*, not egress.
+**Goal:** gate the contracts that are real and load-bearing **today** (§3.3). The QR/`pako` wire
+format is *not* one of them — it is unimplemented (Finding 15); its golden + corruption gate is added
+only under Phase A0 option (a), with that feature. Today's real, ungated contracts:
 
 **Tasks**
-1. **Golden round-trip:** encode a representative session payload → decode → re-encode is
-   byte-identical (`src/utils/compression.ts`).
-2. **Negative/corruption:** truncated payload, flipped bytes, wrong magic/version, and an
-   empty/oversized input all fail *cleanly* (structured error, no crash) when scanned.
-3. **Cross-version:** a payload from an older schema version decodes or is rejected with a clear
-   message — never silently mis-parsed. Tie to the Dexie version (`src/db/db.ts:153`).
+1. **Dexie migration gate (highest value).** `src/db/db.ts:153` is `version(17)` with a data-mutating
+   `upgrade()` (`db.ts:167-175`). Test that a database seeded at an older version upgrades to v17
+   without data loss, and that the `upgrade()` transform is idempotent. A migration bug corrupts the
+   patient's only copy of their record.
+2. **Export/import round-trip.** `src/utils/exportUtils.ts` (`dexie-export-import`) is the user's only
+   backup path. Test export → wipe → import restores byte-equivalent data; assert a truncated/garbled
+   import fails *cleanly* (structured error, no silent partial restore).
+3. **Store actions & transforms.** Cover `src/store/*` actions and `src/utils/compression.ts`
+   (round-trip + corrupted-input clean failure) even though `compression.ts` is currently unused — if
+   Phase A0 keeps it, it must be gated; if A0 removes it, this sub-task is dropped.
+4. **(Conditional) QR wire format** — only if Phase A0 = build: golden round-trip + corruption +
+   cross-version tests for the QR payload, tied to the Dexie version.
 
 **Verify**
-- `npm run test` includes the new suite; golden test fails on any drift; each corruption case
-  asserts a clean failure (proves the gate isn't a happy-path no-op).
+- `npm run test` includes the new suite; the migration test fails if `upgrade()` drops/garbles data;
+  each corruption case asserts a clean failure (proves the gate isn't a happy-path no-op).
 
 ---
 
@@ -161,15 +189,19 @@ negative/corruption tests (§3.3). Distinct from Phase A — this is the *wire f
    days** (verify the registry timestamp), then re-lock. Add Dependabot.
 4. **Versioning (Finding 12):** bump `package.json` from `0.0.0` to a real SemVer (`1.0.0` given it's
    live), tag the release, and start the CHANGELOG `Unreleased`→`1.0.0` entry.
+5. **Unused deps + dead code (Finding 15, if Phase A0 = remove):** delete the dead
+   `src/utils/compression.ts` (no callers) and drop the unused `html5-qrcode`, `qrcode.react`, `pako`
+   (and `@types/pako`) from `package.json`; verify `react-signature-canvas` usage and remove if also
+   unused. Re-lock. (If A0 = build, these become *used* instead — skip this task.)
 
 **Verify**
 - `npm audit` → 0 high (or documented residual); `node scripts/...` no longer references an absolute
   path (or the file is gone); `git check-ignore android ios` consistent with the chosen decision;
-  `npm run build` still green.
+  `npx depcheck` (or grep) shows no unused QR deps remain (if A0 = remove); `npm run build` still green.
 
 ---
 
-## Phase F — Documentation truth pass (Findings 8, 13, 14) · Medium/Low
+## Phase F — Documentation truth pass (Findings 8, 13, 14, 15-docs) · Medium/Low
 
 **Goal:** every claim the repo makes is true and verifiable (§1). Do this last so docs describe the
 *post-remediation* reality.
@@ -182,24 +214,31 @@ negative/corruption tests (§3.3). Distinct from Phase A — this is the *wire f
 2. **README (`readme.md`):** fix the env-var table (lines 93-99) — `GTM_ID` does **not** configure
    the app; document `VITE_GTM_ID` as the real (optional, consent-gated) analytics toggle. Reconcile
    the "Zero-Knowledge / never leaves your device" copy (line 15) with the boundary.
-3. **AGENTS.md:** "React 18" → "React 19" (line 3); confirm commands still accurate (add `npm test`).
-4. **copilot-instructions.md:** drop or qualify the unsubstantiated "HIPAA/GDPR compliance" claim
-   (line 4).
-5. **Debug logging (Finding 13):** remove/guard the 8 `console.*` calls (`db/WebDB.ts:11`,
+3. **QR workflow claims (Finding 15, if Phase A0 = remove):** remove the QR check-in/handoff
+   workflow from `readme.md:41-49` + the feature list, and from `docs/PRD.md`. (If A0 = build, instead
+   make the README accurate to the shipped feature.)
+4. **AGENTS.md:** "React 18" → "React 19" (line 3); confirm commands still accurate (add `npm test`).
+5. **copilot-instructions.md:** drop or qualify the unsubstantiated "HIPAA/GDPR compliance" claim
+   (line 4); fix the stale `GuestSession.tsx` reference and `Dexie v13` → `v17` (`src/db/db.ts:153`);
+   reconcile the QR/guest-session description with Phase A0's outcome.
+6. **Debug logging (Finding 13):** remove/guard the 8 `console.*` calls (`db/WebDB.ts:11`,
    `db/NativeDB.ts:36,38`, `store/useDataStore.ts:103,105,116`, `utils/googleMaps.ts:33,104`).
-6. **Bundle (Finding 14, optional):** route-level `React.lazy` to split the 850 kB chunk; run
+7. **Bundle (Finding 14, optional):** route-level `React.lazy` to split the 850 kB chunk; run
    `npx update-browserslist-db@latest`.
 
 **Verify**
 - `grep -rn "Vercel Analytics" src` → empty; `grep -rn "React 18" AGENTS.md` → empty;
-  `grep -rn "HIPAA" .github` → empty or qualified; `grep -rnE "console\.(log|error|warn)" src`
-  → empty/guarded; `npm run build` shows reduced main-chunk size if F-6 done.
+  `grep -rni "guestsession\|Dexie v13\|HIPAA" .github` → empty or corrected;
+  `grep -rniE "QR|check-in" readme.md docs/PRD.md` consistent with A0's outcome;
+  `grep -rnE "console\.(log|error|warn)" src` → empty/guarded; `npm run build` shows reduced
+  main-chunk size if F-7 done.
 
 ---
 
 ## Sequencing, risk & rollback
 
-- **Order:** A → B → C → D → E → F. A delivers the wedge; B makes regressions visible before the
+- **Order:** A0 → A → B → C → D → E → F. A0 is a maintainer decision (build vs. remove the QR
+  workflow) that gates Phase C/E/F scope; A delivers the wedge; B makes regressions visible before the
   rest lands; C/D/E/F are independently shippable PRs once B's CI is green.
 - **Risk:** Phase A changes runtime behavior (analytics now opt-in) — verify the live site still
   functions with consent denied. Phase E item 3 must honor the 7-day quarantine; do not fast-track a
@@ -208,12 +247,13 @@ negative/corruption tests (§3.3). Distinct from Phase A — this is the *wire f
   re-enabling is a consent default change, not a rebuild.
 
 ## Definition of Done for the whole effort (§10 release gate)
+- [ ] QR build-or-remove fork resolved; README/PRD/copilot-instructions match the code (Phase A0, Finding 15).
 - [ ] Privacy boundary enforced; GATE-1…5 pass (Phase A).
-- [ ] `npx eslint src` clean; CI green on `main`; tests cover stores, transforms, consent gate, and
-      the QR wire format (Phases B, C).
+- [ ] `npx eslint src` clean; CI green on `main`; tests cover the Dexie migration, export/import
+      round-trip, store actions, the consent gate (and the QR wire format only if A0 = build) (Phases B, C).
 - [ ] All §3.1 repo-health files present + accurate; metadata, topics, homepage, branch protection
       set (Phase D).
 - [ ] No machine-path script; native-dir decision consistent; `npm audit` clean (quarantine-aware);
-      real SemVer + CHANGELOG (Phase E).
+      no unused QR deps/dead code (if A0 = remove); real SemVer + CHANGELOG (Phase E).
 - [ ] Every doc claim true and verifiable; no debug logging (Phase F).
 - [ ] Playground refreshed/superseded once the boundary ships and a `docs/specs/` spec takes over.

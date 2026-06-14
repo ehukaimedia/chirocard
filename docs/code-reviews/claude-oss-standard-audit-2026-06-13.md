@@ -12,19 +12,19 @@
 
 ## 0. Durability gate (§2) — answered, not stamped
 
-**Verdict: PASS. The wedge is durable; proceed with the remediation plan.**
+**Verdict: PASS, with two conditions.** The wedge is durable, but two things in the audit must be resolved before the durability case is real: the privacy claims must be made true (Finding 1), and the headline QR handoff must be **built or de-advertised** (Finding 15) — it is currently described in the README but not implemented.
 
-**Six-month thesis.** *Even if Apple Health, Google, Epic/MyChart, or a Cursor-style platform ships a better health tracker over the next six months, ChiroCard still matters because its value is the opposite of theirs: no account, no server, no cloud copy of your health record, and a stateless QR handoff a walk-in practitioner can use with zero onboarding.* Platform health products get more centralized and more account-bound over time; that movement increases — not decreases — demand for a local-first, no-account passport that a patient physically controls and hands to a practitioner who never installs anything.
+**Six-month thesis.** *Even if Apple Health, Google, Epic/MyChart, or a Cursor-style platform ships a better health tracker over the next six months, ChiroCard still matters because its value is the opposite of theirs: no account, no server, no cloud copy of your health record — a passport the patient physically owns on-device.* Platform health products get more centralized and more account-bound over time; that movement increases — not decreases — demand for a local-first, no-account record a patient controls. The *intended* differentiator — a stateless QR handoff a walk-in practitioner uses with zero onboarding — is **not yet implemented** (Finding 15) and is what would complete the wedge.
 
 **Durable-wedge checks (§2.1):**
-- **Specific painful workflow.** A patient who sees multiple hands-on practitioners (chiro + massage + PT + acupuncture) has no single record they own; each clinic keeps its own silo. A walk-in practitioner has no fast, accountless way to see prior bodywork. ChiroCard's QR check-in/check-out closes both, recurring every visit.
-- **Compounding layer.** Local-first ownership, an open export format, and a portable QR wire format are exactly the "local-first state / open contracts / reproducible handoff" categories the standard names as platform-churn-resistant.
+- **Specific painful workflow.** A patient who sees multiple hands-on practitioners (chiro + massage + PT + acupuncture) has no single record they own; each clinic keeps its own silo. A walk-in practitioner has no fast, accountless way to see prior bodywork. ChiroCard's *intended* QR check-in/check-out is designed to close both — but it is not yet built (Finding 15); today the patient-owned record + export is the realized value.
+- **Compounding layer.** Local-first ownership and an open export/import format (`dexie-export-import`, `src/utils/exportUtils.ts`) are implemented and are exactly the "local-first state / open contracts" the standard names as platform-churn-resistant. The portable QR wire format is intended but unbuilt.
 - **Adapter-first.** It rides existing rails (PWA, device calendar export, OSM/Photon for address lookup) rather than fighting a platform.
-- **Dogfoodable slice.** The check-in → chart → check-out loop already runs end-to-end and is live.
+- **Dogfoodable slice.** The single-device intake → session → report → export loop runs and is live; the cross-device QR handoff is not yet built.
 
-**No-go signals (§2.2):** none are true. It is not a generic AI wrapper; no obvious vendor feature erases it; the README does not need future tense to sound useful; the first demo needs no unbuilt systems.
+**No-go signals (§2.2):** none are disqualifying. It is not a generic AI wrapper and no obvious vendor feature erases it. But two cut against the standard and must be fixed: the README leans on a **future-tense capability presented as present** (the QR handoff), and that headline differentiator is **currently unbuilt** — it must be shipped or de-advertised.
 
-**Caveat that the plan must resolve:** the wedge is "you own your data, it doesn't leave your device." That thesis is currently **contradicted by the code** (see Finding 1). The durability case is real *only if the privacy claims are made true*. That is why the remediation centers on the data-egress boundary, not on cosmetics.
+**Caveat that the plan must resolve:** the wedge is "you own your data, it doesn't leave your device, and you hand it off by QR." That promise is currently **contradicted by the code** on two fronts — analytics/egress (Finding 1) and the missing QR handoff (Finding 15). The durability case is real *only if* the privacy claims are made true and the QR workflow is either built or removed from the marketing. That is why the remediation centers on the data-egress boundary and the build-or-remove decision, not on cosmetics.
 
 ---
 
@@ -34,8 +34,8 @@
 |---|---------|----------|----------|
 | 1 | Privacy claims contradicted by actual data egress (GTM/GA4 always-on, hardcoded container, public CORS proxy, "HIPAA/GDPR compliance" claim) | §1, §9 | **Critical** |
 | 2 | No CI/CD at all — nothing runs tests/build/lint on push or PR | §3.2 | **Critical** |
-| 3 | No tests, including no gate on the QR/`pako` session wire format (a real contract) | §3.3 | **High** |
-| 4 | `npm run lint` fails: 11 errors in shipped `src/` (54 total incl. scanned non-source) | §3.3, §6 | **High** |
+| 3 | No tests and no test runner at all; the contracts that DO exist (Dexie schema/migrations, export/import) are ungated | §3.3 | **High** |
+| 4 | `npm run lint` fails: 11 errors in shipped `src/` (full run: 54 errors / 60 problems incl. non-source dirs) | §3.3, §6 | **High** |
 | 5 | Missing repo-health files: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CHANGELOG, issue/PR templates | §3.1 | **High** |
 | 6 | `scripts/setup_chirocard_tags.js` hardcodes an absolute path to the author's machine — cannot run on a clean clone | §3.4, §9 | **High** |
 | 7 | GitHub metadata empty: no description, no topics, no homepage link, no branch protection | §3.1, §3.2 | **Medium** |
@@ -46,8 +46,9 @@
 | 12 | `version: "0.0.0"` + no CHANGELOG → no SemVer/release discipline for a public, live product | §3.1, §3.5 | **Low** |
 | 13 | `console.log`/`console.error` debugging left in `src` (8 occurrences) | §6, §9 | **Low** |
 | 14 | 850 kB single JS chunk (249 kB gz); browserslist data 6 months stale | §7 | **Low** |
+| 15 | Core advertised **QR check-in/handoff workflow is not implemented**: README/PRD describe it but `src` has no QR usage; `compressData`/`decompressData` are dead code; `html5-qrcode`/`qrcode.react`/`pako` are unused deps | §1, §9 | **High** |
 
-**Good (do not regress):** real MIT LICENSE with correct holder/year; `.env` is **not** tracked and the secret scan is clean; Dexie schema is versioned to v17 with an `upgrade()` migration; the build passes; an `AGENTS.md` exists; the live site responds 200; the product loop is real and dogfoodable.
+**Good (do not regress):** real MIT LICENSE with correct holder/year; `.env` is **not** tracked and the secret scan is clean; Dexie schema is versioned to v17 with an `upgrade()` migration; the build passes; an `AGENTS.md` exists; the live site responds 200; the implemented single-device intake → session → report → export loop runs.
 
 ---
 
@@ -63,11 +64,11 @@ This is the load-bearing finding because the privacy promise *is* the product's 
 - `.github/copilot-instructions.md:4` — "Privacy-first design for **HIPAA/GDPR compliance**."
 
 **What the code actually does:**
-- `index.html:14` loads **Google Tag Manager with a hardcoded container `GTM-5RGKKRRX`** on every page, including pages that render health data. `src/utils/analytics.ts` pushes behavioral events (`begin_session`, `complete_session`, `add_practitioner`, …) into `dataLayer` → GTM → GA4. Telemetry leaves the device on normal use.
+- `index.html:14` loads **Google Tag Manager with a hardcoded container `GTM-5RGKKRRX`** on every page, including pages that render health data — unconditionally, with no consent gate. `src/utils/analytics.ts:5` pushes behavioral events (`begin_session`, `complete_session`, `add_practitioner`, …) into the GTM `dataLayer`. (What GTM then forwards is defined by the live container config, which is external to this repo; the repo-verifiable fact is that the data is handed to a third-party tag manager that is loaded on every page.)
 - `src/services/places.ts:65` sends the practitioner's typed address query to `photon.komoot.io` (third party).
 - `src/utils/googleMaps.ts:46` sends Google Maps share links through `https://api.allorigins.win/get` — a **public CORS proxy** — to scrape a business name.
 
-**Precise framing (honesty applied to this audit):** the *raw* clinical content — session notes, body metrics, DOB — stays in IndexedDB, and the secret scan is clean. But the analytics path is **not** content-free: `trackEvent` sends **record-derived identifiers** off-device to GA4 — practitioner names + roles (`src/components/Practitioner/PractitionerManager.tsx:71`), routine titles (`src/components/Dashboard/RoutineVerificationModal.tsx:67`, `src/pages/SessionReport.tsx:123`), and the practitioner name + session id on session completion (`src/pages/SessionActive.tsx:112`). So the defect is twofold: **(a)** the **absolute, enforced-nowhere copy** — "zero-knowledge," "never leaves your device," "HIPAA/GDPR compliance"; and **(b)** **record-derived data actually leaving** with no consent and no data-minimization. A `safe: true`-style claim that is true regardless of the facts is a bug, not a feature (§9).
+**Precise framing (honesty applied to this audit — scoped to what the repo proves):** the *raw* clinical content — session notes, body metrics, DOB — stays in IndexedDB, and the secret scan is clean. But the analytics path is **not** content-free: `trackEvent` pushes **record-derived identifiers** into the GTM `dataLayer` — practitioner names + roles (`src/components/Practitioner/PractitionerManager.tsx:71`), routine titles (`src/components/Dashboard/RoutineVerificationModal.tsx:67`, `src/pages/SessionReport.tsx:123`), and the practitioner name + session id on session completion (`src/pages/SessionActive.tsx:112`). So the defect is twofold: **(a)** the **absolute, enforced-nowhere copy** — "zero-knowledge," "never leaves your device," "HIPAA/GDPR compliance"; and **(b)** **record-derived identifiers are handed to an unconditionally-loaded third-party tag manager** with no consent and no data-minimization (whether/where GTM forwards them is container-config-dependent and not provable from the repo — but the data being available to it is). A `safe: true`-style claim that is true regardless of the facts is a bug, not a feature (§9).
 
 **Why the hardcoded GTM is worse than "just analytics":** a hardcoded third-party tag container on pages that render health data is an **arbitrary-script-injection surface** — whoever controls `GTM-5RGKKRRX` can inject any JavaScript into a health app, with no consent gate and no Content-Security-Policy. This is the architectural reason the data-egress boundary must be pinned as a contract (see the playground spec).
 
@@ -77,14 +78,14 @@ This is the load-bearing finding because the privacy promise *is* the product's 
 
 `.github/` contains only `copilot-instructions.md`; there is **no workflow** (`find .github -type f` → one file). Nothing runs tests, build, or lint on push or PR. This is why the 11 `src` lint errors (Finding 4) and the dependency vulnerabilities (Finding 9) shipped unnoticed. "Never merge red" cannot be enforced when there is no red to see.
 
-### Finding 3 — No tests; the QR wire format is an untested contract (High · §3.3)
+### Finding 3 — No tests and no test runner (High · §3.3)
 
-There are **zero** test files and no test runner (`package.json` has no `test` script; AGENTS.md admits "No automated tests yet"). The standard requires a verification gate + negative/corruption tests wherever the project has a *contract*. ChiroCard has a real one: the **patient↔practitioner QR session payload**, compressed with `pako` (`src/utils/compression.ts`) and exchanged via `html5-qrcode`/`qrcode.react`. The risky paths are entirely unguarded:
-- a practitioner scanning a check-in QR produced by a **different app version**;
-- a patient scanning a session QR with a corrupted/truncated payload;
-- round-trip stability (encode → decode → encode is byte-identical).
+There are **zero** test files and no test runner (`package.json` has no `test` script; AGENTS.md admits "No automated tests yet"). The standard requires a verification gate + negative/corruption tests wherever the project has a *contract*. The contracts that **actually exist** in the code today and are ungated:
+- **Dexie schema + migrations** — `src/db/db.ts:153` is at `version(17)` with an `upgrade()` that mutates data (`db.ts:167-175`). A migration bug silently corrupts a patient's only copy of their record; this is the highest-value thing to gate.
+- **Export / import round-trip** — `dexie-export-import` via `src/utils/exportUtils.ts` is the user's *only* backup path (the Privacy page tells users they are responsible for backups). A broken export = silent data loss.
+- **Store actions & data transforms** — `src/store/*`, `src/utils/compression.ts`.
 
-A golden round-trip test plus negative/corruption tests belong here. (This is distinct from the privacy boundary — keep them separate.)
+Note: the **QR session wire format is not a live contract** — it is described in the README but **not implemented** (see Finding 15: `compressData`/`decompressData` have no callers; no QR scanner/renderer exists). A golden round-trip + corruption gate for the QR payload should be added **when/if** that feature is built, not before. Point the first tests at the migration and export/import paths, which are real and load-bearing today. (This is distinct from the privacy boundary — keep them separate.)
 
 ### Finding 4 — Lint fails on shipped source (High · §3.3, §6)
 
@@ -110,6 +111,7 @@ A tracked file imports from a **hardcoded absolute path on the author's machine*
 
 - `AGENTS.md:3` — "Vite + **React 18**"; `package.json` pins `react ^19.2.0`. Stale docs teach false facts.
 - `readme.md:93-99` — the "Environment Variables" table implies `GTM_ID` configures the app's analytics. It does not: the container is **hardcoded** in `index.html:14`, and `.env.example` is actually consumed by the GTM-provisioning CLI script, not the Vite build. Misleading.
+- `.github/copilot-instructions.md` references files/versions that don't match the code: it points at a `GuestSession.tsx` (no such file in `src/pages`) and states **Dexie v13** while `src/db/db.ts:153` is at **v17**. (Closely related to Finding 15 — the agent guide describes the unbuilt QR/guest-session flow as if present.)
 - `index.html:15-16` — duplicated `<!-- End Google Tag Manager -->` comment (cosmetic).
 
 ### Finding 9 — Dependency vulnerabilities (Medium · §3.5)
@@ -136,11 +138,21 @@ A tracked file imports from a **hardcoded absolute path on the author's machine*
 
 `npm run build`: single `index-*.js` = **850 kB (249 kB gz)**, over Vite's 500 kB warning; browserslist data is 6 months stale. Route-level code-splitting (`React.lazy`) would help LCP/INP (§7).
 
+### Finding 15 — The advertised QR check-in/handoff workflow is not implemented (High · §1, §9)
+
+The README's headline workflow (`readme.md:41-49`) and feature list describe a QR-based exchange: the patient shows a "Check-In" QR, the practitioner scans it on a Kiosk, charts, then generates a session QR the patient scans to save the record and auto-add the practitioner. **None of this exists in the code:**
+- No QR library is imported anywhere in `src` — `grep -rn "html5-qrcode\|qrcode.react\|Html5Qrcode\|QRCode" src` → **0 matches**. So `html5-qrcode`, `qrcode.react`, and `pako` are **declared but unused** dependencies (`package.json`).
+- `src/utils/compression.ts` defines `compressData`/`decompressData` (the would-be wire-format codec) but they have **no callers** anywhere in `src` — dead code.
+- There is **no `GuestSession.tsx`**, no scanner page, and no camera access in `src/pages`.
+
+This is the most serious **honesty** finding (§1) and a named anti-pattern (§9: "a README that describes a different product than the code"). It also undercuts the durability thesis, which leaned on the QR handoff as the differentiator (now corrected in §0). **Decision required:** either **(a) build** the QR workflow so the README becomes true, or **(b) remove** the QR claims from README/PRD/`copilot-instructions.md` and delete the unused deps + dead `compression.ts`. Until one is chosen, the repo fails the "every claim is true and verifiable" bar.
+
 ---
 
 ## 3. What maps to what
 
 - **Finding 1** is architectural and becomes the **playground spec** (`docs/playgrounds/specs/data-egress-boundary.html`) — it pins the one contract: *what is allowed to leave the device, who owns each egress point, and the consent model.*
-- **All findings** are sequenced for remediation in the **implementation plan** (`docs/plans/oss-standard-remediation-2026-06-13.md`), gated so the durable, contract-defining work (privacy boundary, QR wire-format tests, CI) lands before cosmetic polish.
+- **Finding 15** is a product-truth fork (build the QR workflow vs. remove the claims) — the plan surfaces it as an explicit decision before the cosmetic phases.
+- **All findings** are sequenced for remediation in the **implementation plan** (`docs/plans/oss-standard-remediation-2026-06-13.md`), gated so the durable, contract-defining work (privacy boundary, real-contract tests, CI) lands before cosmetic polish.
 
 *Scope note: this audit and its companion spec/plan are documents only. No source, config, or CI was modified as part of this audit.*
