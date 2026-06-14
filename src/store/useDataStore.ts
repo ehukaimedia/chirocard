@@ -101,9 +101,9 @@ export const useDataStore = create<DataState>((set) => ({
                 practitioners
             });
             console.log("DataStore Initialized");
-        } catch (err: any) {
+        } catch (err) {
             console.error("Failed to initialize DataStore", err);
-            set({ isLoading: false, error: err.message });
+            set({ isLoading: false, error: err instanceof Error ? err.message : String(err) });
         }
     },
 
@@ -112,11 +112,11 @@ export const useDataStore = create<DataState>((set) => ({
             // Optimistic update
             set({ user }); // Optimistically update the user state
             await database.get().saveUser(user);
-        } catch (err: any) {
+        } catch (err) {
             console.error("Failed to save user", err);
             // Revert optimistic update if save fails, or handle error
             // For simplicity, we'll just set an error here.
-            set({ error: err.message });
+            set({ error: err instanceof Error ? err.message : String(err) });
             // A more robust solution might involve fetching the original user or reverting to a previous state.
         }
     },

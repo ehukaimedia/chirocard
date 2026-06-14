@@ -44,16 +44,16 @@ export class NativeDB implements IDatabase {
     // Since we use JSON blobs for complex fields, we need to merge the top-level columns with the JSON data
     // when reading, and split them when writing.
 
-    private unpack<T>(row: any): T {
-        if (!row) return row;
+    private unpack<T>(row: Record<string, unknown> | null | undefined): T {
+        if (!row) return row as T;
         const { data, ...rest } = row;
-        const parsed = data ? JSON.parse(data) : {};
+        const parsed = data ? JSON.parse(data as string) : {};
         return { ...rest, ...parsed } as T;
     }
 
-    private pack(obj: any, columns: string[]): { values: any[], params: string, keys: string } {
-        const rowData: any = {};
-        const jsonContent: any = { ...obj };
+    private pack(obj: Record<string, unknown>, columns: string[]): { values: unknown[], params: string, keys: string } {
+        const rowData: Record<string, unknown> = {};
+        const jsonContent: Record<string, unknown> = { ...obj };
 
         // Extract top-level columns
         columns.forEach(col => {
