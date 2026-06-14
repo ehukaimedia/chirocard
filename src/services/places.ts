@@ -58,15 +58,12 @@ function toPlaceResult(feature: PhotonFeature): PlaceResult {
     };
 }
 
-export async function searchPlaces(query: string, location?: { lat: number; lon: number }, signal?: AbortSignal): Promise<PlaceResult[]> {
+export async function searchPlaces(query: string, signal?: AbortSignal): Promise<PlaceResult[]> {
     if (!query || query.length < 3) return [];
 
     try {
-        let url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`;
-
-        if (location) {
-            url += `&lat=${location.lat}&lon=${location.lon}`;
-        }
+        // Only the typed query is sent — no device location/GPS (privacy boundary).
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=en`;
 
         const response = await fetch(url, { signal });
 

@@ -7,10 +7,9 @@ interface PlaceSearchModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (place: PlaceResult) => void;
-    userLocation?: { lat: number; lon: number };
 }
 
-export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: PlaceSearchModalProps) {
+export function PlaceSearchModal({ isOpen, onClose, onSelect }: PlaceSearchModalProps) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<PlaceResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +18,8 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: Pl
         const timer = setTimeout(async () => {
             if (query.length >= 3) {
                 setIsLoading(true);
-                const places = await searchPlaces(query, userLocation);
+                // Only the typed query is sent — no device location (privacy boundary).
+                const places = await searchPlaces(query);
                 setResults(places);
                 setIsLoading(false);
             } else {
@@ -28,7 +28,7 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect, userLocation }: Pl
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [query, userLocation]);
+    }, [query]);
 
     return (
         <AnimatePresence>

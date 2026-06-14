@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-13",
+  "title": "Design System: ChiroCard",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Trust Emerald", "canonical": "#059669", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0"] },
+      "active-emerald": { "role": "primary", "displayName": "Active Emerald", "canonical": "#10b981", "tonalRamp": ["#064e3b", "#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7", "#d1fae5"] },
+      "glow-emerald": { "role": "tertiary", "displayName": "Glow Emerald", "canonical": "#34d399", "tonalRamp": ["#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0", "#d1fae5"] },
+      "mint-paper": { "role": "neutral", "displayName": "Mint Paper", "canonical": "#ecfdf5", "tonalRamp": ["#064e3b", "#047857", "#10b981", "#34d399", "#6ee7b7", "#a7f3d0", "#d1fae5", "#ecfdf5"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#18181b", "tonalRamp": ["#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#f4f4f5"] },
+      "muted-slate": { "role": "neutral", "displayName": "Muted Slate", "canonical": "#71717a", "tonalRamp": ["#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5"] },
+      "alert-red": { "role": "functional", "displayName": "Alert Red", "canonical": "#ef4444", "tonalRamp": ["#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fecaca"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles and screen headers." },
+      "title": { "displayName": "Title", "purpose": "Card and modal headings." },
+      "body": { "displayName": "Body", "purpose": "Default reading text and UI copy (>=14px)." },
+      "label": { "displayName": "Label", "purpose": "Field labels, metadata, captions." }
+    },
+    "shadows": [
+      { "name": "ambient-glass", "value": "0 4px 30px rgba(0,0,0,0.1)", "purpose": "Default soft card lift over Mint Paper." },
+      { "name": "ambient-subtle", "value": "0 2px 10px rgba(0,0,0,0.05)", "purpose": "Lighter surfaces and small chips." },
+      { "name": "action-lift", "value": "0 10px 15px -3px rgba(5,150,105,0.2)", "purpose": "Emerald-tinted lift under primary buttons." },
+      { "name": "emerald-glow", "value": "0 0 20px #34d399", "purpose": "State-only emphasis (live session, focus). Animated 5px->20px. Never ambient." }
+    ],
+    "motion": [
+      { "name": "transition-standard", "value": "all 0.3s", "purpose": "Default control/state transitions (buttons, cards)." },
+      { "name": "press", "value": "scale(0.95)", "purpose": "Active-press feedback on buttons." },
+      { "name": "glow-pulse", "value": "glow 2s ease-in-out infinite alternate", "purpose": "Live/active emphasis only; honor prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The main call-to-action: translucent emerald pill with soft action-lift.",
+      "html": "<button class=\"ds-btn-primary\">Start session</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; height:48px; padding:0 24px; border:1px solid rgba(255,255,255,0.2); border-radius:9999px; background:rgba(5,150,105,0.8); backdrop-filter:blur(12px); color:#fff; font-weight:500; box-shadow:0 10px 15px -3px rgba(5,150,105,0.2); transition:all .3s; cursor:pointer; } .ds-btn-primary:hover { background:rgba(5,150,105,0.9); } .ds-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 2px #059669; } .ds-btn-primary:active { transform:scale(0.95); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Lower-emphasis action: emerald outline pill on transparent.",
+      "html": "<button class=\"ds-btn-outline\">Export data</button>",
+      "css": ".ds-btn-outline { display:inline-flex; align-items:center; justify-content:center; height:48px; padding:0 24px; border:2px solid rgba(5,150,105,0.5); border-radius:9999px; background:transparent; color:#059669; font-weight:500; transition:all .3s; cursor:pointer; } .ds-btn-outline:hover { background:rgba(5,150,105,0.1); } .ds-btn-outline:focus-visible { outline:none; box-shadow:0 0 0 2px #059669; }"
+    },
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card-glass",
+      "description": "The default surface: frosted translucent white over Mint Paper with soft ambient lift.",
+      "html": "<div class=\"ds-card-glass\"><h3 class=\"ds-card-title\">Last session</h3><p class=\"ds-card-body\">Lower back · 2 weeks ago</p></div>",
+      "css": ".ds-card-glass { padding:16px; border:1px solid rgba(255,255,255,0.4); border-radius:16px; background:linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.4) 100%); backdrop-filter:blur(12px); box-shadow:0 4px 30px rgba(0,0,0,0.1); } .ds-card-title { margin:0 0 4px; font-size:1.25rem; font-weight:700; color:#18181b; } .ds-card-body { margin:0; font-size:0.875rem; color:#71717a; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Calm field with a clear keyboard-visible emerald focus ring.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Search for a clinic\" />",
+      "css": ".ds-input { height:44px; width:100%; padding:0 12px; border:1px solid #e4e4e7; border-radius:12px; background:transparent; color:#18181b; font-size:0.875rem; transition:box-shadow .2s; } .ds-input::placeholder { color:#71717a; } .ds-input:focus-visible { outline:none; box-shadow:0 0 0 2px #059669; }"
+    },
+    {
+      "name": "Bottom Nav Item",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Signature app-shell chrome: thumb-reachable bottom tab, emerald when active.",
+      "html": "<nav class=\"ds-bottomnav\"><button class=\"ds-navitem ds-navitem--active\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/></svg><span>Home</span></button><button class=\"ds-navitem\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1\"/></svg><span>Team</span></button></nav>",
+      "css": ".ds-bottomnav { display:flex; gap:8px; padding:8px; background:rgba(255,255,255,0.6); backdrop-filter:blur(12px); border-top:1px solid rgba(255,255,255,0.4); } .ds-navitem { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; padding:6px 0; border:none; background:none; color:#71717a; font-size:0.75rem; font-weight:500; cursor:pointer; } .ds-navitem--active { color:#059669; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Calm Record",
+    "overview": "ChiroCard should feel like a well-kept personal health record that happens to be beautiful — quiet, legible, and unmistakably yours. The system is built on a single calm color story (emerald on a soft mint paper) and a frosted-glass surface language that keeps the interface feeling light and unintimidating. Depth comes from translucency and soft diffusion, not heavy chrome. The personality is calm, trustworthy, clinical-grade: the confidence of a medical record without the coldness of one. It explicitly rejects the cold, dense clinical EHR, and keeps frosted glass and glow as seasoning, never the meal — calm over clever.",
+    "keyCharacteristics": [
+      "One calm color story: emerald accents on emerald-tinted mint paper.",
+      "Frosted-glass surfaces (translucent white, soft blur) instead of hard cards.",
+      "Pill-shaped, soft, tactile controls; generous radii throughout.",
+      "Soft, diffuse depth (ambient shadow + subtle glow), never hard drop shadows.",
+      "Inter everywhere — one humanist sans, sized for easy reading by older users."
+    ],
+    "rules": [
+      { "name": "The One Hue Rule", "body": "Emerald is the only brand color. No blue/purple/multi-color accent systems. Red appears only for destructive or error states, never decoratively.", "section": "colors" },
+      { "name": "The Readable-First Rule", "body": "Body text never drops below 14px; weight (400/500/700), not color or font-swaps, carries hierarchy.", "section": "typography" },
+      { "name": "The Soft-Diffusion Rule", "body": "Shadows are broad, low-opacity, blurred — never tight or dark. Glow is a response to state, not resting decoration.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do rest everything on Mint Paper (#ecfdf5), not stark white — the emerald tint keeps the product calm instead of clinical.",
+      "Do keep emerald the single brand hue; express hierarchy with weight and translucency, not new colors.",
+      "Do use frosted glass + soft ambient shadow for depth; keep blurs soft and shadows low-opacity.",
+      "Do keep body text >=14px and provide visible 2px emerald focus rings for keyboard users (WCAG 2.2 AA).",
+      "Do reserve Alert Red for destructive/error states only — its rarity is the point."
+    ],
+    "donts": [
+      "Don't look like a cold, dense clinical EHR (Epic / MyChart): no cramped gray data tables, jargon-dense forms, dropdown mazes, or institutional coldness.",
+      "Don't let frosted glass and emerald glow tip into hype or decoration — calm over clever. If a glow isn't communicating live state, remove it.",
+      "Don't introduce a second accent hue, multi-color category tags, or purple/blue gradients.",
+      "Don't use hard, dark, small-blur drop shadows; if it looks like a 2014 app card, the shadow is wrong.",
+      "Don't convey status by color alone — pair with text or icon for color-blind users."
+    ]
+  }
+}

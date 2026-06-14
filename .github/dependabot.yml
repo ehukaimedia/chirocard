@@ -1,0 +1,17 @@
+version: 2
+updates:
+  # npm dependencies. Dependabot opens PRs the maintainer reviews; the 7-day
+  # quarantine (CONTRIBUTING.md) is applied at review time, and CI must pass.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: development
+  # Keep GitHub Actions pinned-SHAs current (security updates).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

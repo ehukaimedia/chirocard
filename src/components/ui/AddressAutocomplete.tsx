@@ -15,7 +15,6 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | undefined>();
 
     useEffect(() => {
         if (value !== undefined && value !== query) {
@@ -24,23 +23,8 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    useEffect(() => {
-        let isMounted = true;
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    if (isMounted) {
-                        setUserLocation({
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude
-                        });
-                    }
-                },
-                () => { /* Silently ignore geolocation errors */ }
-            );
-        }
-        return () => { isMounted = false; };
-    }, []);
+    // Note: device geolocation is intentionally NOT requested. Address search
+    // sends only the typed text to Photon — no GPS coordinates leave the device.
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -57,7 +41,7 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
         const timer = setTimeout(async () => {
             if (query.length >= 3 && isSearching) {
                 try {
-                    const places = await searchPlaces(query, userLocation, abortController.signal);
+                    const places = await searchPlaces(query, abortController.signal);
                     setResults(places);
                     setShowResults(true);
                 } catch {
@@ -72,7 +56,7 @@ export function AddressAutocomplete({ value, onSelect, onChange, className, ...p
             clearTimeout(timer);
             abortController.abort();
         };
-    }, [query, isSearching, userLocation]);
+    }, [query, isSearching]);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;

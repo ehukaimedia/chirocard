@@ -120,7 +120,8 @@ export default function SessionReport() {
                 createdAt: Date.now()
             });
 
-            trackEvent('add_routine_to_calendar', { title: data.title, category: data.category });
+            // Minimized: no record-derived fields (routine title and category stay on-device).
+            trackEvent('add_routine_to_calendar');
 
             setAddedRecs(prev => {
                 const next = new Set(prev);
@@ -188,7 +189,8 @@ export default function SessionReport() {
 
                     <button
                         onClick={() => {
-                            trackEvent('print_report', { session_id: session.id });
+                            // Minimized: no record-derived session id.
+                            trackEvent('print_report');
                             window.print();
                         }}
                         className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 shadow-sm shadow-emerald-900/10"

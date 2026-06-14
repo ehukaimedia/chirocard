@@ -21,12 +21,11 @@ export default function SessionActive() {
     const [practitionerVerification, setPractitionerVerification] = useState<string | null>(null);
 
 
-    const practitioner = useMemo(() => {
-        if (currentSession?.practitionerId && practitioners) {
-            return practitioners.find(p => p.id === currentSession.practitionerId);
-        }
-        return undefined;
-    }, [currentSession?.practitionerId, practitioners]);
+    // Computed directly; the React Compiler memoizes this (manual useMemo here
+    // conflicted with the compiler's inferred dependencies).
+    const practitioner = currentSession?.practitionerId && practitioners
+        ? practitioners.find(p => p.id === currentSession.practitionerId)
+        : undefined;
 
     // Recommendations State
     const [newRecTitle, setNewRecTitle] = useState("");
@@ -109,7 +108,8 @@ export default function SessionActive() {
             });
 
             toast("Session saved successfully!", "success");
-            trackEvent('complete_session', { id: currentSession.id, practitioner: currentSession.practitionerName });
+            // Minimized: no record-derived identifiers (no session id, no practitioner name).
+            trackEvent('complete_session');
             endSession();
             navigate("/");
         } catch {

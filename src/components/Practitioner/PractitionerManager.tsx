@@ -68,7 +68,8 @@ export function PractitionerManager({ onSelect }: { onSelect?: (p: Practitioner)
                     id: crypto.randomUUID(),
                     order: count // Add to end
                 });
-                trackEvent('add_practitioner', { name: practitionerData.name, category: practitionerData.role });
+                // Minimized: no record-derived fields (name and role both stay on-device).
+                trackEvent('add_practitioner');
             }
 
             setIsEditing(false);
