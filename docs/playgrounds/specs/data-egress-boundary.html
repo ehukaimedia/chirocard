@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChiroCard — Data-Egress Boundary (Target Contract)</title>
+<!--
+  INTENT: Pin the ONE architecture contract that makes ChiroCard's privacy claim true:
+  what is allowed to leave the device, who owns each egress point, and the consent model.
+  DECISION IT INFORMS: every remediation of Audit Finding 1 (privacy claims not enforced).
+  ANTI-PATTERN IT PREVENTS: a "zero-knowledge / never leaves your device" claim while
+  analytics, address queries, and a public CORS proxy quietly send data off-device with
+  no consent gate. A claim that is true regardless of the facts is a bug, not a feature.
+  LIFECYCLE: active · target-contract (Spec Seed below). Source of truth = the code anchors cited.
+  Companion audit: docs/code-reviews/claude-oss-standard-audit-2026-06-13.md
+-->
+<style>
+  :root{
+    --bg:#0f1417; --panel:#161d22; --panel-2:#1d262c; --line:#2a363d;
+    --ink:#e7eef2; --muted:#9fb0b8; --faint:#6f8088;
+    --device:#15a07a; --device-soft:#0f3b30;
+    --leak:#e0653f; --leak-soft:#3a1f17;
+    --ok:#2fb98a; --warn:#e8b341; --bad:#e0653f;
+    --accent:#56b6c2;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 22px 80px}
+  header.top{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:26px}
+  .kicker{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:27px;margin:10px 0 6px;letter-spacing:-.01em}
+  h2{font-size:18px;margin:38px 0 12px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+  h2 .n{font:700 12px/1.4 var(--mono);color:var(--bg);background:var(--accent);
+    border-radius:6px;padding:4px 7px}
+  h3{font-size:14px;margin:20px 0 8px;color:var(--ink)}
+  p{color:var(--muted);margin:8px 0}
+  a{color:var(--accent)}
+  code,.mono{font-family:var(--mono);font-size:12.5px}
+  .src{font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  .lede{color:var(--ink);font-size:15px;max-width:74ch}
+  .pill{display:inline-block;font:600 11px/1 var(--mono);padding:5px 8px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted)}
+  .pill.active{color:var(--bg);background:var(--ok);border-color:var(--ok)}
+  .intent{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:16px 18px;margin:18px 0}
+  .intent b{color:var(--ink)}
+  /* boundary diagram */
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:6px 0 14px}
+  .toggle button{background:var(--panel);color:var(--muted);border:0;padding:8px 14px;
+    font:600 12px var(--sans);cursor:pointer}
+  .toggle button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink)}
+  .diagram{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:20px;margin:6px 0 4px}
+  .device{border:2px dashed var(--device);border-radius:12px;padding:16px;background:var(--device-soft)}
+  .device .lbl{font:700 12px var(--mono);color:var(--device);letter-spacing:.08em;text-transform:uppercase}
+  .vault{margin-top:10px;background:#0c2a22;border:1px solid #1d5a48;border-radius:8px;padding:12px}
+  .vault .lbl{color:#8fe0c4}
+  .vault small{color:#6fae97;font-family:var(--mono)}
+  .edges{margin-top:14px;display:grid;gap:10px}
+  .edge{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+    border:1px solid var(--line);border-radius:9px;padding:11px 13px;background:var(--panel-2)}
+  .edge .what{font-size:13px}
+  .edge .what b{color:var(--ink)}
+  .edge .dest{font:600 12px var(--mono);white-space:nowrap}
+  .edge .src{display:block;margin-top:3px}
+  .edge.leak{border-left:3px solid var(--leak)}
+  .edge.gated{border-left:3px solid var(--ok)}
+  .edge.peer{border-left:3px solid var(--accent)}
+  .tag{font:600 10px var(--mono);padding:3px 6px;border-radius:5px;letter-spacing:.04em}
+  .tag.bad{color:var(--bg);background:var(--bad)} .tag.ok{color:var(--bg);background:var(--ok)}
+  .tag.warn{color:var(--bg);background:var(--warn)} .tag.peer{color:var(--bg);background:var(--accent)}
+  .hide{display:none}
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--faint);font:600 11px var(--mono);letter-spacing:.05em;text-transform:uppercase}
+  td .src{display:block;margin-top:3px}
+  .cur{color:var(--leak)} .tgt{color:var(--ok)}
+  .seed{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 20px 18px;margin-top:10px}
+  ul{color:var(--muted);padding-left:20px} li{margin:5px 0}
+  .gate{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:9px;
+    background:var(--panel-2);padding:12px 15px;margin:8px 0}
+  .gate b{color:var(--ink)} .check{color:var(--ok);font-family:var(--mono)}
+  footer{margin-top:46px;border-top:1px solid var(--line);padding-top:16px;color:var(--faint);font-size:12px}
+  .reject{border:1px dashed var(--line);border-radius:9px;padding:12px 15px;margin:10px 0;color:var(--muted)}
+  .reject b{color:var(--ink)}
+  @media (prefers-reduced-motion: no-preference){.edge{transition:border-color .15s ease}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- INTENT: see head comment. This is a target-contract playground (Spec Seed below). -->
+  <header class="top">
+    <div class="kicker">ChiroCard · Architecture Playground · Target Contract</div>
+    <h1>The Data-Egress Boundary</h1>
+    <p class="lede">ChiroCard's wedge is "your health record is yours and stays on your device."
+      This playground pins the single contract that makes that claim <em>true and enforceable</em>:
+      a hard boundary around the device, an explicit inventory of every point where data crosses it,
+      a named owner for each, and a consent model. Everything else in the privacy remediation flows
+      from this boundary.</p>
+    <span class="pill active">active</span>
+    <span class="pill">specs/ · target-contract</span>
+    <span class="pill">informs Audit Finding&nbsp;1 (Critical)</span>
+  </header>
+
+  <div class="intent">
+    <b>Decision this informs.</b> How to resolve the contradiction in Audit Finding 1 — privacy
+    claims that the code does not enforce. <br>
+    <b>Anti-pattern it prevents.</b> Shipping "zero-knowledge / never leaves your device /
+    HIPAA-GDPR compliant" copy while Google Tag Manager (hardcoded container), Photon address
+    search, and a public CORS proxy send data off-device with no consent gate.
+    A claim that is true regardless of the facts is a bug, not a feature.
+  </div>
+
+  <h2><span class="n">1</span> The boundary, today vs. target</h2>
+  <p>Toggle to compare what the code does <span class="cur">today</span> against the
+    <span class="tgt">target contract</span>. Each edge cites the source line that proves it.</p>
+
+  <div class="toggle" role="group" aria-label="View">
+    <button id="btnCur" aria-pressed="true" onclick="setView('cur')">Current (as-built)</button>
+    <button id="btnTgt" aria-pressed="false" onclick="setView('tgt')">Target (contract)</button>
+  </div>
+
+  <div class="diagram">
+    <div class="device">
+      <div class="lbl">📱 Patient device — trust boundary</div>
+      <div class="vault">
+        <div class="lbl mono">🔒 IndexedDB (Dexie v17) — the protected asset</div>
+        <small>profile · sessions · journal · care-team · routines &nbsp;— <b>never emitted</b></small>
+        <div class="src">src/db/db.ts:153 (this.version(17).stores) · interfaces in src/db/interfaces.ts</div>
+      </div>
+
+      <div class="edges" id="edges">
+        <!-- ANALYTICS -->
+        <div class="edge leak" data-cur>
+          <div class="what"><b>Behavioral telemetry + record-derived identifiers</b> — event names
+            <em>plus</em> practitioner names/roles, routine titles, and session ids. Raw clinical
+            notes/body metrics stay local, but this is <b>not</b> content-free.
+            <span class="src">index.html:14 (hardcoded GTM-5RGKKRRX) · analytics.ts:5 · SessionActive.tsx:112 · PractitionerManager.tsx:71 · RoutineVerificationModal.tsx:67</span></div>
+          <div class="dest"><span class="tag bad">ALWAYS-ON · NO CONSENT</span><br>→ GTM dataLayer (googletagmanager.com); GA4 is the configured target</div>
+        </div>
+        <div class="edge gated hide" data-tgt>
+          <div class="what"><b>Behavioral telemetry</b> — loaded <b>only after explicit opt-in</b>;
+            container id from build-time env; constrained by CSP; payloads <b>minimized</b> to
+            non-identifying counts/categories (no practitioner names or routine titles).
+            <span class="src">owner: src/lib/consent.ts (new) gates the GTM loader + trackEvent payload review</span></div>
+          <div class="dest"><span class="tag ok">CONSENT-GATED · MINIMIZED</span><br>→ googletagmanager.com → GA4</div>
+        </div>
+
+        <!-- PHOTON -->
+        <div class="edge leak" data-cur>
+          <div class="what"><b>Address query + device GPS coordinates</b> — the typed clinic-address text
+            <em>and</em>, when the browser grants geolocation, the device's precise lat/lon. Debounced
+            (500ms, ≥3 chars), not on every keystroke. Undisclosed on the Privacy page.
+            <span class="src">AddressAutocomplete.tsx:29-43 (geolocation) · places.ts:65-68 (&amp;lat&amp;lon → photon.komoot.io)</span></div>
+          <div class="dest"><span class="tag bad">GPS + QUERY · UNDISCLOSED</span><br>→ photon.komoot.io</div>
+        </div>
+        <div class="edge gated hide" data-tgt>
+          <div class="what"><b>Address query</b> — fires only on explicit practitioner input (already
+            debounced), <b>disclosed</b> as a named third party, and the <b>GPS coordinates dropped</b>
+            (or sent only with explicit location consent — data minimization).
+            <span class="src">owner: src/services/places.ts + AddressAutocomplete.tsx · listed in egress allowlist</span></div>
+          <div class="dest"><span class="tag ok">DISCLOSED · NO GPS</span><br>→ photon.komoot.io</div>
+        </div>
+
+        <!-- ALLORIGINS -->
+        <div class="edge leak" data-cur>
+          <div class="what"><b>Google Maps link</b> routed through a <b>public CORS proxy</b> to scrape a
+            business name. Arbitrary third party in the path; undisclosed.
+            <span class="src">src/utils/googleMaps.ts:46 (api.allorigins.win/get)</span></div>
+          <div class="dest"><span class="tag bad">PUBLIC PROXY</span><br>→ api.allorigins.win → google.com</div>
+        </div>
+        <div class="edge gated hide" data-tgt>
+          <div class="what"><b>Google Maps link</b> — <b>DECISION REQUIRED</b>: prefer local-only parse of
+            long links (<code>extractPlaceFromGoogleLink</code>, no network) and drop the proxy; else
+            replace with an owned resolver + disclose. See rejected option below.
+            <span class="src">owner: src/utils/googleMaps.ts — proxy path removed or owned</span></div>
+          <div class="dest"><span class="tag ok">LOCAL PARSE</span><br>(no off-device call)</div>
+        </div>
+
+        <!-- QR PEER (DESIGNED, NOT IMPLEMENTED) -->
+        <div class="edge peer" data-cur data-tgt>
+          <div class="what"><b>QR session handoff</b> patient ⇄ practitioner — <b>DESIGNED, NOT YET
+            IMPLEMENTED</b> (Audit Finding 15). The intended flow is optical, device-to-device,
+            <b>no server</b> (would stay inside the contract). Today <code>compressData</code>/
+            <code>decompressData</code> exist but have <b>no callers</b>, and <code>html5-qrcode</code>/
+            <code>qrcode.react</code> are unused deps.
+            <span class="src">src/utils/compression.ts:6,27 (dead) · no QR imports in src</span></div>
+          <div class="dest"><span class="tag peer">PEER · OFFLINE</span><br>(not built)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="src" id="legend">Legend: red = leaves device with no consent/disclosure · green = gated/disclosed/local · teal = peer, offline (not a network egress).</p>
+
+  <h2><span class="n">2</span> Egress inventory &amp; ownership</h2>
+  <table>
+    <thead><tr><th>Egress point</th><th>What leaves</th><th>Owner (in repo)</th><th>Processor</th><th>Trigger</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Analytics (GTM→GA4)<span class="src">index.html:14 · analytics.ts:5 · SessionActive.tsx:112</span></td>
+        <td>event names + <b>record-derived ids</b> (practitioner names/roles, routine titles, session ids); raw notes/metrics stay local</td>
+        <td><b>consent module</b> + deferred loader (new)</td>
+        <td>Google</td>
+        <td>every page load + tracked events</td>
+      </tr>
+      <tr>
+        <td>Address search<span class="src">places.ts:65-68 · AddressAutocomplete.tsx:29-43</span></td>
+        <td>typed address query <b>+ device GPS lat/lon</b> (when geolocation granted)</td>
+        <td><code>places.ts</code> + <code>AddressAutocomplete.tsx</code></td>
+        <td>komoot (Photon/OSM)</td>
+        <td>practitioner types an address (debounced 500ms)</td>
+      </tr>
+      <tr>
+        <td>Maps link resolve<span class="src">utils/googleMaps.ts:46</span></td>
+        <td>Google Maps URL (may embed business identity)</td>
+        <td><code>googleMaps.ts</code> — <span class="cur">to be decided</span></td>
+        <td>allorigins.win → Google</td>
+        <td>practitioner pastes a short Maps link</td>
+      </tr>
+      <tr>
+        <td>QR handoff <span class="cur">(not built)</span><span class="src">compression.ts:6,27 (dead)</span></td>
+        <td>intended peer/optical payload — <b>not implemented</b> (Finding 15)</td>
+        <td><code>compression.ts</code> codec exists but unused</td>
+        <td>none (would be device⇄device)</td>
+        <td>n/a — feature absent</td>
+      </tr>
+      <tr>
+        <td><b>Health records</b><span class="src">db/db.ts:153</span></td>
+        <td><b>nothing — stays in IndexedDB</b></td>
+        <td><code>db.ts</code> (Dexie v17)</td>
+        <td>—</td>
+        <td>never</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="src"><b>Edge-direction evidence:</b> the GTM <code>&lt;script&gt;</code> in <code>index.html:14</code> is the
+    emitter to googletagmanager.com; <code>analytics.ts:5-9</code> pushes to <code>window.dataLayer</code> (the
+    repo-verifiable boundary). The container's configured target is GA4 — the GA4 event tags are
+    provisioned by <code>scripts/setup_chirocard_tags.js</code> — but what the live container forwards is
+    config-dependent and external to this repo. <code>places.ts:65</code> and <code>googleMaps.ts:46</code> are
+    the literal <code>fetch()</code> call sites.</p>
+
+  <div class="reject">
+    <b>Runner-up contract considered &amp; rejected for this playground:</b> the QR/<code>pako</code>
+    session <em>wire format</em>. It <em>would</em> be a real contract deserving a verification gate — but
+    it is currently <b>not implemented</b> (Audit Finding 15: <code>compressData</code>/<code>decompressData</code>
+    have no callers; the QR libs are unused). So it is neither an egress concern nor a present test
+    target; a golden round-trip + corruption gate belongs with that feature <em>if/when it is built</em>.
+    The QR edge appears above only to mark the <em>intended</em> peer flow as designed-but-absent.
+    <br><b>Rejected remediation option:</b> "keep the public allorigins.win proxy and just add a sentence
+    to the Privacy page." Rejected — a health app should not route any user-supplied URL through an
+    arbitrary public proxy; disclosure does not remove the third-party-in-the-path risk.
+  </div>
+
+  <h2><span class="n">3</span> Spec Seed</h2>
+  <p>This section is written to graduate into a reviewable spec under <code>docs/specs/</code> when the
+    remediation is scheduled. It is the contract the implementation plan builds to.</p>
+
+  <div class="seed">
+    <h3>Current vs. target behavior</h3>
+    <table>
+      <thead><tr><th>Aspect</th><th class="cur">Current (as-built)</th><th class="tgt">Target (contract)</th></tr></thead>
+      <tbody>
+        <tr><td>Analytics load</td><td class="cur">GTM fires on first paint, every page, no consent</td><td class="tgt">GTM deferred until consent === "granted"</td></tr>
+        <tr><td>GTM container id</td><td class="cur">hardcoded <code>GTM-5RGKKRRX</code> in index.html (script-injection surface)</td><td class="tgt">injected from build-time env; absent ⇒ analytics simply off</td></tr>
+        <tr><td>trackEvent guard</td><td class="cur">fires whenever <code>window.dataLayer</code> exists</td><td class="tgt">no-op unless consent granted</td></tr>
+        <tr><td>Telemetry payload</td><td class="cur">sends record-derived ids — practitioner names/roles, routine titles, session ids (SessionActive.tsx:112, PractitionerManager.tsx:71, RoutineVerificationModal.tsx:67, SessionReport.tsx:123)</td><td class="tgt">minimized to non-identifying counts/categories</td></tr>
+        <tr><td>Disclosed third parties</td><td class="cur">claims "Google/Vercel Analytics" (Vercel not used); omits Photon &amp; allorigins</td><td class="tgt">Privacy page enumerates exactly the live egress set, no more, no less</td></tr>
+        <tr><td>Address geolocation</td><td class="cur">browser GPS lat/lon requested on mount and appended to every Photon query (AddressAutocomplete.tsx:29-43, places.ts:67-68)</td><td class="tgt">GPS dropped from the query, or sent only with explicit location consent</td></tr>
+        <tr><td>Maps link resolve</td><td class="cur">public CORS proxy in the path</td><td class="tgt">local-only long-link parse; proxy removed (or replaced + disclosed)</td></tr>
+        <tr><td>Network policy</td><td class="cur">no CSP; any origin reachable</td><td class="tgt">CSP allowlist = exactly the egress domains</td></tr>
+        <tr><td>Claim wording</td><td class="cur">"zero-knowledge / never leaves your device / HIPAA-GDPR"</td><td class="tgt">precise: records stay local; named, consented telemetry &amp; lookups may leave</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Public interfaces (single source of truth)</h3>
+    <ul>
+      <li><code>src/lib/consent.ts</code> — owns consent state (<code>"unset" | "granted" | "denied"</code>), persisted in IndexedDB/localStorage; the only module that authorizes analytics.</li>
+      <li><code>loadAnalytics()</code> — idempotent deferred GTM loader, called only when consent is granted; reads container id from <code>import.meta.env.VITE_GTM_ID</code>.</li>
+      <li><code>trackEvent()</code> (<code>src/utils/analytics.ts</code>) — gains a consent check; becomes a no-op otherwise.</li>
+      <li><code>EGRESS_ALLOWLIST</code> — one constant that is the source of truth for both the CSP header and the Privacy-page third-party list (docs and enforcement cannot drift).</li>
+    </ul>
+
+    <h3>Ownership boundaries</h3>
+    <ul>
+      <li><b>Device / IndexedDB</b> — patient owns it. <code>db.ts</code> is the single schema source of truth (Dexie v17 + migrations); records are written through that Dexie instance from many components (e.g. <code>PractitionerManager.tsx:66</code>, <code>AddJournalModal.tsx:17</code>, <code>RoutineVerificationModal.tsx:71</code>) and the <code>WebDB.ts</code> adapter — not a single writer. The contract invariant is only that these records are <b>never emitted off-device</b>.</li>
+      <li><b>Analytics egress</b> — consent module authorizes; deferred loader emits; Google processes.</li>
+      <li><b>Address egress</b> — <code>places.ts</code> + <code>AddressAutocomplete.tsx</code> own; fires on debounced practitioner input. Currently also emits device GPS lat/lon — to be dropped or consent-gated.</li>
+      <li><b>Link-resolution egress</b> — <code>googleMaps.ts</code> owns; flagged for the remove/replace decision.</li>
+    </ul>
+
+    <h3>Data flow (target)</h3>
+    <ul>
+      <li>App boot → render → <b>no analytics</b>. Consent prompt shown once.</li>
+      <li>Consent granted → <code>loadAnalytics()</code> injects GTM (env id) → later <code>trackEvent()</code> calls flow to GA4.</li>
+      <li>Consent denied/unset → GTM never loads; <code>trackEvent()</code> is a no-op; records never leave regardless.</li>
+      <li>Practitioner address input → debounced <code>places.ts</code> call to Photon (disclosed).</li>
+    </ul>
+
+    <h3>Build sequence (what the plan implements, in order)</h3>
+    <ul>
+      <li>1 — Land this boundary doc (done).</li>
+      <li>2 — <code>consent.ts</code> + consent UI; move GTM out of <code>index.html</code> into a gated <code>loadAnalytics()</code>.</li>
+      <li>3 — Container id from <code>VITE_GTM_ID</code>; add CSP from <code>EGRESS_ALLOWLIST</code>.</li>
+      <li>4 — Resolve the allorigins.win decision (prefer remove).</li>
+      <li>5 — Rewrite Privacy page + README copy to match the boundary exactly; drop "Vercel Analytics".</li>
+    </ul>
+
+    <h3>Acceptance tests (the gate — must pass)</h3>
+    <div class="gate"><span class="check">[GATE-1]</span> <b>No-consent ⇒ no telemetry.</b> With consent unset/denied, zero requests to <code>googletagmanager.com</code> / <code>google-analytics.com</code> fire (assert in a test / observe in network panel).</div>
+    <div class="gate"><span class="check">[GATE-2]</span> <b>No hardcoded container.</b> <code>grep "GTM-"</code> over <code>index.html</code>/<code>src</code> returns nothing; the id resolves from env at build.</div>
+    <div class="gate"><span class="check">[GATE-3]</span> <b>Docs match code.</b> The Privacy page's third-party list equals <code>EGRESS_ALLOWLIST</code> exactly — no "Vercel Analytics", no omissions.</div>
+    <div class="gate"><span class="check">[GATE-4]</span> <b>CSP constrains egress.</b> A CSP restricts <code>script-src</code>/<code>connect-src</code> to the allowlisted domains; a request to a non-allowlisted origin is blocked.</div>
+    <div class="gate"><span class="check">[GATE-5]</span> <b>Records stay local.</b> No IndexedDB record content appears in any outbound request body across the core flows.</div>
+
+    <h3>Non-goals</h3>
+    <ul>
+      <li>The QR/<code>pako</code> wire-format schema and its corruption tests (separate test target — plan §C).</li>
+      <li>UI/visual redesign, bundle-splitting, or any non-egress finding.</li>
+      <li>Building a first-party analytics backend — out of scope; consent-gated GA4 is acceptable if disclosed.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <b>Lifecycle:</b> active target-contract playground · <code>docs/playgrounds/specs/</code>.
+    Refresh when any egress call site changes; supersede/archive once the boundary ships and a
+    <code>docs/specs/</code> spec becomes the source of truth.<br>
+    <b>Inbound references:</b> Audit Finding 1 — <code>docs/code-reviews/claude-oss-standard-audit-2026-06-13.md</code>;
+    Plan §A — <code>docs/plans/oss-standard-remediation-2026-06-13.md</code>.<br>
+    <b>Source anchors:</b> index.html:14 · src/utils/analytics.ts:5 · src/services/places.ts:65 ·
+    src/utils/googleMaps.ts:46 · src/db/db.ts:153 · src/pages/Privacy.tsx:48,75 · readme.md:15.
+  </footer>
+
+</div>
+<script>
+  function setView(v){
+    var cur = v === 'cur';
+    document.getElementById('btnCur').setAttribute('aria-pressed', String(cur));
+    document.getElementById('btnTgt').setAttribute('aria-pressed', String(!cur));
+    document.querySelectorAll('[data-cur]').forEach(function(el){
+      // elements that are BOTH cur and tgt (the peer edge) always stay visible
+      if(el.hasAttribute('data-tgt')) return;
+      el.classList.toggle('hide', !cur);
+    });
+    document.querySelectorAll('[data-tgt]').forEach(function(el){
+      if(el.hasAttribute('data-cur')) return;
+      el.classList.toggle('hide', cur);
+    });
+  }
+  setView('cur');
+</script>
+</body>
+</html>
