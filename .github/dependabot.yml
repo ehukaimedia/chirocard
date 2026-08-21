@@ -8,7 +8,10 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    # Pause new npm PRs. Grouped/native bumps were filling the PR tab with
+    # failures during public review. Re-raise this limit when you want
+    # Dependabot to open patch/minor PRs again.
+    open-pull-requests-limit: 0
     groups:
       dev-dependencies:
         dependency-type: development
