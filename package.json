@@ -16,7 +16,7 @@
     "mobile:open:android": "npx cap open android"
   },
   "dependencies": {
-    "@capacitor-community/sqlite": "^7.0.2",
+    "@capacitor-community/sqlite": "^7.0.3",
     "@capacitor/android": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
