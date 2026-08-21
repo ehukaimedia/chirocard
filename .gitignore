@@ -43,5 +43,6 @@ mobile/
 # committed (like node_modules). The generated design CONTEXT is committed:
 # PRODUCT.md, DESIGN.md, .impeccable/design.json.
 .agents/
+skills/
 skills-lock.json
 

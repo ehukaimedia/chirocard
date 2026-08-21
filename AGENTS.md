@@ -23,7 +23,7 @@ ChiroCard is a **Bodywork Journal & Digital Passport** built as a Vite + React 1
 - Naming: PascalCase for components/files, `use*` for hooks, camelCase for utilities and Zustand selectors.
 
 ## Testing Guidelines
-- Tests run on Vitest (jsdom). Existing suites cover the consent/data-egress gate (`src/utils/analytics.test.ts`, `src/lib/consent.test.ts`), the Dexie v17 migration (`src/db/db.migration.test.ts`), and the export/import round-trip (`src/utils/exportImport.test.ts`). Name new files `*.test.ts(x)`; cover store actions, data transforms, migrations, and critical flows. `npm test` must pass before a PR.
+- Tests run on Vitest (jsdom). Existing suites cover the consent/data-egress gate (`src/utils/analytics.test.ts`, `src/lib/consent.test.ts`), the Dexie v17 migration (`src/db/db.migration.test.ts`), export/import (`src/utils/exportImport.test.ts`), live Dexie store boot (`src/store/useDataStore.test.ts`), pain-level tokens (`src/constants/painLevels.test.ts`), and Pages `_headers` (`src/constants/headers.test.ts`). Name new files `*.test.ts(x)`; cover store actions, data transforms, migrations, and critical flows. `npm test` must pass before a PR.
 - Manual QA: run `npm run dev`, create/update an Intake, move through the Dashboard and an active session, and export a report to confirm Dexie persistence.
 
 ## Commit & Pull Request Guidelines

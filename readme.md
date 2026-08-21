@@ -3,6 +3,7 @@
 **Your Personalized Bodywork Journal.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/ehukaimedia/chirocard/actions/workflows/ci.yml/badge.svg)](https://github.com/ehukaimedia/chirocard/actions/workflows/ci.yml)
 [![Live](https://img.shields.io/badge/Live-chirocard.com-blue)](https://chirocard.com)
 
 "Chiro" means "hand". ChiroCard is your personalized journal for holistic body care — keeping track of all hands-on bodywork and serving as a bridge between patients and holistic practitioners (Chiropractors, Massage Therapists, Physical Therapists, Acupuncturists, and more) without centralized servers or accounts.
@@ -14,7 +15,7 @@
 - **Patient is the Database** — All health records, history, and preferences live on the patient's device. No cloud, no accounts, no lock-in.
 - **Local-First Privacy** — Your health records never leave your device. The only outbound calls are optional, opt-in analytics and address lookups, and neither carries your health data.
 - **Frictionless Practitioner Experience** — A practitioner charts a session right on the patient's device — no account, no login, no install. *(A stateless QR "kiosk" handoff is on the [roadmap](#roadmap), not yet implemented.)*
-- **Installable App (PWA)** — Installs to the home screen of any device (iOS, Android, Desktop) without an app store. *(Full offline caching is on the roadmap; the service worker is currently a passthrough.)*
+- **Installable App (PWA)** — Installs to the home screen of any device (iOS, Android, Desktop) without an app store. The service worker caches hashed `/assets` and the app shell, and uses network-first navigation so deploys still update.
 
 ---
 

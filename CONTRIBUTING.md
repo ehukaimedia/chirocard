@@ -49,7 +49,7 @@ export a report, and confirm the data persists (`npm run preview`).
 
 ## Commits & PRs
 
-- Branch off `main`; never commit to `main` directly.
+- Branch off `main` for pull requests. External contributors should never push to `main`; maintainers may ship to `main` after `npm run lint`, `npm test`, and `npm run build` are green.
 - Use conventional-commit prefixes (`feat:`, `fix:`, `docs:`, `test:`, `chore:`,
   `refactor:`) — match the existing history.
 - Fill in the PR template: what changed, why, and how you verified it.

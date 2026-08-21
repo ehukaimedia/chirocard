@@ -114,7 +114,7 @@
 
 ### 7.3. Progressive Web App (PWA)
 *   **Installable:** Users can install the app directly from the browser (Chrome, Safari, etc.) to their home screen.
-*   **Offline (roadmap):** A service worker is registered, but it is currently a passthrough — full offline caching is planned, not yet implemented.
+*   **Offline:** The service worker caches hashed `/assets` (cache-first) and the app shell, and uses network-first navigation so a new deploy still updates. Health records remain in IndexedDB, not in the HTTP cache.
 *   **Smart Install Prompt:** Custom "Install App" banner detects eligibility and guides users (including iOS-specific instructions).
 
 ### 7.2. Development Workflow

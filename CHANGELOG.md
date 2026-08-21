@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Cloudflare Pages `_headers` now send HSTS, COOP, and CORP, and cache hashed `/assets/*` for a year.
+- The PWA service worker caches hashed assets and the app shell (network-first for navigations).
+- Dependabot groups only patch/minor dev-dependency updates so majors cannot land as one failing PR.
+
+### Fixed
+- Production `react-router` CVE range (bump `react-router-dom` to 7.18.2).
 
 ## [1.0.0] - 2026-06-13
 
