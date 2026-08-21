@@ -1,28 +1,24 @@
 version: 2
 updates:
-  # npm dependencies. Dependabot opens PRs the maintainer reviews; the 7-day
-  # quarantine (CONTRIBUTING.md) is applied at review time, and CI must pass.
-  # Group only patch/minor bumps. Ignore majors so Dependabot cannot open
-  # TypeScript 7 / Vite 8 / Tailwind 4 PRs that fail CI on peer conflicts.
+  # Dependabot stays enabled (free with GitHub). npm version-bump PRs are
+  # maintainer-batched: majors and Capacitor native packages need a human, and
+  # grouped auto-PRs kept failing CI. Security alerts still fire on GitHub.
   - package-ecosystem: npm
     directory: "/"
     schedule:
       interval: weekly
-    # Pause new npm PRs. Grouped/native bumps were filling the PR tab with
-    # failures during public review. Re-raise this limit when you want
-    # Dependabot to open patch/minor PRs again.
     open-pull-requests-limit: 0
-    groups:
-      dev-dependencies:
-        dependency-type: development
-        update-types:
-          - "minor"
-          - "patch"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-  # Keep GitHub Actions pinned-SHAs current (security updates).
+      - dependency-name: "@capacitor/android"
+      - dependency-name: "@capacitor/ios"
+      - dependency-name: "@capacitor/core"
+      - dependency-name: "@capacitor/cli"
+      - dependency-name: "@capacitor-community/sqlite"
+  # Pin GitHub Actions to current SHAs. These PRs have been small and green.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+    open-pull-requests-limit: 2
