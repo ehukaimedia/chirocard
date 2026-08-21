@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Cloudflare Pages `_headers` now send HSTS, COOP, and CORP, and cache hashed `/assets/*` for a year.
+
 ## [1.0.0] - 2026-06-13
 
 First tagged release, hardening the repo to the Ehukai OSS standard.

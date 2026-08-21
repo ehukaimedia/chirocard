@@ -11,6 +11,9 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
   Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Strict-Transport-Security: max-age=15552000; includeSubDomains
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://photon.komoot.io https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com; img-src 'self' data: blob: https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://www.googletagmanager.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'
 
 # Do not cache the service worker so updates are detected immediately
@@ -20,3 +23,7 @@
 # Ensure correct content type for manifest (optional but good practice)
 /manifest.webmanifest
   Content-Type: application/manifest+json
+
+# Vite content-hashes these files; they are safe to cache for a year
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
