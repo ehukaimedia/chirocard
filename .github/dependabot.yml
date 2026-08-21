@@ -2,8 +2,8 @@ version: 2
 updates:
   # npm dependencies. Dependabot opens PRs the maintainer reviews; the 7-day
   # quarantine (CONTRIBUTING.md) is applied at review time, and CI must pass.
-  # Group only patch/minor bumps. Majors (ESLint 10, TypeScript 7, Tailwind 4,
-  # Vite 8) must stay ungrouped so they cannot land as one failing PR.
+  # Group only patch/minor bumps. Ignore majors so Dependabot cannot open
+  # TypeScript 7 / Vite 8 / Tailwind 4 PRs that fail CI on peer conflicts.
   - package-ecosystem: npm
     directory: "/"
     schedule:
@@ -16,7 +16,7 @@ updates:
           - "minor"
           - "patch"
     ignore:
-      - dependency-name: "@capacitor-community/sqlite"
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
   # Keep GitHub Actions pinned-SHAs current (security updates).
   - package-ecosystem: github-actions
