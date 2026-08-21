@@ -9,8 +9,8 @@ interface StatusUpdateModalProps {
 }
 
 export function StatusUpdateModal({ isOpen, onClose }: StatusUpdateModalProps) {
-    const { user, saveUser } = useDataStore();
-    // const user = useLiveQuery(() => db.users.get("me"));
+    const user = useDataStore((s) => s.user);
+    const saveUser = useDataStore((s) => s.saveUser);
     const [statusText, setStatusText] = useState("");
 
     useEffect(() => {

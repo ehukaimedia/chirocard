@@ -14,8 +14,8 @@ interface WelcomeModalProps {
 
 export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
     const navigate = useNavigate();
-    const { user, saveUser } = useDataStore();
-    // const user = useLiveQuery(() => db.users.get("me"));
+    const user = useDataStore((s) => s.user);
+    const saveUser = useDataStore((s) => s.saveUser);
     const [showForm, setShowForm] = useState(false);
     const [missingFields, setMissingFields] = useState<string[]>([]);
     const { toast } = useToast();

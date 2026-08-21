@@ -35,7 +35,9 @@ export default function Dashboard() {
     });
 
     const appointments = useLiveQuery(() => db.appointments.where("date").aboveOrEqual(Date.now()).limit(1).toArray());
-    const { currentSession, endSession, viewMode } = useAppStore();
+    const currentSession = useAppStore((s) => s.currentSession);
+    const endSession = useAppStore((s) => s.endSession);
+    const viewMode = useAppStore((s) => s.viewMode);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showRoutineModal, setShowRoutineModal] = useState(false);
@@ -89,16 +91,18 @@ export default function Dashboard() {
                         <h1 className="text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tighter leading-none">
                             <span className="text-emerald-600 dark:text-emerald-500">Chiro</span>Card
                         </h1>
-                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest uppercase">BODYWORK JOURNAL</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Bodywork journal</p>
                     </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                     <NotificationCenter />
-                    <Link to="/profile">
-                        <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">
-                            <User className="w-5 h-5 text-zinc-400" />
-                        </div>
+                    <Link
+                        to="/profile"
+                        aria-label="Profile"
+                        className="min-h-11 min-w-11 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700"
+                    >
+                        <User className="w-5 h-5 text-zinc-500" />
                     </Link>
                 </div>
             </header>
@@ -119,8 +123,10 @@ export default function Dashboard() {
                                         <span>Active Session</span>
                                     </div>
                                     <button
+                                        type="button"
+                                        aria-label="Discard active session"
                                         onClick={(e) => { e.stopPropagation(); setShowClearConfirm(true); }}
-                                        className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                                        className="min-h-11 min-w-11 inline-flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full transition-colors"
                                     >
                                         <Trash2 className="w-4 h-4 text-white/80" />
                                     </button>
@@ -142,50 +148,60 @@ export default function Dashboard() {
                     ) : (
                         nextAppointment && new Date(nextAppointment.date).toDateString() === new Date().toDateString() ? (
                             <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => {
-                                    // Minimized: keep the non-identifying type; drop the appointment id.
                                     trackEvent('begin_session', { type: 'appointment' });
                                     navigate("/intake", { state: { appointmentId: nextAppointment.id } });
                                 }}
-                                className="group bg-gradient-to-br from-zinc-900 to-zinc-800 dark:from-zinc-800 dark:to-zinc-900 rounded-3xl p-1 pb-1 shadow-lg cursor-pointer transform transition-all active:scale-[0.98]"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        trackEvent('begin_session', { type: 'appointment' });
+                                        navigate("/intake", { state: { appointmentId: nextAppointment.id } });
+                                    }
+                                }}
+                                className="group bg-zinc-900 dark:bg-zinc-900 rounded-2xl p-6 cursor-pointer transform transition-all active:scale-[0.98] border border-zinc-800"
                             >
-                                <div className="bg-zinc-900 dark:bg-zinc-950 rounded-[22px] p-6 h-full border border-zinc-800 relative overflow-hidden">
-                                    <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
-
-                                    <div className="relative z-10 flex flex-col items-center text-center space-y-4">
-                                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-500">
-                                            <CalendarIcon className="w-8 h-8 text-emerald-500" />
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-1">Check In Now</h2>
-                                            <p className="text-zinc-400 text-sm">
-                                                For your {new Date(nextAppointment.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} Appointment
-                                            </p>
-                                        </div>
-                                        <div className="w-full flex items-center justify-center gap-2 text-emerald-500 font-bold text-sm uppercase tracking-wider pt-2">
-                                            <span>Tap to Start</span>
-                                            <ChevronRight className="w-4 h-4" />
-                                        </div>
+                                <div className="flex flex-col items-center text-center space-y-4">
+                                    <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                                        <CalendarIcon className="w-8 h-8 text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white mb-1">Check In Now</h2>
+                                        <p className="text-zinc-300 text-sm">
+                                            For your {new Date(nextAppointment.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} appointment
+                                        </p>
+                                    </div>
+                                    <div className="w-full flex items-center justify-center gap-2 text-emerald-400 font-semibold text-sm pt-2">
+                                        <span>Start check-in</span>
+                                        <ChevronRight className="w-4 h-4" />
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => {
                                     trackEvent('begin_session', { type: 'new' });
                                     navigate("/intake");
                                 }}
-                                className="group bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 shadow-xl shadow-emerald-500/20 cursor-pointer text-center relative overflow-hidden transform transition-all active:scale-[0.98]"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        trackEvent('begin_session', { type: 'new' });
+                                        navigate("/intake");
+                                    }
+                                }}
+                                className="group bg-primary rounded-2xl p-6 cursor-pointer text-center relative overflow-hidden transform transition-all active:scale-[0.98]"
                             >
-                                <div className="absolute top-0 right-0 p-8 opacity-10">
-                                    <Plus className="w-32 h-32 -mr-8 -mt-8 rotate-12" />
-                                </div>
-                                <div className="relative z-10 flex flex-col items-center">
-                                    <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 group-active:scale-95 transition-transform">
+                                <div className="flex flex-col items-center">
+                                    <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mb-4">
                                         <Plus className="w-8 h-8 text-white" />
                                     </div>
                                     <h2 className="text-2xl font-bold text-white mb-1">New Session</h2>
-                                    <p className="text-emerald-100 text-sm font-medium mb-0">Record a new bodywork visit</p>
+                                    <p className="text-emerald-50 text-sm font-medium mb-0">Record a new bodywork visit</p>
                                 </div>
                             </div>
                         )
@@ -196,19 +212,27 @@ export default function Dashboard() {
                 <section className="grid grid-cols-2 gap-4">
                     {/* Status Card */}
                     <Card
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setShowStatusModal(true)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setShowStatusModal(true);
+                            }
+                        }}
                         className="p-4 flex flex-col justify-between h-32 cursor-pointer border-none bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
                         <div className="flex justify-between items-start">
                             <div className="p-2 bg-blue-500/10 rounded-lg">
                                 <Info className="w-5 h-5 text-blue-500" />
                             </div>
-                            <button className="text-zinc-300">
+                            <span aria-hidden="true" className="text-zinc-300">
                                 <Pencil className="w-3 h-3" />
-                            </button>
+                            </span>
                         </div>
                         <div>
-                            <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 mb-1">Current Focus</p>
+                            <p className="text-xs font-semibold text-zinc-500 mb-1">Current focus</p>
                             <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm leading-tight line-clamp-2">
                                 {activeFocus}
                             </p>
@@ -217,7 +241,15 @@ export default function Dashboard() {
 
                     {/* Routine Card */}
                     <Card
+                        role="button"
+                        tabIndex={0}
                         onClick={() => navigate("/calendar")}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                navigate("/calendar");
+                            }
+                        }}
                         className={`p-4 flex flex-col justify-between h-32 cursor-pointer border-none transition-colors ${hasPendingRoutines
                             ? 'bg-orange-500/5 hover:bg-orange-500/10'
                             : 'bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -233,7 +265,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div>
-                            <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-400 mb-1">Daily Routine</p>
+                            <p className="text-xs font-semibold text-zinc-500 mb-1">Daily routine</p>
                             <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm leading-tight">
                                 {allRoutines.length === 0 ? "No routines set" :
                                     (hasPendingRoutines ? `${pendingRoutines.length} tasks todo` : "All complete!")}
@@ -285,28 +317,36 @@ export default function Dashboard() {
 
                 {/* 4. Did You Know? (Moved to bottom) */}
                 <section
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                         trackEvent('view_promotion', { creative_name: 'did_you_know' });
                         setShowWelcomeModal(true);
                     }}
-                    className="bg-zinc-900 rounded-2xl p-6 relative overflow-hidden cursor-pointer hover:scale-[1.01] transition-transform"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            trackEvent('view_promotion', { creative_name: 'did_you_know' });
+                            setShowWelcomeModal(true);
+                        }
+                    }}
+                    className="bg-zinc-900 rounded-2xl p-6 cursor-pointer border border-zinc-800"
                 >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                    <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-wider">
+                    <div>
+                        <div className="flex items-center justify-between mb-2 gap-3">
+                            <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
                                 <Info className="w-4 h-4" />
                                 <span>Did you know?</span>
                             </div>
-                            <span className="text-[10px] text-zinc-500 font-medium bg-zinc-800/50 px-2 py-0.5 rounded-full border border-zinc-700/50">Tap to learn more</span>
+                            <span className="text-xs text-zinc-400 font-medium">Open intro</span>
                         </div>
 
                         <p className="text-zinc-100 font-medium text-sm leading-relaxed mb-4">
-                            "Chiro" means <span className="text-emerald-400">"hand"</span>. ChiroCard is your personalized journal for holistic body care that keeps track of all hands on bodywork.
+                            "Chiro" means <span className="text-emerald-300">"hand"</span>. ChiroCard is your journal for hands-on bodywork — kept on this device, not in a clinic silo.
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {['Chiropractic', 'Massage', 'PT', 'Cupping', 'Acupuncture'].map(tag => (
-                                <span key={tag} className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-[10px] border border-zinc-700">
+                                <span key={tag} className="px-2 py-1 rounded bg-zinc-800 text-zinc-300 text-xs border border-zinc-700">
                                     {tag}
                                 </span>
                             ))}
@@ -314,11 +354,10 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                {/* Compliance Footer */}
-                <footer className="pt-4 pb-8 text-center opacity-50">
+                <footer className="pt-4 pb-8 text-center">
                     <div className="flex items-center justify-center gap-1 text-zinc-500 mb-2">
-                        <ShieldCheck className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">Local-First Privacy</span>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span className="text-xs font-medium">Your record stays on this device</span>
                     </div>
                 </footer>
             </main>

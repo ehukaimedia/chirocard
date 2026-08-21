@@ -57,7 +57,8 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
                     {onDelete && (
                         <button
                             onClick={(e) => onDelete(session.id, e)}
-                            className="text-zinc-400 hover:text-red-500 transition-colors p-2 opacity-0 group-hover:opacity-100"
+                            className="text-zinc-400 hover:text-red-500 transition-colors min-h-11 min-w-11 p-2 inline-flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100"
+                            aria-label="Delete session"
                             title="Delete Record"
                         >
                             <Trash2 className="w-4 h-4" />

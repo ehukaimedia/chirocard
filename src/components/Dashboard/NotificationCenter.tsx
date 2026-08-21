@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Bell, Calendar, CheckCircle, Clock, ChevronRight } from "lucide-react";
 import { Button } from "../ui/Button";
 import { type BodyworkRoutine } from "../../db/db";
-import { useDataStore } from "../../store/useDataStore";
+import { db } from "../../db/db";
+import { useLiveQuery } from "dexie-react-hooks";
 import { useNavigate } from "react-router-dom";
 import { RoutineVerificationModal } from "./RoutineVerificationModal";
 
@@ -11,7 +12,8 @@ export function NotificationCenter() {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedRoutine, setSelectedRoutine] = useState<BodyworkRoutine | null>(null);
-    const { appointments: allAppointments, routines: allRoutines } = useDataStore();
+    const allAppointments = useLiveQuery(() => db.appointments.toArray()) || [];
+    const allRoutines = useLiveQuery(() => db.routines.toArray()) || [];
 
     // Time-dependent reads happen in the render body so they reflect the current
     // moment; the React Compiler memoizes the component, so manual useMemo isn't needed.
@@ -56,6 +58,8 @@ export function NotificationCenter() {
             <Button
                 variant="ghost"
                 size="icon"
+                aria-label={notificationCount > 0 ? `Notifications, ${notificationCount} unread` : "Notifications"}
+                aria-expanded={isOpen}
                 className={`relative transition-colors ${hasNotifications ? 'text-emerald-600 dark:text-emerald-500' : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'}`}
                 onClick={() => setIsOpen(!isOpen)}
             >
@@ -101,13 +105,14 @@ export function NotificationCenter() {
                                             Upcoming Appointments
                                         </div>
                                         {appointments.map(apt => (
-                                            <div
+                                            <button
+                                                type="button"
                                                 key={apt.id}
                                                 onClick={() => {
                                                     navigate("/intake", { state: { appointmentId: apt.id } });
                                                     setIsOpen(false);
                                                 }}
-                                                className="group flex items-start gap-3 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+                                                className="group w-full text-left flex items-start gap-3 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
                                             >
                                                 <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0 text-emerald-600 dark:text-emerald-400">
                                                     <Calendar className="w-5 h-5" />
@@ -124,7 +129,7 @@ export function NotificationCenter() {
                                                     </p>
                                                 </div>
                                                 <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:text-zinc-500 mt-1" />
-                                            </div>
+                                            </button>
                                         ))}
                                     </div>
                                 )}

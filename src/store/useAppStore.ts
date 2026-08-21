@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { type BodyStatus } from "../components/BodyMap/BodyRegionSelector";
 import { type Session, type BodyworkRoutine, type PostSessionEntry } from "../db/db";
 
@@ -38,14 +38,6 @@ interface AppState {
     viewMode: ViewMode;
     currentSession: SessionData | null;
 
-    // Kiosk/Guest Mode State - REMOVED
-    // scannedPatientData: any | null;
-    // activePractitioner: any | null;
-    // intakeData: any | null;
-    // resumedSessionData: any | null;
-    // activeAppointmentId: string | null;
-    // activeSessionId: string | null;
-
     // Actions
     setViewMode: (mode: ViewMode) => void;
     setMode: (mode: ViewMode) => void; // Alias
@@ -73,6 +65,38 @@ interface AppState {
         routineRemindersEnabled: boolean;
     };
     updateNotificationSettings: (settings: Partial<AppState['notificationSettings']>) => void;
+}
+
+function createDebouncedLocalStorage(delay = 400) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let pending: { name: string; value: string } | null = null;
+
+    const flush = () => {
+        if (!pending) return;
+        localStorage.setItem(pending.name, pending.value);
+        pending = null;
+    };
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('pagehide', flush);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') flush();
+        });
+    }
+
+    return {
+        getItem: (name: string) => localStorage.getItem(name),
+        setItem: (name: string, value: string) => {
+            pending = { name, value };
+            clearTimeout(timer);
+            timer = setTimeout(flush, delay);
+        },
+        removeItem: (name: string) => {
+            pending = null;
+            clearTimeout(timer);
+            localStorage.removeItem(name);
+        },
+    };
 }
 
 export const useAppStore = create<AppState>()(
@@ -187,6 +211,7 @@ export const useAppStore = create<AppState>()(
         }),
         {
             name: 'chirocard-storage',
+            storage: createJSONStorage(() => createDebouncedLocalStorage()),
             partialize: (state) => ({
                 viewMode: state.viewMode,
                 currentSession: state.currentSession,

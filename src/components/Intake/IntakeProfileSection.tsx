@@ -4,8 +4,7 @@ import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function IntakeProfileSection() {
-    const { user } = useDataStore();
-    // const user = useLiveQuery(() => db.users.get("me"));
+    const user = useDataStore((s) => s.user);
     const navigate = useNavigate();
 
     const calculateAge = (dob?: string) => {

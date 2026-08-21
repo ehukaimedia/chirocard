@@ -15,7 +15,8 @@ import { trackEvent } from "../utils/analytics";
 export default function Profile() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user, saveUser } = useDataStore();
+    const user = useDataStore((s) => s.user);
+    const saveUser = useDataStore((s) => s.saveUser);
 
     const [isEditing, setIsEditing] = useState(false);
     const [missingFields, setMissingFields] = useState<string[]>([]);

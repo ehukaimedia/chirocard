@@ -1,14 +1,12 @@
-import { useDataStore } from "../../store/useDataStore";
 import { Button } from "../ui/Button";
 import { Plus, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../../store/useAppStore";
-import { useMemo } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../../db/db";
 
 export function IntakePractitionerSection() {
-    const { practitioners: allPractitioners } = useDataStore();
-    const practitioners = useMemo(() => [...(allPractitioners || [])].sort((a, b) => (a.order || 0) - (b.order || 0)), [allPractitioners]);
-    // const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray());
+    const practitioners = useLiveQuery(() => db.practitioners.orderBy('order').toArray()) || [];
     const { currentSession, updateSession } = useAppStore();
     const navigate = useNavigate();
 

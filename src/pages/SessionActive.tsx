@@ -1,21 +1,26 @@
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { useDataStore } from "../store/useDataStore";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, SERVICE_TAGS, FINDING_TAGS } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { BodyRegionSelector } from "../components/BodyMap/BodyRegionSelector";
 import { ArrowLeft, CheckCircle, FileText, Plus, Trash2 } from "lucide-react";
 import { Input } from "../components/ui/Input";
 import { useState, useMemo } from "react";
 import { useToast } from "../components/ui/Toast";
-import { SERVICE_TAGS, FINDING_TAGS } from "../db/db";
 import { trackEvent } from "../utils/analytics";
 
 
 
 export default function SessionActive() {
     const navigate = useNavigate();
-    const { currentSession, updateSession, endSession } = useAppStore();
-    const { user, practitioners, saveSession } = useDataStore();
+    const currentSession = useAppStore((s) => s.currentSession);
+    const updateSession = useAppStore((s) => s.updateSession);
+    const endSession = useAppStore((s) => s.endSession);
+    const user = useDataStore((s) => s.user);
+    const saveSession = useDataStore((s) => s.saveSession);
+    const practitioners = useLiveQuery(() => db.practitioners.toArray()) || [];
     const { toast } = useToast();
     const [showReview, setShowReview] = useState(false);
     const [practitionerVerification, setPractitionerVerification] = useState<string | null>(null);
@@ -126,7 +131,7 @@ export default function SessionActive() {
             <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col">
                 <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] flex items-center justify-between transition-all duration-300">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={() => setShowReview(false)} className="text-zinc-400 hover:text-zinc-100">
+                        <Button variant="ghost" size="icon" aria-label="Back to session" onClick={() => setShowReview(false)} className="text-zinc-400 hover:text-zinc-100">
                             <ArrowLeft className="w-6 h-6" />
                         </Button>
                         <div>
@@ -424,7 +429,7 @@ export default function SessionActive() {
             {/* Header */}
             <header className="sticky top-0 z-20 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-4 pb-4 pt-[calc(env(safe-area-inset-top)+4rem)] flex items-center justify-between transition-all duration-300">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-zinc-400 hover:text-zinc-100">
+                    <Button variant="ghost" size="icon" aria-label="Return to dashboard" onClick={() => navigate("/")} className="text-zinc-400 hover:text-zinc-100">
                         <ArrowLeft className="w-6 h-6" />
                     </Button>
                     <div>

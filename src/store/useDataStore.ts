@@ -50,7 +50,9 @@ interface DataState {
     clearData: () => Promise<void>;
 }
 
-export const useDataStore = create<DataState>((set) => ({
+let initializePromise: Promise<void> | null = null;
+
+export const useDataStore = create<DataState>((set, get) => ({
     initialized: false,
     user: null,
     sessions: [],
@@ -63,47 +65,30 @@ export const useDataStore = create<DataState>((set) => ({
     error: null,
 
     initialize: async () => {
+        if (get().initialized) return;
+        if (initializePromise) return initializePromise;
+
+        initializePromise = (async () => {
         try {
-            set({ isLoading: true });
+            set({ isLoading: true, error: null });
 
-            // Init DB Connection
             await database.init();
-            const db = database.get();
-
-            // Fetch All Data Parallel
-            const [
-                user,
-                sessions,
-                appointments,
-                routines,
-                completions,
-                journal,
-                practitioners
-            ] = await Promise.all([
-                db.getUser(),
-                db.getSessions(),
-                db.getAppointments(),
-                db.getRoutines(),
-                db.getRoutineCompletions(),
-                db.getJournalEntries(),
-                db.getPractitioners()
-            ]);
+            const user = await database.get().getUser();
 
             set({
                 initialized: true,
                 isLoading: false,
                 user: user || null,
-                sessions,
-                appointments,
-                routines,
-                routineCompletions: completions,
-                journalEntries: journal,
-                practitioners
             });
         } catch (err) {
             if (import.meta.env.DEV) console.error("Failed to initialize DataStore", err);
             set({ isLoading: false, error: err instanceof Error ? err.message : String(err) });
+        } finally {
+            initializePromise = null;
         }
+        })();
+
+        return initializePromise;
     },
 
     saveUser: async (user: UserProfile) => {

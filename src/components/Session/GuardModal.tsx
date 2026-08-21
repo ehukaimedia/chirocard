@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { Modal } from "../ui/Modal";
 import { UserPlus, Users, Check, ChevronLeft, Stethoscope, Briefcase, PlusCircle, Hospital } from "lucide-react";
-import { type Practitioner } from "../../db/db";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, type Practitioner } from "../../db/db";
 import { useDataStore } from "../../store/useDataStore";
 import { useAppStore } from "../../store/useAppStore";
 import { Button } from "../ui/Button";
@@ -14,9 +15,9 @@ interface GuardModalProps {
 }
 
 export function GuardModal({ isOpen, onUnlock, onCancel }: GuardModalProps) {
-    const { updateSession } = useAppStore();
-    const { practitioners, savePractitioner } = useDataStore();
-    // const practitioners = useLiveQuery(() => db.practitioners.toArray());
+    const updateSession = useAppStore((s) => s.updateSession);
+    const savePractitioner = useDataStore((s) => s.savePractitioner);
+    const practitioners = useLiveQuery(() => db.practitioners.toArray());
     const [view, setView] = useState<'select' | 'add'>('select');
 
     // New Practitioner Form State

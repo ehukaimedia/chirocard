@@ -21,11 +21,11 @@ export function ConsentBanner() {
 
     return (
         <div
-            role="dialog"
+            role="region"
             aria-label="Analytics consent"
             className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-md
                        rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800
-                       shadow-xl p-4"
+                       p-4"
         >
             <p className="text-sm text-zinc-700 dark:text-zinc-200 leading-relaxed">
                 Your health records stay on this device. May we collect{" "}

@@ -3,8 +3,8 @@
   "short_name": "ChiroCard",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#242424",
-  "theme_color": "#242424",
+  "background_color": "#ecfdf5",
+  "theme_color": "#059669",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

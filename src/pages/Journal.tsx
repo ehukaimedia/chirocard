@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Search } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import { type Session, type RoutineCompletion, type JournalEntry } from "../db/db";
-import { useDataStore } from "../store/useDataStore";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, type Session, type RoutineCompletion, type JournalEntry } from "../db/db";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { AddJournalModal } from "../components/Journal/AddJournalModal";
@@ -19,12 +19,9 @@ export default function Journal() {
     const [activeTab, setActiveTab] = useState<'all' | 'sessions' | 'routines' | 'notes'>('all');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    // const sessions = useLiveQuery(() => db.sessions.orderBy('date').reverse().toArray());
-    // // We need to fetch routine completions and journal entries too
-    // const routineCompletions = useLiveQuery(() => db.routineCompletions.orderBy('completedAt').reverse().toArray());
-    // const journalEntries = useLiveQuery(() => db.journal.orderBy('date').reverse().toArray());
-
-    const { sessions, routineCompletions, journalEntries } = useDataStore();
+    const sessions = useLiveQuery(() => db.sessions.orderBy('date').reverse().toArray()) || [];
+    const routineCompletions = useLiveQuery(() => db.routineCompletions.orderBy('completedAt').reverse().toArray()) || [];
+    const journalEntries = useLiveQuery(() => db.journal.orderBy('date').reverse().toArray()) || [];
 
     // Combine and sort all items for the "All" view
     const allItems: JournalItem[] = [
@@ -118,9 +115,20 @@ export default function Journal() {
                                         }`} />
                                 </div>
 
-                                <Card className="p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer" onClick={() => {
-                                    if (item.type === 'session') navigate(`/session/${item.id}`);
-                                }}>
+                                <Card
+                                    className={`p-4 transition-colors ${item.type === 'session' ? 'hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer' : ''}`}
+                                    role={item.type === 'session' ? 'link' : undefined}
+                                    tabIndex={item.type === 'session' ? 0 : undefined}
+                                    onClick={() => {
+                                        if (item.type === 'session') navigate(`/session/${item.id}`);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (item.type === 'session' && (e.key === 'Enter' || e.key === ' ')) {
+                                            e.preventDefault();
+                                            navigate(`/session/${item.id}`);
+                                        }
+                                    }}
+                                >
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">

@@ -15,8 +15,7 @@ export default function Intake() {
     const { currentSession, startSession, updateSession } = useAppStore();
     const { toast } = useToast();
 
-    const { user } = useDataStore();
-    // const user = useLiveQuery(() => db.users.get("me"));
+    const user = useDataStore((s) => s.user);
     const [showReview, setShowReview] = useState(false);
     const [showGuard, setShowGuard] = useState(false);
 

@@ -15,20 +15,34 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect }: PlaceSearchModal
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
+        const controller = new AbortController();
         const timer = setTimeout(async () => {
             if (query.length >= 3) {
                 setIsLoading(true);
-                // Only the typed query is sent — no device location (privacy boundary).
-                const places = await searchPlaces(query);
-                setResults(places);
-                setIsLoading(false);
+                const places = await searchPlaces(query, controller.signal);
+                if (!controller.signal.aborted) {
+                    setResults(places);
+                    setIsLoading(false);
+                }
             } else {
                 setResults([]);
             }
         }, 500);
 
-        return () => clearTimeout(timer);
+        return () => {
+            controller.abort();
+            clearTimeout(timer);
+        };
     }, [query]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [isOpen, onClose]);
 
     return (
         <AnimatePresence>
@@ -48,15 +62,18 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect }: PlaceSearchModal
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-lg bg-white/10 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] neon-border"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="place-search-title"
+                        className="relative w-full max-w-lg bg-white/10 dark:bg-zinc-900/40 backdrop-blur-xl border border-white/20 dark:border-zinc-800/50 rounded-3xl overflow-hidden flex flex-col max-h-[80vh] neon-border"
                     >
                         <div className="p-6 border-b border-white/10 dark:border-zinc-800/50">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <h3 id="place-search-title" className="text-xl font-bold text-white flex items-center gap-2">
                                     <Hospital className="w-6 h-6 text-emerald-400" />
                                     Find Clinic
                                 </h3>
-                                <button onClick={onClose} className="p-2 text-zinc-400 hover:text-white transition-colors">
+                                <button type="button" onClick={onClose} aria-label="Close clinic search" className="min-h-11 min-w-11 p-2 inline-flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
@@ -67,6 +84,7 @@ export function PlaceSearchModal({ isOpen, onClose, onSelect }: PlaceSearchModal
                                     autoFocus
                                     type="text"
                                     placeholder="Search for a clinic or practitioner..."
+                                    aria-label="Search for a clinic or practitioner"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     className="w-full bg-white/5 dark:bg-zinc-950/30 border border-white/10 dark:border-zinc-800/50 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 placeholder-zinc-500 transition-all"

@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useDataStore } from "../store/useDataStore";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../db/db";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { ArrowLeft, User, Activity, FileText, CheckCircle } from "lucide-react";
@@ -8,14 +9,26 @@ import { REGIONS } from "../constants/bodyRegions";
 export default function SessionDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { sessions } = useDataStore();
-    const session = sessions.find(s => s.id === id);
-    // const session = useLiveQuery(() => id ? db.sessions.get(id) : undefined, [id]);
+    const session = useLiveQuery(async () => {
+        if (!id) return null;
+        return (await db.sessions.get(id)) ?? null;
+    }, [id]);
 
-    if (!session) {
+    if (session === undefined) {
         return (
             <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 flex items-center justify-center">
                 <p className="text-zinc-500">Loading session...</p>
+            </div>
+        );
+    }
+
+    if (session === null) {
+        return (
+            <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-6 flex flex-col items-center justify-center gap-4">
+                <p className="text-zinc-500">This session could not be found.</p>
+                <Button variant="outline" onClick={() => navigate("/")}>
+                    Return to Dashboard
+                </Button>
             </div>
         );
     }
@@ -36,7 +49,7 @@ export default function SessionDetails() {
             {/* Header */}
             <div className="flex items-center gap-4 mb-8 justify-between">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                    <Button variant="ghost" size="icon" aria-label="Go back" onClick={() => navigate(-1)}>
                         <ArrowLeft className="w-6 h-6" />
                     </Button>
                     <div>
